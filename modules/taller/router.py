@@ -16,9 +16,12 @@ DATA = engine.load()
 
 
 @router.get("/priority", response_model=dict)
-def priority():
-    items = [Priority(**p).model_dump() for p in engine.priority(DATA)]
-    return {"mode": DATA.mode, "items": items}
+def priority(at: str | None = None, limit: int = 50):
+    """D3 · Estaciones para el taller, de mayor a menor prioridad (C2). `at` en hora CDMX."""
+    when = datetime.fromisoformat(at) if at else None
+    items = [Priority(**p).model_dump() for p in engine.priority(DATA, when)][:limit]
+    pending = [] if DATA.mode == "EJEMPLO" else ["empty_share: falta el feed de la Línea 1"]
+    return {"mode": DATA.mode, "pending": pending, "items": items}
 
 
 @router.get("/ignored", response_model=dict)
