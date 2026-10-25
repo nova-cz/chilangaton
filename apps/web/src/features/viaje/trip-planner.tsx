@@ -4,12 +4,12 @@ import { Skeleton, StateMessage } from "@/components/ui/state-message";
 import { Button } from "@/components/ui/button";
 import { TONE_DOT, TONE_TEXT } from "@/features/stations/status";
 import { cn } from "@/lib/cn";
-import { ArrowDownUp, ChevronDown, Footprints, Repeat2, Settings2, Shuffle } from "lucide-react";
+import { ArrowDownUp, ChevronDown, Footprints, History, Repeat2, Settings2, Shuffle } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { DEMO_AT, HOME, STORY, getNearby, getRecommendation, getStations, type StationChoices } from "./data";
-import { LIGHT_TONE, cdmxTime, localClock, pct, splitName, walkMinutes } from "./format";
+import { HOME, REPLAY_AT, STORY, getNearby, getRecommendation, getStations, type StationChoices } from "./data";
+import { LIGHT_TONE, cdmxStamp, pct, replayLabel, splitName, walkMinutes } from "./format";
 import { usePrefs } from "./prefs";
 import { RideTimer } from "./ride-timer";
 import { TripRibbon } from "./trip-ribbon";
@@ -25,13 +25,20 @@ export function TripPlanner() {
   const [prefs] = usePrefs();
   const [stations, setStations] = useState<Load<StationChoices>>({ status: "loading" });
   const [nearby, setNearby] = useState<NearbyRow[]>([]);
-  const [rec, setRec] = useState<Load<Recommendation>>({ status: "loading" });
+  const [recState, setRec] = useState<Load<Recommendation> & { key?: string }>({ status: "loading" });
   const [chosen, setChosen] = useState<string | null>(null);
   const [riding, setRiding] = useState(false);
   const [reload, setReload] = useState(0);
 
-  const from = params.get("from") ?? STORY.from;
-  const to = params.get("to") ?? STORY.to;
+  const rawFrom = params.get("from") ?? STORY?.from ?? "";
+  const rawTo = params.get("to") ?? STORY?.to ?? "";
+  const choices = stations.status === "ok" ? stations.data : null;
+  // Solo cuenta lo elegido si existe en las listas; si no, la pantalla pide elegir.
+  const from = choices?.origins.some((s) => s.station_id === rawFrom) ? rawFrom : "";
+  const to = choices?.destinations.some((s) => s.station_id === rawTo) ? rawTo : "";
+  const tripKey = `${from}>${to}>${prefs.maxWalk}>${prefs.avoidEffort}>${prefs.acceptAlternative}>${reload}`;
+  // Si lo que tenemos es de otro viaje, mostramos "cargando" en vez de datos viejos.
+  const rec: Load<Recommendation> = recState.key === tripKey ? recState : { status: "loading" };
   const originStation = stations.status === "ok" ? stations.data.origins.find((s) => s.station_id === from) : undefined;
   const walkToOrigin = originStation ? walkMinutes(HOME, originStation) : 3;
 
@@ -59,15 +66,15 @@ export function TripPlanner() {
   }, [reload]);
 
   useEffect(() => {
-    if (from === to || stations.status !== "ok") return;
+    if (!from || !to || from === to || stations.status !== "ok") return;
     let alive = true;
     getRecommendation(from, to, prefs, walkToOrigin)
-      .then((r) => alive && setRec({ status: "ok", data: r, mode: r.mode }))
-      .catch((e: unknown) => alive && setRec({ status: "error", message: e instanceof Error ? e.message : "Sin conexión" }));
+      .then((r) => alive && setRec({ key: tripKey, status: "ok", data: r, mode: r.mode }))
+      .catch((e: unknown) => alive && setRec({ key: tripKey, status: "error", message: e instanceof Error ? e.message : "Sin conexión" }));
     return () => {
       alive = false;
     };
-  }, [from, to, prefs, reload, walkToOrigin, stations.status]);
+  }, [from, to, prefs, reload, walkToOrigin, stations.status, tripKey]);
 
   const recData = rec.status === "ok" ? rec.data : null;
   const target = chosen ?? recData?.destination.station_id ?? to;
@@ -104,8 +111,15 @@ export function TripPlanner() {
           </div>
           <p className="mt-1 text-ink-muted">
             Te decimos qué tan probable es encontrar bici al salir y lugar al llegar.
-            {stations.status === "ok" && stations.mode.includes("EJEMPLO") ? ` Escenario: martes ${localClock(DEMO_AT)} h.` : null}
           </p>
+          {REPLAY_AT ? (
+            <p className="mt-2 inline-flex items-start gap-2 rounded-2xl bg-mist-100 px-3 py-2 text-sm text-ink">
+              <History aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-700" />
+              <span>
+                <span className="font-semibold">Repetición del {replayLabel(REPLAY_AT)}.</span> Usamos los datos de esa mañana, no los de ahorita.
+              </span>
+            </p>
+          ) : null}
         </div>
 
         <div className="rounded-[var(--radius-card)] bg-card p-2 shadow-soft">
@@ -182,7 +196,18 @@ export function TripPlanner() {
 
       {/* Columna 2: el viaje (en móvil va antes de "Cerca de ti") */}
       <div className="min-w-0 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:pt-2 max-lg:order-2">
-        {from === to ? (
+        {stations.status === "loading" ? (
+          <div className="space-y-3">
+            <Skeleton className="h-40" />
+            <Skeleton className="h-40" />
+          </div>
+        ) : !from || !to ? (
+          <StateMessage
+            kind="empty"
+            title={!from && !to ? "Elige de dónde sales y a dónde vas" : !from ? "Elige de dónde sales" : "Elige a dónde vas"}
+            description="Con tus dos estaciones te decimos si habrá bici al salir y lugar al llegar."
+          />
+        ) : from === to ? (
           <StateMessage kind="empty" title="Elige un destino distinto" description="El origen y el destino son la misma estación." />
         ) : rec.status === "loading" ? (
           <div className="space-y-3">
@@ -191,7 +216,7 @@ export function TripPlanner() {
             <Skeleton className="h-40" />
           </div>
         ) : rec.status === "error" ? (
-          <StateMessage kind="error" title="No pudimos calcular tu viaje" description={rec.message} />
+          <StateMessage kind="error" title="No pudimos calcular ese viaje" description={rec.message} />
         ) : riding ? (
           <RideTimer
             stationName={targetName}
@@ -208,11 +233,12 @@ export function TripPlanner() {
             onChoose={setChosen}
             onChooseOrigin={(id) => setRoute({ from: id })}
             onStart={() => setRiding(true)}
+            replay={Boolean(REPLAY_AT)}
           />
         )}
         {recData ? (
           <p className="mt-3 px-1 text-xs text-ink-soft">
-            Cálculo con 500 mañanas simuladas a partir del promedio de 28 días. Estado de la estación de las {cdmxTime(recData.data_ts)} h.
+            Cálculo con 500 mañanas simuladas a partir del promedio de 28 días. Estado de la estación: {cdmxStamp(recData.data_ts)} (hora CDMX).
           </p>
         ) : null}
       </div>
@@ -242,7 +268,7 @@ function StationSelect({
         <label htmlFor={id} className="block text-xs font-semibold text-ink-muted">
           {label}
         </label>
-        <p aria-hidden className="truncate font-semibold">
+        <p aria-hidden className={cn("truncate font-semibold", !current && "text-ink-soft")}>
           {current ? splitName(current.name).street : "Elige estación"}
           {current && splitName(current.name).area ? (
             <span className="font-normal text-ink-muted"> · {splitName(current.name).area}</span>
@@ -253,10 +279,15 @@ function StationSelect({
       {/* Select nativo encima: accesible y cómodo en móvil */}
       <select
         id={id}
-        value={value}
+        value={current ? value : ""}
         onChange={(e) => onChange(e.target.value)}
         className="absolute inset-0 cursor-pointer opacity-0"
       >
+        {!current ? (
+          <option value="" disabled>
+            Elige estación
+          </option>
+        ) : null}
         {stations.map((s) => (
           <option key={s.station_id} value={s.station_id}>
             {s.name}

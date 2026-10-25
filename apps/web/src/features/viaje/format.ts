@@ -19,7 +19,8 @@ export function lightOf(p: number): Light {
 }
 
 /** "Jesús García - Carlos J. Meneses (Buenavista)" → { street: "Jesús García - Carlos J. Meneses", area: "Buenavista" } */
-export function splitName(name: string): { street: string; area: string | null } {
+export function splitName(raw: string): { street: string; area: string | null } {
+  const name = raw.replace(/^CE-?[\d-]+\s+/i, "").trim() || raw; // "CE-271-272 Jesús García" → "Jesús García"
   const m = name.match(/^(.*?)\s*\(([^)]+)\)\s*$/);
   return m ? { street: m[1]!, area: m[2]! } : { street: name, area: null };
 }
@@ -36,6 +37,25 @@ export function cdmxTime(iso: string | null | undefined): string {
 export function localClock(atLocal: string): string {
   const t = atLocal.split("T")[1] ?? "";
   return t.replace(/^0/, "");
+}
+
+/** "2026-09-29T07:45" → "martes 29 sep, 7:45 h" */
+export function replayLabel(atLocal: string): string {
+  const [d] = atLocal.split("T");
+  const date = new Date(`${d}T12:00:00-06:00`);
+  const day = new Intl.DateTimeFormat("es-MX", { timeZone: "America/Mexico_City", weekday: "long", day: "numeric", month: "short" })
+    .format(date)
+    .replace(".", "");
+  return `${day}, ${localClock(atLocal)} h`;
+}
+
+/** "2026-09-29T13:37:00+00:00" → "29 sep, 07:37 h" (hora CDMX) */
+export function cdmxStamp(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const f = new Intl.DateTimeFormat("es-MX", { timeZone: "America/Mexico_City", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hour12: false });
+  return f.format(d).replace(".", "").replace(",", ",") + " h";
 }
 
 export function isExampleMode(mode: string): boolean {

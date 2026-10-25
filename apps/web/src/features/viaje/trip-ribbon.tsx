@@ -22,7 +22,9 @@ export function TripRibbon({
   onChoose,
   onChooseOrigin,
   onStart,
+  replay = false,
 }: {
+  replay?: boolean;
   rec: Recommendation;
   walkToOrigin: number;
   chosen: string;
@@ -98,7 +100,10 @@ export function TripRibbon({
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold shadow-soft">
             <Bike aria-hidden className="size-4 text-brand-600" />
             <Metric value={Math.round(destination.ride_min)} unit="min" className="text-base" />
-            <span className="text-ink-muted">en bici · llegas {destination.arrival_local}</span>
+            <span className="text-ink-muted">
+              en bici · llegas {destination.arrival_local}
+              {replay ? " (esa mañana)" : ""}
+            </span>
           </span>
           <span className="hidden text-xs text-ink-soft sm:inline">{destination.ride_source}</span>
         </li>

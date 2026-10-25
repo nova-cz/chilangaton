@@ -228,12 +228,35 @@ def load_live(fetch=None) -> tuple[dict, dict, dict]:
     return stations, states, keymap
 
 
+def merge_live(real: Data, live_stations: dict, live_states: dict, keymap: dict) -> Data:
+    """Estado de AHORA (feed GBFS) + promedios reales de real/. Une por número de estación."""
+    inv = {gid: key for key, gid in keymap.items() if key}
+    states = {}
+    for gid, st in live_states.items():
+        key = inv.get(gid)
+        if key in real.stations:
+            states[key] = State(key, st.ts, st.useful_bikes, st.docks_available, st.docks_disabled,
+                                st.is_renting, st.is_returning, real.states[key].suspected_expected
+                                if key in real.states else 0.0)
+    real.states = states
+    real.stations = {k: v for k, v in real.stations.items() if k in states}
+    real.mode = "VIVO + baseline REAL"
+    return real
+
+
 def load() -> Data:
-    """Orden: VIAJE_MODE=ejemplo fuerza fixtures; si existe real/ se usa (REAL);
-    LIVE=1 → estado del feed en vivo; DATA_DIR → baseline desde parquet de la rama data."""
+    """Orden: VIAJE_MODE=ejemplo fuerza fixtures; si existe real/ se usa (REAL, repite el martes 29);
+    con LIVE=1 además usa el estado de ahorita (VIVO + baseline REAL);
+    DATA_DIR → baseline desde parquet de la rama data."""
     if os.getenv("VIAJE_MODE", "").lower() != "ejemplo":
         real = load_real()
-        if real and os.getenv("LIVE") != "1":
+        if real and os.getenv("LIVE") == "1":
+            try:
+                return merge_live(real, *load_live())
+            except Exception as e:  # sin internet: se queda con la repetición
+                print(f"[viaje] LIVE no disponible ({e}); uso datos reales del 29 sep")
+                real = load_real()
+        if real:
             return real
     d = load_fixtures()
     keymap = None

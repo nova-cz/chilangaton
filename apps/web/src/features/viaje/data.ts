@@ -27,7 +27,13 @@ export const HOME = snap.home;
 export const STORY = snap.story;
 export const FORECAST_HORIZONS = [15, 30, 45, 60, 75, 90] as const;
 const isDemo = config.dataMode === "demo";
-const at = process.env.NEXT_PUBLIC_DEMO_AT ?? DEMO_AT;
+/**
+ * Con API y sin NEXT_PUBLIC_DEMO_AT se usa la hora real de ahorita (la API debe correr con LIVE=1).
+ * En modo demo, o si fijas DEMO_AT, es una REPETICIÓN de esa mañana y la pantalla lo dice.
+ */
+const fixedAt = isDemo ? DEMO_AT : process.env.NEXT_PUBLIC_DEMO_AT;
+const at = fixedAt ? `&at=${fixedAt}` : "";
+export const REPLAY_AT: string | null = fixedAt ?? null;
 
 export interface Sourced<T> {
   data: T;
@@ -46,13 +52,13 @@ export async function getStations(): Promise<Sourced<StationChoices>> {
     const pick = (ids: string[]) => snap.stations.filter((s) => ids.includes(s.station_id));
     return { data: { origins: pick(snap.origins), destinations: pick(snap.destinations) }, mode: snap.mode };
   }
-  const r = await apiGet<{ mode: string; stations: ViajeStation[] }>(`/viaje/stations?at=${at}`);
+  const r = await apiGet<{ mode: string; stations: ViajeStation[] }>(`/viaje/stations?${at.slice(1)}`);
   return { data: { origins: r.stations, destinations: r.stations }, mode: r.mode };
 }
 
 export async function getNearby(lat = HOME.lat, lon = HOME.lon): Promise<Sourced<NearbyRow[]>> {
   if (isDemo) return { data: snap.nearby, mode: snap.mode };
-  const r = await apiGet<{ mode: string; stations: NearbyRow[] }>(`/viaje/nearby?lat=${lat}&lon=${lon}&at=${at}&limit=6`);
+  const r = await apiGet<{ mode: string; stations: NearbyRow[] }>(`/viaje/nearby?lat=${lat}&lon=${lon}${at}&limit=6`);
   return { data: r.stations, mode: r.mode };
 }
 
@@ -63,7 +69,7 @@ export async function getForecast(id: string): Promise<Sourced<{ station: ViajeS
     return station && forecast ? { data: { station, forecast }, mode: snap.mode } : null;
   }
   const r = await apiGet<{ mode: string; station: ViajeStation; forecast: ForecastPoint[] }>(
-    `/viaje/stations/${encodeURIComponent(id)}/forecast?at=${at}&horizons=${FORECAST_HORIZONS.join(",")}`,
+    `/viaje/stations/${encodeURIComponent(id)}/forecast?horizons=${FORECAST_HORIZONS.join(",")}${at}`,
   );
   return { data: { station: r.station, forecast: r.forecast }, mode: r.mode };
 }
@@ -77,7 +83,7 @@ export async function getRecommendation(
   const walk = prefs.avoidEffort ? 2 : prefs.maxWalk;
   if (isDemo) {
     const r = snap.recommendations[`${origin}>${destination}>${walk}`];
-    if (!r) throw new Error("Esa combinación no está en el escenario de ejemplo.");
+    if (!r) throw new Error("Ese viaje no está en la repetición de la mañana. Prueba con otro origen o destino.");
     if (prefs.acceptAlternative || r.alternatives.length === 0) return r;
     // Misma regla que el motor cuando no aceptas otra estación.
     return {
@@ -89,7 +95,7 @@ export async function getRecommendation(
   const q = new URLSearchParams({
     origin,
     destination,
-    at,
+    ...(fixedAt ? { at: fixedAt } : {}),
     walk_to_origin: String(walkToOrigin),
     max_walk: String(walk),
     accept_alt: String(prefs.acceptAlternative),

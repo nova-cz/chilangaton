@@ -67,3 +67,12 @@ def test_c3_varias_estaciones():
     c = TestClient(create_app())
     r = c.get("/api/v1/viaje/forecast").json()
     assert r["forecast"] and set(r["forecast"][0]) == {"station_id", "ts", "horizon_min", "p_useful_bike", "p_free_dock"}
+
+
+def test_merge_live_une_por_numero_de_estacion():
+    base = engine.load_fixtures()
+    base.mode = "REAL"
+    live_states = {"g14": engine.State("g14", "2026-10-25T18:00:00+00:00", 3, 36)}
+    out = engine.merge_live(base, {}, live_states, {"14": "g14", "271": "g271"})
+    assert list(out.stations) == ["14"] and out.states["14"].useful_bikes == 3
+    assert out.mode == "VIVO + baseline REAL"

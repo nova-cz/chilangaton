@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { DockStrip, timesOutOfTen } from "./dock-strip";
 import { FORECAST_HORIZONS, getForecast } from "./data";
-import { LIGHT_LABEL, LIGHT_TONE, cdmxTime, lightOf, pct, splitName } from "./format";
+import { LIGHT_LABEL, LIGHT_TONE, cdmxStamp, lightOf, pct, splitName } from "./format";
 import type { ForecastPoint, ViajeStation } from "./types";
 import { ModeBadge } from "./viaje-shell";
 
@@ -104,7 +104,7 @@ export function StationForecast({ id }: { id: string }) {
       </div>
       <p className="mt-2 flex items-center gap-1.5 px-1 text-xs text-ink-soft">
         <Clock3 aria-hidden className="size-3.5" />
-        Estado de las {cdmxTime(station.data_ts)} h. “Útiles” descuenta las bicis que podrían estar dañadas.
+        Estado del {cdmxStamp(station.data_ts)} (hora CDMX). “Útiles” descuenta las bicis que podrían estar dañadas.
       </p>
 
       {/* Si llegas en… */}
