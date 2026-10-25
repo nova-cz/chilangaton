@@ -1,9 +1,17 @@
+import pytest
 from fastapi.testclient import TestClient
 
+from modules.taller import engine, router
 from services.api.core.config import Settings
 from services.api.main import create_app
 
 client = TestClient(create_app(Settings()))
+
+
+@pytest.fixture(autouse=True)
+def example_data(monkeypatch):
+    """Siempre modo EJEMPLO: aunque haya DATA_DIR, las pruebas no escriben en los datos reales."""
+    monkeypatch.setattr(router, "DATA", engine.Data(mode="EJEMPLO", reports=engine._example("c4_reports")))
 
 
 def test_module_loaded():
@@ -26,3 +34,17 @@ def test_create_report():
     res = client.post("/api/v1/taller/reports", json={"station_id": "271", "type": "llanta"})
     assert res.status_code == 201
     assert res.json()["report_id"].startswith("r-")
+
+
+def test_duplicate_report_returns_200():
+    body = {"station_id": "273", "type": "frenos", "user_hash": "dup-test"}
+    first = client.post("/api/v1/taller/reports", json=body)
+    second = client.post("/api/v1/taller/reports", json=body)
+    assert (first.status_code, second.status_code) == (201, 200)
+    assert second.json()["report_id"] == first.json()["report_id"]
+
+
+def test_report_rejects_unknown_type():
+    res = client.post("/api/v1/taller/reports", json={"station_id": "271", "type": "robo"})
+    assert res.status_code == 422
+    assert res.json()["error"]["code"] == "validation_error"
