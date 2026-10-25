@@ -92,6 +92,9 @@ class Data:
     # (origen, destino) -> minutos (mediana real)
     travel: dict[tuple[str, str], float] = field(default_factory=dict)
     mode: str = "EJEMPLO"
+    # Qué tanto del azar de Poisson se conserva (1 = completo). El inventario real se corrige solo
+    # (camiones, usuarios), así que el azar puro sobrestima la incertidumbre. Se ajusta con backtest --tune.
+    disp: float = 1.0
 
 
 def _read(path: Path):
@@ -151,6 +154,9 @@ def load_real() -> Data | None:
     d.stations = {k: v for k, v in d.stations.items() if k in d.states}
     for st in d.stations.values():  # "CE-271-272 Jesús García - …" → "Jesús García - …"
         st.name = re.sub(r"^CE-?[\w-]+\s+", "", st.name).strip() or st.name
+    tuning = REAL_DIR / "tuning.json"   # lo escribe backtest --tune
+    if tuning.exists():
+        d.disp = float(json.loads(tuning.read_text(encoding="utf-8")).get("disp", 1.0))
     return d
 
 
@@ -297,6 +303,9 @@ def simulate(data: Data, sid: str, start: datetime, minutes: float,
         frac = min(1.0, left / 15)
         lo, li = data.baseline.get((sid, day_type(t), block_of(t)), (0.0, 0.0))
         delta = rng.poisson(li * frac, n) - rng.poisson(lo * frac, n)   # llegadas − salidas
+        if data.disp != 1.0:
+            mean = (li - lo) * frac
+            delta = np.rint(mean + data.disp * (delta - mean))
         inv = np.clip(inv + delta, 0, cap)
         free = np.clip(free - delta, 0, cap)
         t += timedelta(minutes=15 * frac)

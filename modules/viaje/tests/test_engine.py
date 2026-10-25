@@ -95,3 +95,13 @@ def test_modo_real_usa_la_hora_de_la_repeticion():
         assert router._now(None) == engine.REPLAY_AT
     finally:
         router.DATA.mode = old
+
+
+def test_dispersion_menor_da_pronostico_mas_firme():
+    d = engine.load_fixtures()
+    d.disp = 1.0
+    a = engine.simulate(d, "14", T, 45)
+    d.disp = 0.2
+    b = engine.simulate(d, "14", T, 45)
+    assert 0 <= b["p_free_dock"] <= 1 and 0 <= a["p_free_dock"] <= 1
+    assert abs(b["p_free_dock"] - 0.5) >= abs(a["p_free_dock"] - 0.5) - 0.05
