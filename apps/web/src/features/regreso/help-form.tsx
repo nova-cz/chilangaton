@@ -95,15 +95,15 @@ export function HelpForm() {
           href={whatsappUrl(message)}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn(buttonClasses("lime"), "w-full justify-center")}
+          className={cn(buttonClasses("lime"), WIDE)}
         >
           <MessageCircle aria-hidden className="size-4" />
-          Enviar por WhatsApp a ECOBICI
-          <span className="sr-only">({ECOBICI_WHATSAPP.label}, abre WhatsApp)</span>
+          Enviar por WhatsApp
+          <span className="sr-only">a ECOBICI ({ECOBICI_WHATSAPP.label}, abre WhatsApp)</span>
         </a>
-        <Button variant="soft" className="w-full justify-center" onClick={share}>
+        <Button variant="soft" className={WIDE} onClick={share}>
           <Share2 aria-hidden className="size-4" />
-          Compartir o copiar el mensaje
+          Compartir o copiar
         </Button>
       </div>
       <Announce message={notice} />
@@ -111,6 +111,9 @@ export function HelpForm() {
     </Card>
   );
 }
+
+/** Botón a todo lo ancho que crece si el texto no cabe (pantallas de 320 px o letra grande). */
+const WIDE = "h-auto min-h-11 w-full justify-center py-2.5 text-center";
 
 const INPUT =
   "h-11 w-full rounded-2xl border border-line bg-white px-4 text-[15px] text-ink placeholder:text-ink-soft focus-visible:border-brand-500";

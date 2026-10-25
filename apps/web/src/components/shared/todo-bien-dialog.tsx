@@ -8,6 +8,9 @@ import Link from "next/link";
 import { useEffect, useId, useRef } from "react";
 import { speak, vibrate } from "./announce";
 
+/** Botón a todo lo ancho que crece si el texto no cabe (pantallas de 320 px o letra grande). */
+const WIDE = "h-auto min-h-11 w-full justify-center py-2.5 text-center";
+
 /**
  * "¿Todo bien?" de Regreso Seguro. La Línea 3 lo abre a los 45 y 90 min del contador de viaje.
  * Usa <dialog> nativo: atrapa el foco, cierra con Esc y el lector lo anuncia como diálogo.
@@ -52,7 +55,7 @@ export function TodoBienDialog({
       aria-labelledby={titleId}
       aria-describedby={textId}
       onClose={onClose}
-      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-[var(--radius-sheet)] bg-card p-6 text-ink shadow-float backdrop:bg-brand-900/50"
+      className="animate-pop m-auto w-[calc(100%-2rem)] max-w-sm rounded-[var(--radius-sheet)] bg-card p-6 text-ink shadow-float backdrop:bg-brand-900/50"
     >
       <span className="grid size-12 place-items-center rounded-2xl bg-lime-100 text-brand-700">
         <HeartHandshake aria-hidden className="size-6" />
@@ -66,7 +69,7 @@ export function TodoBienDialog({
       </p>
 
       <div className="mt-5 grid gap-2">
-        <button type="button" autoFocus onClick={() => ref.current?.close()} className={cn(buttonClasses("dark"), "justify-center")}>
+        <button type="button" autoFocus onClick={() => ref.current?.close()} className={cn(buttonClasses("dark"), WIDE)}>
           Todo bien, sigo mi viaje
         </button>
         {onFindDock ? (
@@ -76,15 +79,15 @@ export function TodoBienDialog({
               ref.current?.close();
               onFindDock();
             }}
-            className={cn(buttonClasses("lime"), "justify-center")}
+            className={cn(buttonClasses("lime"), WIDE)}
           >
             No encuentro dónde anclar
           </button>
         ) : null}
-        <Link href={helpHref({ kind: "anclaje", station, bikeId })} className={cn(buttonClasses("soft"), "justify-center")}>
+        <Link href={helpHref({ kind: "anclaje", station, bikeId })} className={cn(buttonClasses("soft"), WIDE)}>
           Ya anclé y no se registró
         </Link>
-        <Link href={helpHref({ kind: "robo", station, bikeId })} className={cn(buttonClasses("soft"), "justify-center")}>
+        <Link href={helpHref({ kind: "robo", station, bikeId })} className={cn(buttonClasses("soft"), WIDE)}>
           Me robaron la bici o tuve un problema
         </Link>
       </div>

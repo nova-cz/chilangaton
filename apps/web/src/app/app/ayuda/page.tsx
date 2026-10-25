@@ -11,7 +11,10 @@ import { Suspense } from "react";
 
 export const metadata: Metadata = { title: "Ayuda" };
 
-/** R3 · Robo, pérdida y anclaje. Lo urgente (911) va en el HTML inicial, antes de que cargue JavaScript. */
+/** Botón a todo lo ancho que crece si el texto no cabe (pantallas de 320 px o letra grande). */
+const WIDE = "h-auto min-h-11 w-full justify-center py-2.5 text-center";
+
+/** R3 · Robo, pérdida y anclaje. Lo urgente (911) va en el HTML inicial y sin animación de entrada. */
 export default function AyudaPage() {
   return (
     <main className="pt-safe pb-safe mx-auto min-h-dvh max-w-xl space-y-4 bg-surface px-4">
@@ -33,17 +36,19 @@ export default function AyudaPage() {
         <p className="mt-1 text-sm text-ink">
           Primero ponte a salvo. No persigas a nadie ni intentes recuperar la bici por tu cuenta.
         </p>
-        <a href={`tel:${EMERGENCIAS.tel}`} className={cn(buttonClasses("dark"), "mt-3 w-full justify-center")}>
+        <a href={`tel:${EMERGENCIAS.tel}`} className={cn(buttonClasses("dark"), WIDE, "mt-3")}>
           <Phone aria-hidden className="size-4" />
           Llamar al {EMERGENCIAS.label}
         </a>
       </Card>
 
-      <Suspense fallback={<Skeleton className="h-96" />}>
-        <HelpForm />
-      </Suspense>
+      <div className="animate-rise" style={{ animationDelay: "60ms" }}>
+        <Suspense fallback={<Skeleton className="h-96" />}>
+          <HelpForm />
+        </Suspense>
+      </div>
 
-      <Card className="p-5">
+      <Card className="animate-rise p-5" style={{ animationDelay: "120ms" }}>
         <h2 className="font-semibold">Si fue un robo, denúncialo</h2>
         <p className="mt-1 text-sm text-ink-muted">
           La denuncia ante la Fiscalía de la CDMX deja constancia oficial. Ten a la mano la estación, la hora y la
@@ -53,17 +58,17 @@ export default function AyudaPage() {
           href={DENUNCIA_DIGITAL_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn(buttonClasses("soft"), "mt-3 w-full justify-center")}
+          className={cn(buttonClasses("soft"), WIDE, "mt-3")}
         >
-          Denuncia digital de la Fiscalía
+          Hacer denuncia digital
           <ExternalLink aria-hidden className="size-4" />
           <span className="sr-only">(abre en otra pestaña)</span>
         </a>
       </Card>
 
-      <Card className="p-5">
+      <Card className="animate-rise p-5" style={{ animationDelay: "180ms" }}>
         <h2 className="font-semibold">¿Prefieres llamar a ECOBICI?</h2>
-        <a href={`tel:${ECOBICI_PHONE.tel}`} className={cn(buttonClasses("soft"), "mt-3 w-full justify-center")}>
+        <a href={`tel:${ECOBICI_PHONE.tel}`} className={cn(buttonClasses("soft"), WIDE, "mt-3")}>
           <Phone aria-hidden className="size-4" />
           {ECOBICI_PHONE.label}
         </a>
