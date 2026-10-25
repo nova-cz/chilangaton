@@ -33,7 +33,9 @@ def test_priority_ranks_busier_station_first(tmp_path):
 
     items = engine.priority(data, T0 + timedelta(hours=3))
 
-    assert [i["station_id"] for i in items] == ["271", "18"]
+    assert [i["short_name"] for i in items] == ["271", "18"]
+    assert items[1]["station_id"] == engine.feed_ids()["18"]       # id del feed
+    assert engine.priority(data, T0 + timedelta(hours=3), "ce")[1]["station_id"] == "18"
     assert items[0]["priority_score"] == 1.0
     assert items[0]["suspected_expected"] == 2
     assert items[0]["empty_share"] is None

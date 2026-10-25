@@ -48,3 +48,12 @@ def test_report_rejects_unknown_type():
     res = client.post("/api/v1/taller/reports", json={"station_id": "271", "type": "robo"})
     assert res.status_code == 422
     assert res.json()["error"]["code"] == "validation_error"
+
+
+def test_validation_requires_export_in_example_mode():
+    assert client.get("/api/v1/taller/validation").status_code == 404
+
+
+def test_ids_param_is_validated():
+    assert client.get("/api/v1/taller/priority?ids=ce").status_code == 200
+    assert client.get("/api/v1/taller/priority?ids=otro").status_code == 422

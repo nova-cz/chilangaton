@@ -34,8 +34,9 @@ def test_counts_bikes_gone_three_weeks_by_band(tmp_path):
     ])
     items = engine.loss_risk(engine.Data(mode="REAL", trips_dir=tmp_path), AT)
 
-    got = {(i["station_id"], i["time_band"]): i["disappeared_bikes"] for i in items}
+    got = {(i["short_name"], i["time_band"]): i["disappeared_bikes"] for i in items}
     assert got == {("271", "18:00-21:00"): 2, ("18", "07:00-10:00"): 1}
+    assert {i["short_name"]: i["station_id"] for i in items}["18"] == engine.feed_ids()["18"]
     for i in items:
         LossRisk(**i)
         assert i["note"] == "riesgo, no robo comprobado"
