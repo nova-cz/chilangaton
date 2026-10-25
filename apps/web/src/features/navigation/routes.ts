@@ -38,14 +38,13 @@ export const PANEL_NAV: NavItem[] = [
 export type AppTab =
   | { key: "map"; label: string; icon: LucideIcon; view: "map" }
   | { key: "list"; label: string; icon: LucideIcon; view: "list" }
-  | { key: "missions"; label: string; icon: LucideIcon; view: "missions" }
-  | { key: "trip"; label: string; icon: LucideIcon; href: string; owner: string; ready: boolean }
+  | { key: "trip" | "missions"; label: string; icon: LucideIcon; href: string; owner: string; ready: boolean }
   | { key: "help"; label: string; icon: LucideIcon; href: string; owner: string; ready: boolean };
 
 export const APP_TABS: AppTab[] = [
   { key: "map", label: "Mapa", icon: Map, view: "map" },
   { key: "list", label: "Lista", icon: List, view: "list" },
   { key: "trip", label: "Viaje", icon: Bike, href: "/app/viaje", owner: "Línea 3", ready: true },
-  { key: "missions", label: "Misiones", icon: Target, view: "missions" },
+  { key: "missions", label: "Misiones", icon: Target, href: "/app/mision", owner: "Línea 4", ready: true },
   { key: "help", label: "Ayuda", icon: LifeBuoy, href: "/app/ayuda", owner: "Línea 5", ready: true },
 ];
