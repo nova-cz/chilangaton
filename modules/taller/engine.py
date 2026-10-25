@@ -13,6 +13,7 @@ Tareas pendientes (ver plan unificado):
 import json
 import os
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -37,15 +38,72 @@ def _example(name: str) -> list[dict]:
 def load() -> Data:
     data_dir = os.getenv("DATA_DIR")
     if data_dir:
-        trips = Path(data_dir) / "trips"
+        trips = Path(data_dir).resolve() / "trips"
         if any(trips.glob("trips_*.parquet")):
             return Data(mode="REAL", trips_dir=trips)
     return Data(mode="EJEMPLO", reports=_example("c4_reports"))
 
 
-def ignored_bikes(data: Data) -> list[dict]:
-    """D2. TODO: implementar con duckdb sobre data.trips_dir."""
-    return []
+IGNORED_SQL = """
+WITH t AS (
+    SELECT CAST(bike_id AS VARCHAR) AS bike_id, start_key, start_local, end_key, end_local
+    FROM read_parquet($glob)
+    WHERE start_local IS NOT NULL AND end_local IS NOT NULL
+),
+docked AS (                      -- cada vez que una bici queda anclada y cuándo vuelve a salir
+    SELECT bike_id, end_key AS station_key, end_local AS docked_since,
+           LEAD(start_local) OVER (PARTITION BY bike_id ORDER BY start_local) AS next_out
+    FROM t
+),
+now_docked AS (                  -- ancladas en `at`, hace menos de 3 semanas (más es D4)
+    SELECT * FROM docked
+    WHERE docked_since <= $at
+      AND (next_out IS NULL OR next_out > $at)
+      AND docked_since >= $at - INTERVAL (CAST($lost AS INTEGER)) DAY
+      AND station_key IS NOT NULL
+),
+departures AS (                  -- salidas de la estación en las últimas 24 h
+    SELECT start_key AS station_key, start_local
+    FROM t
+    WHERE start_local > $at - INTERVAL (CAST($window AS INTEGER)) HOUR AND start_local <= $at
+)
+SELECT n.station_key, n.bike_id, n.docked_since, COUNT(*) AS departures_while_docked
+FROM now_docked n
+JOIN departures d ON d.station_key = n.station_key AND d.start_local >= n.docked_since
+GROUP BY ALL
+HAVING COUNT(*) >= $min_dep
+ORDER BY departures_while_docked DESC
+"""
+
+
+def latest_time(data: Data) -> datetime | None:
+    """Último retiro registrado (hora CDMX). Sirve de `at` por defecto en modo REAL."""
+    if data.mode != "REAL":
+        return None
+    import duckdb
+    glob = str(data.trips_dir / "trips_*.parquet")
+    return duckdb.execute("SELECT max(start_local) FROM read_parquet(?)", [glob]).fetchone()[0]
+
+
+def ignored_bikes(data: Data, at: datetime | None = None) -> list[dict]:
+    """D2 · Bici ignorada: sigue anclada mientras salieron >=30 bicis de su estación en 24 h.
+
+    `at` va en hora CDMX sin zona (igual que start_local). Es una señal, no un diagnóstico:
+    la bici probablemente no sirve, nadie la eligió.
+    """
+    if data.mode != "REAL":
+        return []
+    import duckdb  # solo hace falta en modo REAL
+    at = (at or latest_time(data)).replace(tzinfo=None)
+    rows = duckdb.execute(IGNORED_SQL, {
+        "glob": str(data.trips_dir / "trips_*.parquet"), "at": at,
+        "window": IGNORED_WINDOW_H, "lost": LOST_AFTER_DAYS, "min_dep": IGNORED_MIN_DEPARTURES,
+    }).fetchall()
+    return [
+        {"station_key": st, "bike_id": bike, "docked_since": since.isoformat(timespec="minutes"),
+         "departures_while_docked": n, "signal": "bici ignorada"}
+        for st, bike, since, n in rows
+    ]
 
 
 def priority(data: Data) -> list[dict]:
