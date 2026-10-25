@@ -9,7 +9,7 @@ import { Button, buttonClasses } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import type { StationDataset } from "@/features/stations/types";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { Box, LayoutDashboard, List, LocateFixed, Map as MapIcon } from "lucide-react";
+import { Bike, Box, LayoutDashboard, LifeBuoy, List, LocateFixed, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -167,6 +167,12 @@ export function AppExperience({ data }: { data: StationDataset }) {
                 ]}
               />
             </div>
+            <Link href="/app/viaje" className={buttonClasses("dark", "md")}>
+              <Bike aria-hidden className="size-4" /> Viaje
+            </Link>
+            <Link href="/app/ayuda" className={buttonClasses("soft", "md")}>
+              <LifeBuoy aria-hidden className="size-4" /> Ayuda
+            </Link>
             <Link href="/panel" className={buttonClasses("dark", "md")}>
               <LayoutDashboard aria-hidden className="size-4" /> Panel
             </Link>

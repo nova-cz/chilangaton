@@ -6,6 +6,7 @@ import { ArrowLeft, Radio } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { isExampleMode } from "./format";
+import { REPLAY_AT } from "./data";
 
 /** Marco común de /app/viaje, /app/estacion/[id] y /app/ajustes. */
 export function ViajeShell({
@@ -62,7 +63,7 @@ export function ModeBadge({ mode, className }: { mode: string; className?: strin
   return (
     <Badge tone="brand" className={className}>
       <Radio aria-hidden className="size-3" />
-      {mode.startsWith("VIVO") ? "En vivo" : "Datos reales"}
+      {mode.startsWith("VIVO") && !REPLAY_AT ? "En vivo" : "Repetición histórica"}
     </Badge>
   );
 }
