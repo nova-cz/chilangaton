@@ -71,6 +71,8 @@ class CaseOut(BaseModel):
     created_at: AwareDatetime
     updated_at: AwareDatetime
     history: list[CaseEvent]
+    next_states: list[BikeState] = Field(description="A dónde puede moverlo un Guardián u operador ahora")
+    simulated: bool = Field(description="Escenario SIMULADO; se muestra con su etiqueta y no entra a C5")
 
 
 class IncidentOut(BaseModel):
@@ -142,3 +144,18 @@ class ReturnOut(BaseModel):
     window_ends_at: AwareDatetime
     baseline: StationSnapshot | None
     latest: StationSnapshot | None
+
+
+# ---------- Escenarios SIMULADOS (R4) ----------
+class ScenarioOut(BaseModel):
+    key: str
+    title: str
+    story: str
+    expected: BikeState
+    outcome: str
+
+
+class ScenarioRunOut(ScenarioOut):
+    obtained: BikeState
+    passed: bool
+    case: CaseOut

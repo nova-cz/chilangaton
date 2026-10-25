@@ -1,0 +1,20 @@
+{
+ "demo_day": "2026-09-29",
+ "demo_time": "07:45",
+ "baseline_days": 28,
+ "sources": [
+  "public_data_web_2026-09.csv",
+  "Sep.parquet",
+  "station_information.json"
+ ],
+ "built_at_utc": "2026-10-25T18:33:45+00:00",
+ "log": [
+  "Catálogo: 677 estaciones",
+  "Viajes: data/public_data_web_2026-09.csv",
+  "  1,498,934 viajes · 0 sin fecha de llegada · 2026-02-10 08:46:10 → 2026-09-30 23:56:06 (hora CDMX)",
+  "Códigos del CSV encontrados en el catálogo: 100.0%",
+  "Estado a las 7:45 del 2026-09-29 (≤ 13:45 UTC): 677 estaciones",
+  "Baseline 2026-09-01 → 2026-09-28: 101,588 filas (estación × tipo de día × bloque)",
+  "Tiempos de viaje: 106,927 pares con 3 o más viajes"
+ ]
+}
