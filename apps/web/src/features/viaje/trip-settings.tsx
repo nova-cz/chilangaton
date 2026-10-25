@@ -91,7 +91,7 @@ export function TripSettings() {
         <Lock aria-hidden className="mt-0.5 size-5 shrink-0 text-brand-700" />
         <div className="text-sm">
           <p className="font-semibold">Se queda en este teléfono</p>
-          <p className="mt-0.5 text-ink-muted">No pedimos edad, género ni cuenta. Estas preferencias no se envían a nadie más que al cálculo de tu viaje.</p>
+          <p className="mt-0.5 text-ink-muted">No pedimos edad, género ni cuenta. Estas preferencias no se envían a nadie más que al cálculo de tu viaje. Si das permiso de ubicación, la redondeamos a unos 100 m y solo la usamos para ordenar las estaciones cercanas.</p>
           <button type="button" onClick={() => update(DEFAULT_PREFS)} className="mt-2 font-semibold text-brand-700 hover:underline">
             Restablecer
           </button>

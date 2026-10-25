@@ -60,5 +60,22 @@ python -m modules.viaje.export_demo     # actualiza el escenario de la web (modo
 dice qué archivos se usaron y trae avisos (códigos sin pareja, huecos del feed).
 En modo REAL el `station_id` es el número de la estación (el del letrero), p. ej. `271`.
 
+### En vivo (datos de ahorita) y despliegue
+
+Con `LIVE=1` la API usa el estado de las estaciones **de este momento** (feed GBFS, se refresca cada 60 s;
+si el feed falla, sigue con lo último y reintenta a los 15 s) y los promedios reales de `real/`. La hora es la real.
+`mode` dice `VIVO + baseline REAL` y la web muestra "En vivo". Sin `LIVE`, `mode` es `REAL` y es la repetición del 29 sep.
+
+| Dónde | Variable | Valor |
+|---|---|---|
+| Railway (API) | `LIVE` | `1` |
+| Railway (API) | `CORS_ORIGINS` | la URL de Vercel, p. ej. `https://equilibici.vercel.app` (config de Miguel) |
+| Vercel (web) | `NEXT_PUBLIC_DATA_MODE` | `api` |
+| Vercel (web) | `NEXT_PUBLIC_API_URL` | la URL de Railway |
+
+Local: `LIVE=1 uvicorn services.api.main:app --reload` y en `apps/web/.env.local`: `NEXT_PUBLIC_DATA_MODE=api`.
+Para ensayar la historia de Isabel en un despliegue, pon `NEXT_PUBLIC_DATA_MODE=demo` (no necesita API) o
+`NEXT_PUBLIC_DEMO_AT=2026-09-29T07:45` con la API sin `LIVE`.
+
 La respuesta siempre dice en `mode` qué datos usó. Pendiente: restar las sospechosas reales de C2 (Línea 2):
 basta con dejar `real/c2_priority.json` (`[{station_id, suspected_expected}]`).
