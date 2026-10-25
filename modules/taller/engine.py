@@ -22,6 +22,7 @@ CONTRACTS = REPO_ROOT / "shared" / "contracts"
 
 IGNORED_MIN_DEPARTURES = 30      # salidas de otras bicis mientras la bici sigue anclada
 IGNORED_WINDOW_H = 24
+IGNORED_MAX_AGE_H = 72          # anclada más tiempo: probablemente ya la retiraron
 LOST_AFTER_DAYS = 21
 
 
@@ -104,11 +105,24 @@ def ignored_bikes(data: Data, at: datetime | None = None) -> list[dict]:
         "glob": str(data.trips_dir / "trips_*.parquet"), "at": at,
         "window": IGNORED_WINDOW_H, "lost": LOST_AFTER_DAYS, "min_dep": IGNORED_MIN_DEPARTURES,
     }).fetchall()
-    return [
-        {"station_key": st, "bike_id": bike, "docked_since": since.isoformat(timespec="minutes"),
-         "departures_while_docked": n, "signal": "bici ignorada"}
-        for st, bike, since, n in rows
-    ]
+    out = []
+    for st, bike, since, n in rows:
+        age_h = (at - since).total_seconds() / 3600
+        out.append({
+            "station_key": st, "bike_id": bike, "docked_since": since.isoformat(timespec="minutes"),
+            "hours_docked": round(age_h, 1), "departures_while_docked": n,
+            "signal": "bici ignorada" if age_h < IGNORED_MAX_AGE_H else "sin movimiento 3+ días",
+        })
+    return out
+
+
+def suspected_by_station(items: list[dict]) -> dict[str, int]:
+    """Cuenta solo las bicis ignoradas (no las sin movimiento) por estación. Alimenta C2."""
+    counts: dict[str, int] = {}
+    for i in items:
+        if i["signal"] == "bici ignorada":
+            counts[i["station_key"]] = counts.get(i["station_key"], 0) + 1
+    return counts
 
 
 def priority(data: Data) -> list[dict]:
