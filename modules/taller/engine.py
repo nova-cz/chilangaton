@@ -11,6 +11,7 @@ Tareas pendientes (ver plan unificado):
 """
 
 import json
+import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -36,11 +37,15 @@ def _example(name: str) -> list[dict]:
 
 
 def load() -> Data:
-    data_dir = os.getenv("DATA_DIR")
+    data_dir = (os.getenv("DATA_DIR") or "").strip()
     if data_dir:
         trips = Path(data_dir).resolve() / "trips"
         if any(trips.glob("trips_*.parquet")):
+            logging.info("taller: modo REAL con %s", trips)
             return Data(mode="REAL", trips_dir=trips)
+        logging.warning("taller: DATA_DIR=%r no tiene trips/trips_*.parquet; uso EJEMPLO", data_dir)
+    else:
+        logging.info("taller: sin DATA_DIR; modo EJEMPLO")
     return Data(mode="EJEMPLO", reports=_example("c4_reports"))
 
 
