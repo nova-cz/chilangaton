@@ -1,14 +1,16 @@
 "use client";
 
 import { Announce } from "@/components/shared/announce";
+import { WIDE_BUTTON } from "@/components/shared/classes";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Segmented } from "@/components/ui/segmented";
 import { cn } from "@/lib/cn";
 import { MessageCircle, Share2 } from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useId, useState, type ReactNode } from "react";
-import { ECOBICI_WHATSAPP, HELP_KINDS, helpMessage, isHelpKind, whatsappUrl, type HelpKind } from "./channels";
+import { anclajeHref, ECOBICI_WHATSAPP, HELP_KINDS, helpMessage, isHelpKind, whatsappUrl, type HelpKind } from "./channels";
 
 const TIPS: Record<HelpKind, string> = {
   robo: "Avisa a ECOBICI lo antes posible y, si puedes, haz la denuncia (abajo).",
@@ -52,7 +54,17 @@ export function HelpForm() {
       </div>
 
       <Segmented label="Qué pasó" options={HELP_KINDS} value={kind} onChange={setKind} className="w-full" />
-      <p className="text-sm text-ink">{TIPS[kind]}</p>
+      <p className="text-sm text-ink">
+        {TIPS[kind]}
+        {kind === "anclaje" ? (
+          <>
+            {" "}
+            <Link href={anclajeHref()} className="font-semibold text-brand-600 underline underline-offset-2">
+              Revisar con «Anclé aquí»
+            </Link>
+          </>
+        ) : null}
+      </p>
 
       <div className="space-y-3">
         <Field id={ids.station} label="Estación" hint="Nombre o número, como CE-014">
@@ -95,13 +107,13 @@ export function HelpForm() {
           href={whatsappUrl(message)}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn(buttonClasses("lime"), WIDE)}
+          className={cn(buttonClasses("lime"), WIDE_BUTTON)}
         >
           <MessageCircle aria-hidden className="size-4" />
           Enviar por WhatsApp
           <span className="sr-only">a ECOBICI ({ECOBICI_WHATSAPP.label}, abre WhatsApp)</span>
         </a>
-        <Button variant="soft" className={WIDE} onClick={share}>
+        <Button variant="soft" className={WIDE_BUTTON} onClick={share}>
           <Share2 aria-hidden className="size-4" />
           Compartir o copiar
         </Button>
@@ -111,9 +123,6 @@ export function HelpForm() {
     </Card>
   );
 }
-
-/** Botón a todo lo ancho que crece si el texto no cabe (pantallas de 320 px o letra grande). */
-const WIDE = "h-auto min-h-11 w-full justify-center py-2.5 text-center";
 
 const INPUT =
   "h-11 w-full rounded-2xl border border-line bg-white px-4 text-[15px] text-ink placeholder:text-ink-soft focus-visible:border-brand-500";

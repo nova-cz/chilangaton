@@ -5,6 +5,7 @@ Router FastAPI en `router.py` (`router`), montado bajo `/api/v1`. Todo en memori
 | Endpoint | Qué hace |
 |---|---|
 | `POST /returns` | "Anclé aquí": abre una verificación de 3 min contra el feed GBFS en vivo. Opcional: `baseline` con lo que la app veía al llegar |
+| `GET /returns/stations` | Catálogo real de estaciones (GBFS, se renueva cada hora) para elegir dónde se ancló |
 | `GET /returns/{id}` | La app la consulta (cada ~10 s) hasta que `status` deje de ser `revisando` |
 | `POST /incidents` | Abre un caso (`robo`, `perdida`, `anclaje`, `viaje_largo`, `discrepancia`); si ya hay uno abierto de la misma bici o verificación, se suma |
 | `GET /cases?state=&station_id=&open=` | Cola de casos (sin `user_hash`) |

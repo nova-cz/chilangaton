@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 from modules.regreso import router as regreso
 from modules.regreso.cases import CaseStore
-from modules.regreso.gbfs import FeedProblem, StationReading
+from modules.regreso.gbfs import FeedProblem, StationInfo, StationReading
 
 T0 = datetime(2026, 10, 25, 14, 0, tzinfo=UTC)
 
@@ -23,6 +23,14 @@ class FakeFeed:
                               last_reported=now, feed_updated=now)
 
 
+class FakeCatalog:
+    def __init__(self, stations):
+        self._stations = stations
+
+    async def stations(self):
+        return self._stations
+
+
 @pytest.fixture
 def env():
     feed, clock = FakeFeed(), {"now": T0}
@@ -33,6 +41,8 @@ def env():
     app.dependency_overrides[regreso.get_cases] = lambda: store
     app.dependency_overrides[regreso.get_returns] = lambda: checks
     app.dependency_overrides[regreso.now_utc] = lambda: clock["now"]
+    app.dependency_overrides[regreso.get_catalog] = lambda: FakeCatalog(
+        [StationInfo(station_id="1", code="710", name="CE-710 Molino del Rey", lat=19.41, lon=-99.19)])
     return TestClient(app), feed, clock
 
 
@@ -71,3 +81,17 @@ def test_caso_inexistente(env):
     assert client.get("/api/v1/cases/nope").status_code == 404
     assert client.get("/api/v1/returns/nope").status_code == 404
     assert client.post("/api/v1/returns", json={"station_id": "no-existe"}).status_code == 404
+
+
+def test_catalogo_de_estaciones(env):
+    client, _, _ = env
+    r = client.get("/api/v1/returns/stations")
+    assert r.status_code == 200
+    assert r.json() == [{"station_id": "1", "code": "710", "name": "CE-710 Molino del Rey",
+                         "lat": 19.41, "lon": -99.19}]
+
+
+def test_catalogo_caido(env):
+    client, _, _ = env
+    client.app.dependency_overrides[regreso.get_catalog] = lambda: FakeCatalog(None)
+    assert client.get("/api/v1/returns/stations").status_code == 503
