@@ -6,62 +6,98 @@ import { DemoBadge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
 import type { DemoDataset } from "@/features/demo/types";
-import { cn } from "@/lib/cn";
 import { useMediaQuery } from "@/lib/use-media-query";
-import { Box, LayoutDashboard, List, Map as MapIcon, Target } from "lucide-react";
+import { Box, LayoutDashboard, List, LocateFixed, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BottomNav, type AppView } from "./bottom-nav";
+import { BottomSheet, type SheetSnap } from "./bottom-sheet";
+import { FilterChips, filterStations, type StationFilter } from "./filter-chips";
+import { MapOverview } from "./map-overview";
 import { MissionCard } from "./mission-card";
 import { StationCard } from "./station-card";
 import { StationList } from "./station-list";
 import { StationSearch } from "./station-search";
 
-/** Pantalla principal /app: mapa + búsqueda + tarjeta flotante + lista equivalente. */
+/** Alto visible del bottom sheet en modo compacto (px). */
+const PEEK = 250;
+
+/** Pantalla principal /app: mapa 3D + búsqueda + filtros + bottom sheet + lista equivalente. */
 export function AppExperience({ data }: { data: DemoDataset }) {
-  const { stations, missions } = data;
+  const { stations: allStations, missions } = data;
   const [view, setView] = useState<AppView>("map");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [view3d, setView3d] = useState(false);
+  const [view3d, setView3d] = useState(true);
   const [supports3d, setSupports3d] = useState(false);
+  const [filter, setFilter] = useState<StationFilter>("all");
+  const [snap, setSnap] = useState<SheetSnap>("compact");
+  const [recenter, setRecenter] = useState(0);
+  const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
+  const stations = filterStations(allStations, filter);
   const selected = stations.find((s) => s.id === selectedId) ?? null;
   const mission = missions[0];
   const showMap = view !== "list";
 
   const changeView = (next: AppView) => {
+    // La estación abierta pertenece a la vista donde se abrió: al cambiar de vista se cierra.
+    if (next !== view) setSelectedId(null);
     setView(next);
-    if (next === "missions") setSelectedId(null);
+    setSnap(next === "missions" ? "expanded" : "compact");
   };
+  // Elegir una estación (lista, búsqueda o resumen) siempre lleva al mapa, donde vive su ficha.
   const pickStation = (id: string) => {
     setSelectedId(id);
-    if (view === "missions") setView("map");
+    setSnap("compact");
+    setView("map");
+  };
+  const clearSelection = () => {
+    setSelectedId(null);
+    setSnap("compact");
   };
 
-  const sheetContent = selected ? (
-    <StationCard station={selected} onClose={() => setSelectedId(null)} />
-  ) : view === "missions" || (isDesktop && mission) ? (
-    <div className="space-y-3">
-      {mission ? <MissionCard mission={mission} stations={stations} onShowStation={pickStation} /> : null}
-      <p className="px-1 text-sm text-ink-muted">
-        Toca una estación en el mapa o búscala para ver bicis y anclajes. Todos los datos de esta pantalla son DEMO.
-      </p>
-    </div>
-  ) : view === "map" ? (
-    <div className="flex items-center justify-between gap-3">
-      <div className="min-w-0">
-        <p className="font-semibold">{stations.length} estaciones en el corredor</p>
-        <p className="text-sm text-ink-muted">Toca un marcador para ver detalles</p>
-      </div>
-      {mission ? (
-        <Button variant="soft" size="sm" onClick={() => changeView("missions")}>
-          <Target aria-hidden className="size-4" />
-          Misión
-        </Button>
-      ) : null}
-    </div>
+  const overview = (
+    <MapOverview
+      stations={stations}
+      onPick={pickStation}
+      showList={isDesktop || snap === "expanded"}
+      mission={mission ? { title: mission.title, onOpen: () => router.push("/app/mision") } : undefined}
+    />
+  );
+  const missionCard = mission ? (
+    <MissionCard className="animate-rise" mission={mission} stations={allStations} onShowStation={pickStation} />
   ) : null;
+
+  const panelContent = selected ? (
+    <StationCard key={selected.id} station={selected} onClose={clearSelection} />
+  ) : view === "missions" ? (
+    missionCard
+  ) : view === "map" || isDesktop ? (
+    overview
+  ) : null;
+
+  const mapControls = (
+    <>
+      <Button
+        variant="glass"
+        size="md"
+        aria-pressed={view3d}
+        disabled={!supports3d}
+        onClick={() => setView3d((v) => !v)}
+        title={supports3d ? "Alternar vista 3D (edificios de OpenStreetMap)" : "El estilo de mapa no trae alturas de edificios"}
+        aria-label={view3d ? "Cambiar a vista 2D" : "Cambiar a vista 3D"}
+        className="px-4 font-bold"
+      >
+        {view3d ? <MapIcon aria-hidden className="size-4" /> : <Box aria-hidden className="size-4" />}
+        {view3d ? "2D" : "3D"}
+      </Button>
+      <Button variant="glass" size="icon" aria-label="Encuadrar el corredor" onClick={() => setRecenter((n) => n + 1)}>
+        <LocateFixed aria-hidden className="size-5" />
+      </Button>
+    </>
+  );
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-surface">
@@ -70,12 +106,13 @@ export function AppExperience({ data }: { data: DemoDataset }) {
         <div className="absolute inset-0">
           <StationMap
             stations={stations}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
+            selectedId={selected?.id ?? null}
+            onSelect={(id) => (id ? pickStation(id) : clearSelection())}
             view3d={view3d}
             on3dSupport={setSupports3d}
-            focusOffset={isDesktop ? [210, 0] : [0, -190]}
-            fitPadding={isDesktop ? { top: 110, bottom: 60, left: 470, right: 90 } : { top: 170, bottom: 230, left: 36, right: 72 }}
+            recenterSignal={recenter}
+            focusOffset={isDesktop ? [210, 0] : [0, -85]}
+            fitPadding={isDesktop ? { top: 120, bottom: 70, left: 470, right: 90 } : { top: 190, bottom: 340, left: 24, right: 24 }}
             errorAction={
               <Button variant="dark" size="sm" onClick={() => changeView("list")}>
                 <List aria-hidden className="size-4" /> Ver lista
@@ -84,30 +121,32 @@ export function AppExperience({ data }: { data: DemoDataset }) {
           />
         </div>
       ) : (
-        <div className="absolute inset-0 overflow-y-auto px-4 pt-[152px] pb-36 lg:pt-28 lg:pr-8 lg:pb-8 lg:pl-[468px]">
-          <div className="mx-auto max-w-2xl">
-            {!isDesktop && mission && !selected ? (
-              <MissionCard className="mb-5" mission={mission} stations={stations} onShowStation={pickStation} />
-            ) : null}
-            <StationList stations={stations} selectedId={selectedId} onSelect={setSelectedId} />
+        <div className="absolute inset-0 overflow-y-auto px-4 pt-[196px] pb-40 lg:pt-[196px] lg:pr-8 lg:pb-8 lg:pl-[468px]">
+          <div key="list" className="mx-auto max-w-2xl animate-rise">
+            <StationList stations={stations} selectedId={selected?.id ?? null} onSelect={pickStation} />
           </div>
         </div>
       )}
 
-      {/* Header + búsqueda */}
-      <header className="pt-safe pointer-events-none absolute inset-x-0 top-0 z-20 px-3 lg:px-4">
+      {/* Cabecera: marca, búsqueda y filtros (una sola columna: nada se encima) */}
+      <header className="pt-safe pointer-events-none absolute inset-x-0 top-0 z-30 px-3 lg:px-4">
         <div className="flex items-start justify-between gap-3">
           <div className="pointer-events-auto w-full space-y-2.5 lg:w-[420px]">
-            <div className="glass flex h-14 items-center justify-between rounded-full pr-2 pl-2.5">
+            <div className="glass flex h-14 items-center justify-between rounded-full pr-1.5 pl-2.5">
               <Logo subtitle="Bicis útiles, a tiempo" />
               <div className="flex items-center gap-1.5">
                 <DemoBadge />
-                <Link href="/panel" className={buttonClasses("ghost", "icon", "size-10 lg:hidden")} aria-label="Ir al panel operativo">
-                  <LayoutDashboard aria-hidden className="size-5" />
+                <Link
+                  href="/panel"
+                  className={buttonClasses("dark", "icon", "size-10 lg:hidden")}
+                  aria-label="Ir al panel operativo"
+                >
+                  <LayoutDashboard aria-hidden className="size-[18px]" />
                 </Link>
               </div>
             </div>
-            <StationSearch stations={stations} onPick={pickStation} />
+            <StationSearch stations={allStations} onPick={pickStation} />
+            {view !== "missions" ? <FilterChips stations={allStations} value={filter} onChange={setFilter} /> : null}
           </div>
 
           <div className="pointer-events-auto hidden items-center gap-2 lg:flex">
@@ -129,38 +168,31 @@ export function AppExperience({ data }: { data: DemoDataset }) {
         </div>
       </header>
 
-      {/* Control 2D / 3D */}
-      {showMap ? (
-        <div className="absolute top-[152px] right-3 z-10 flex flex-col gap-2 lg:top-24 lg:right-4">
-          <Button
-            variant="glass"
-            size="icon"
-            aria-pressed={view3d}
-            disabled={!supports3d}
-            onClick={() => setView3d((v) => !v)}
-            title={supports3d ? "Alternar vista 3D (edificios de OpenStreetMap)" : "El estilo de mapa no trae alturas de edificios"}
-            aria-label={view3d ? "Cambiar a vista 2D" : "Cambiar a vista 3D"}
-            className={cn("text-xs font-bold", view3d && "bg-brand-900 text-white hover:bg-brand-700")}
-          >
-            {view3d ? <MapIcon aria-hidden className="size-5" /> : <Box aria-hidden className="size-5" />}
-          </Button>
-        </div>
-      ) : null}
-
-      {/* Bottom sheet (móvil) / panel lateral (escritorio) */}
-      {sheetContent ? (
-        <aside
-          aria-label="Detalle"
-          className={cn(
-            "absolute inset-x-0 bottom-0 z-20 px-3 pb-[calc(max(env(safe-area-inset-bottom),0.75rem)+80px)]",
-            "lg:inset-x-auto lg:top-[152px] lg:bottom-auto lg:left-4 lg:w-[420px] lg:px-0 lg:pb-0",
-          )}
+      {/* Escritorio: controles del mapa arriba a la derecha y panel lateral */}
+      {isDesktop ? (
+        <>
+          {showMap ? <div className="absolute top-24 right-4 z-10 flex gap-2">{mapControls}</div> : null}
+          {panelContent ? (
+            <aside aria-label="Detalle" className="absolute top-[212px] bottom-4 left-4 z-20 w-[420px]">
+              <div
+                key={`${view}-${selected?.id ?? "none"}`}
+                className="opaque-pane max-h-full animate-sheet-in overflow-y-auto rounded-[var(--radius-sheet)] p-4"
+              >
+                {panelContent}
+              </div>
+            </aside>
+          ) : null}
+        </>
+      ) : panelContent ? (
+        <BottomSheet
+          snap={snap}
+          onSnap={setSnap}
+          peek={PEEK}
+          label="Detalle"
+          controls={showMap ? mapControls : undefined}
         >
-          <div className="glass mx-auto max-h-[62dvh] max-w-md animate-sheet-in overflow-y-auto rounded-[var(--radius-sheet)] p-4 lg:max-h-[calc(100dvh-170px)] lg:max-w-none">
-            <div aria-hidden className="mx-auto -mt-1 mb-3 h-1.5 w-10 rounded-full bg-ink/15 lg:hidden" />
-            {sheetContent}
-          </div>
-        </aside>
+          <div key={`${view}-${selected?.id ?? "none"}`}>{panelContent}</div>
+        </BottomSheet>
       ) : null}
 
       <BottomNav view={view} onView={changeView} />

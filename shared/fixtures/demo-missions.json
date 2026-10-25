@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "label": "DEMO",
+    "description": "Camino de misiones y puntos inventados para la maqueta. Puntos virtuales: sin canje real, no es contrato entre lineas.",
+    "generated_at": "2026-10-25"
+  },
+  "player": { "level": 2, "points": 100, "streak_days": 3 },
+  "missions": [
+    { "id": "demo-mision-1", "from_station_id": "demo-05", "to_station_id": "demo-01", "title": "Lleva una bici de Reforma a Buenavista", "window_label": "Ejemplo · 7:00–10:00", "points": 50, "state": "completed" },
+    { "id": "demo-mision-2", "from_station_id": "demo-06", "to_station_id": "demo-02", "title": "De Reforma Río a Buenavista Sur", "window_label": "Ejemplo · 7:00–10:00", "points": 50, "state": "completed" },
+    { "id": "demo-mision-3", "from_station_id": "demo-10", "to_station_id": "demo-03", "title": "De Polanco a San Rafael", "window_label": "Ejemplo · 7:30–9:30", "points": 60, "state": "available" },
+    { "id": "demo-mision-4", "from_station_id": "demo-08", "to_station_id": "demo-04", "title": "De Anzures a San Rafael Poniente", "window_label": "Ejemplo · 7:00–10:00", "points": 60, "state": "locked" },
+    { "id": "demo-mision-5", "from_station_id": "demo-11", "to_station_id": "demo-12", "title": "De Polanco Parque a Juárez", "window_label": "Ejemplo · 8:00–10:00", "points": 70, "state": "locked" },
+    { "id": "demo-mision-6", "from_station_id": "demo-09", "to_station_id": "demo-01", "title": "De Anzures Parque a Buenavista", "window_label": "Ejemplo · 7:00–9:00", "points": 80, "state": "locked" }
+  ]
+}
