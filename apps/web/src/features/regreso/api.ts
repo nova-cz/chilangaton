@@ -68,6 +68,22 @@ export interface Case {
   updated_at: string;
   history: CaseEvent[];
   next_states: BikeState[];
+  /** Escenario SIMULADO: se muestra con <SimulatedBadge/> y no cuenta en indicadores ni en C5. */
+  simulated: boolean;
+}
+
+export interface Scenario {
+  key: string;
+  title: string;
+  story: string;
+  expected: BikeState;
+  outcome: string;
+}
+
+export interface ScenarioRun extends Scenario {
+  obtained: BikeState;
+  passed: boolean;
+  case: Case;
 }
 
 export interface IncidentIn {
@@ -102,6 +118,8 @@ export const regresoApi = {
     apiPost<Case>(`/cases/${encodeURIComponent(caseId)}/transitions`, body),
   assign: (caseId: string, body: { guardian_id: string; actor: Actor }) =>
     apiPost<Case>(`/cases/${encodeURIComponent(caseId)}/assign`, body),
+  scenarios: () => apiGet<Scenario[]>("/scenarios"),
+  runScenario: (key: string) => apiPost<ScenarioRun>(`/scenarios/${encodeURIComponent(key)}/run`, {}),
 };
 
 export function bikesTotal(snapshot: StationSnapshot | null): number | null {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge, SimulatedBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ApiError } from "@/lib/api";
@@ -53,6 +53,7 @@ export function CaseDetail({
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone={STATE_TONE[item.state]}>{STATE_LABEL[item.state]}</Badge>
           {!item.is_open ? <Badge tone="neutral">Cerrado</Badge> : null}
+          {item.simulated ? <SimulatedBadge /> : null}
         </div>
         <h2 id={`case-${item.case_id}`} className="text-xl font-bold tracking-tight">
           {TYPE_LABEL[item.type]}

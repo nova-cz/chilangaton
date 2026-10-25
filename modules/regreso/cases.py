@@ -68,6 +68,7 @@ class Case:
     created_at: datetime
     updated_at: datetime
     assigned_to: str | None = None
+    simulated: bool = False
     history: list[CaseEvent] = field(default_factory=list)
 
     @property
@@ -112,7 +113,7 @@ class CaseStore:
 
     def _open_duplicate(self, incident: IncidentIn) -> Case | None:
         for case in self._cases.values():
-            if not case.is_open:
+            if not case.is_open or case.simulated:
                 continue
             if incident.bike_id and case.bike_id == incident.bike_id:
                 return case
@@ -120,8 +121,9 @@ class CaseStore:
                 return case
         return None
 
-    def open(self, incident: IncidentIn, now: datetime) -> tuple[Case, bool]:
-        """Abre un caso, o suma el reporte al caso abierto de la misma bici o verificación."""
+    def open(self, incident: IncidentIn, now: datetime, simulated: bool = False) -> tuple[Case, bool]:
+        """Abre un caso, o suma el reporte al caso abierto de la misma bici o verificación.
+        `simulated` solo lo usan los escenarios de scenarios.py; nunca llega desde la API."""
         if dup := self._open_duplicate(incident):
             dup.log(now, dup.state, incident.source, incident.note or f"Reporte adicional: {incident.type}")
             return dup, False
@@ -135,6 +137,7 @@ class CaseStore:
             bike_id=incident.bike_id,
             return_id=incident.return_id,
             user_hash=incident.user_hash,
+            simulated=simulated,
             created_at=now,
             updated_at=now,
         )
@@ -182,7 +185,7 @@ class CaseStore:
         """Contrato C5 para la Línea 1."""
         by_station: dict[str, list[int]] = defaultdict(lambda: [0, 0])
         for case in self._cases.values():
-            if case.station_id is None:
+            if case.station_id is None or case.simulated:  # lo SIMULADO no entra al contrato
                 continue
             if case.is_open:
                 by_station[case.station_id][0] += 1

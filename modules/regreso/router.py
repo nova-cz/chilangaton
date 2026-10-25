@@ -6,11 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
 from shared.contracts.c5_cases_count import CasesCountResponse
 
-from . import returns
+from . import returns, scenarios
 from .cases import CaseNotFound, CaseStore, InvalidTransition
 from .gbfs import FeedProblem, StationCatalog, StationFeed
-from .schemas import (AssignIn, BikeState, CaseOut, IncidentIn, IncidentOut, ReturnIn, ReturnOut, StationOut,
-                      TransitionIn)
+from .schemas import (AssignIn, BikeState, CaseOut, IncidentIn, IncidentOut, ReturnIn, ReturnOut, ScenarioOut,
+                      ScenarioRunOut, StationOut, TransitionIn)
 
 router = APIRouter(tags=["Línea 5 · Regreso Seguro"])
 
@@ -130,3 +130,21 @@ def assign_case(case_id: str, body: AssignIn, store: CaseStore = Depends(get_cas
     except InvalidTransition as e:
         raise HTTPException(status.HTTP_409_CONFLICT, str(e)) from None
     return CaseOut.model_validate(case)
+
+
+# ---------- R4 · Escenarios SIMULADOS ----------
+@router.get("/scenarios", response_model=list[ScenarioOut])
+def list_scenarios():
+    return [ScenarioOut(key=s.key, title=s.title, story=s.story, expected=s.expected, outcome=s.outcome)
+            for s in scenarios.SCENARIOS.values()]
+
+
+@router.post("/scenarios/{key}/run", response_model=ScenarioRunOut)
+def run_scenario(key: str, store: CaseStore = Depends(get_cases), now: datetime = Depends(now_utc)):
+    """Crea un caso SIMULADO y lo lleva hasta su resultado esperado. No entra al contrato C5."""
+    if key not in scenarios.SCENARIOS:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Escenario no encontrado")
+    scenario, case = scenarios.run(store, key, now)
+    return ScenarioRunOut(key=scenario.key, title=scenario.title, story=scenario.story,
+                          expected=scenario.expected, outcome=scenario.outcome, obtained=case.state,
+                          passed=case.state is scenario.expected, case=CaseOut.model_validate(case))

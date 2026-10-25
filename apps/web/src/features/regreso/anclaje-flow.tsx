@@ -230,7 +230,7 @@ function Result({
   const now = bikesTotal(check.latest);
   return (
     <Card className={cn("animate-pop space-y-3 border-transparent p-5", copy.card)}>
-      <Semaforo tone={copy.tone} label={copy.label} />
+      <Semaforo tone={copy.tone} label={copy.label} className={copy.tone === "ok" ? "text-brand-700" : undefined} />
       <h2 className="text-xl font-bold tracking-tight">{check.message}</h2>
       <p className="text-[15px] text-ink">{copy.body}</p>
       {before !== null && now !== null && check.latest ? (

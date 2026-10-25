@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge, SimulatedBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Segmented } from "@/components/ui/segmented";
@@ -14,6 +14,7 @@ import { CaseDetail } from "./case-detail";
 import { STATE_LABEL, STATE_TONE, TYPE_LABEL } from "./case-labels";
 import { formatCdmxTime } from "./channels";
 import { NewCaseForm } from "./new-case-form";
+import { ScenariosCard } from "./scenarios-card";
 
 const REFRESH_MS = 15_000;
 type Filter = "open" | "closed" | "all";
@@ -61,12 +62,13 @@ export function CasesView() {
 
   const totals = useMemo(() => {
     if (!cases) return null;
-    const open = cases.filter((c) => c.is_open);
+    const real = cases.filter((c) => !c.simulated); // lo SIMULADO nunca entra a los indicadores
+    const open = real.filter((c) => c.is_open);
     return {
       open: open.length,
       review: open.filter((c) => c.state === "en_revision" || c.state === "devolucion_en_duda").length,
       unassigned: open.filter((c) => !c.assigned_to).length,
-      reincorporated: cases.filter((c) => c.state === "reincorporada").length,
+      reincorporated: real.filter((c) => c.state === "reincorporada").length,
     };
   }, [cases]);
 
@@ -195,6 +197,7 @@ export function CasesView() {
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold">{TYPE_LABEL[c.type]}</span>
                       <Badge tone={STATE_TONE[c.state]}>{STATE_LABEL[c.state]}</Badge>
+                      {c.simulated ? <SimulatedBadge /> : null}
                     </span>
                     <span className="text-sm text-ink-muted">
                       {nameOf(c.station_id) ?? (c.station_id ? `Estación ${c.station_id}` : "Sin estación")} ·{" "}
@@ -215,6 +218,13 @@ export function CasesView() {
           </Card>
         )}
       </div>
+
+      <ScenariosCard
+        onRun={(item) => {
+          upsert(item);
+          setFilter("all");
+        }}
+      />
 
       <Card>
         <CardHeader
