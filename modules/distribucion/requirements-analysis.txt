@@ -1,0 +1,4 @@
+# Solo para analisis y simulacion offline (S2/S3). NO se instalan en la API: el router lee los JSON de fixtures/.
+duckdb>=1.0
+pandas>=2.0
+pyarrow>=15
