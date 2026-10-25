@@ -1,42 +1,37 @@
-# Equilibici · datos compartidos (rama `data`)
+# Equilibici 2.0
 
-Esta rama solo guarda los datos del hackatón. No tiene código de la app.
+Prototipo para el **Chilangotón 2026**: una PWA (app ciudadana `/app` + panel operativo `/panel`) sobre un motor en Python (FastAPI).
+Proyecto independiente, **sin afiliación con ECOBICI**, su operador ni Semovi. Todo dato marcado **DEMO** es inventado; todo resultado marcado **SIMULADO** viene de un simulador.
 
-## Cómo bajar los datos sin cambiar de rama
+## Arranque local
 
-```
-git fetch origin data
-git checkout origin/data -- data/
-git reset data/
-```
+Requisitos: Node ≥ 20.9, Python ≥ 3.12.
 
-Los archivos quedan en tu carpeta `data/` pero no se agregan a tu commit. En `main`, `data/` va en `.gitignore`.
+```bash
+# Web (http://localhost:3000)
+cd apps/web
+npm install
+npm run dev
 
-## Qué hay
-
-| Ruta | Qué es | Hora |
-|---|---|---|
-| `data/trips/trips_2026-07.parquet` … `trips_2026-09.parquet` | Viajes oficiales de ECOBICI con columnas iguales | `*_local` en hora CDMX, `*_utc` en UTC |
-| `data/feed/feed_2026-08.parquet`, `feed_2026-09.parquet` | Historial del feed GBFS (MaxHalford, cada ~12 min) | UTC (`committed_at_utc`) |
-| `data/stations.parquet` | Catálogo de estaciones y equivalencia CSV ↔ `station_id` (columna `key`) | — |
-| `data/demo/feed_demo_day.parquet` | Feed del martes 29 sep 2026, 7–10 h | UTC |
-| `data/demo/trips_demo_day.parquet` | Viajes de ese mismo rato | CDMX y UTC |
-| `data/MANIFEST.md` | Filas, fechas y avisos de la última corrida | — |
-
-Para unir viajes con estaciones usa `start_key` / `end_key` contra `stations.key`.
-
-## Cómo regenerarlos
-
-```
-pip install duckdb pandas pyarrow requests
-python prepare_data.py            # todo
-python prepare_data.py demo       # solo el día demo (cambia DEMO_DAY en el script)
+# API (http://localhost:8000/health · docs en /docs) — desde la raíz del repo
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements-dev.txt
+uvicorn services.api.main:app --reload
 ```
 
-## Fuentes
+Verificación: `npm run lint && npm run typecheck && npm run build` (en `apps/web`) y `pytest` (en la raíz).
 
-- Viajes: https://ecobici.cdmx.gob.mx/datos-abiertos/
-- Historial del feed: https://github.com/MaxHalford/bike-sharing-history (licencia MIT)
-- Feed en vivo: https://gbfs.mex.lyftbikes.com/gbfs/gbfs.json
+## Estructura
 
-Reglas: nadie descarga datos por su cuenta; todo se guarda en UTC y se muestra en hora CDMX. GitHub rechaza archivos de más de 100 MB: si alguno pasa, va en Drive y aquí se deja la liga en `MANIFEST.md`.
+```
+apps/web/            Next.js 16 (App Router) + Tailwind 4 + MapLibre + Serwist
+services/api/        FastAPI: main.py, core/ (config, errores, cargador de módulos), routers/ (health, demo)
+modules/<línea>/     Un paquete por línea con router.py (se monta solo en /api/v1)
+shared/fixtures/     Datos DEMO compartidos por web y API
+shared/contracts/    Contratos entre líneas (los publica cada dueño)
+docs/                architecture.md · frontend-roadmap.md
+```
+
+Los datos reales viven en la rama `data` (ver su README); `data/` está en `.gitignore`.
+
+Más detalle: [`docs/architecture.md`](docs/architecture.md) · Guía para agentes y equipo: [`CLAUDE.md`](CLAUDE.md).

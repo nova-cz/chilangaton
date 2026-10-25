@@ -1,0 +1,33 @@
+{
+  "_meta": {
+    "label": "DEMO",
+    "description": "Estaciones y conteos inventados para la maqueta del esqueleto (S1). No son datos de ECOBICI, no son pronósticos y no son un contrato entre líneas.",
+    "replaced_by": "Contratos C1 (useful_bikes, Línea 1) y C3 (forecast, Línea 3) después del corte A",
+    "outlook_values": ["ok", "low", "empty", "full"],
+    "generated_at": "2026-10-25"
+  },
+  "stations": [
+    { "id": "demo-01", "name": "Buenavista Norte", "zone": "Buenavista", "lat": 19.4472, "lon": -99.1519, "capacity": 31, "bikes_available": 2, "docks_available": 28, "example_outlook": { "15": "low", "30": "empty", "60": "empty" } },
+    { "id": "demo-02", "name": "Buenavista Sur", "zone": "Buenavista", "lat": 19.4441, "lon": -99.1538, "capacity": 23, "bikes_available": 0, "docks_available": 22, "example_outlook": { "15": "empty", "30": "empty", "60": "low" } },
+    { "id": "demo-03", "name": "San Rafael Centro", "zone": "San Rafael", "lat": 19.4402, "lon": -99.1603, "capacity": 19, "bikes_available": 4, "docks_available": 15, "example_outlook": { "15": "low", "30": "low", "60": "empty" } },
+    { "id": "demo-04", "name": "San Rafael Poniente", "zone": "San Rafael", "lat": 19.4378, "lon": -99.1652, "capacity": 15, "bikes_available": 7, "docks_available": 8, "example_outlook": { "15": "ok", "30": "low", "60": "low" } },
+    { "id": "demo-05", "name": "Reforma Glorieta", "zone": "Reforma", "lat": 19.4300, "lon": -99.1622, "capacity": 39, "bikes_available": 34, "docks_available": 3, "example_outlook": { "15": "ok", "30": "full", "60": "full" } },
+    { "id": "demo-06", "name": "Reforma Río", "zone": "Reforma", "lat": 19.4268, "lon": -99.1680, "capacity": 27, "bikes_available": 21, "docks_available": 5, "example_outlook": { "15": "ok", "30": "ok", "60": "full" } },
+    { "id": "demo-07", "name": "Cuauhtémoc Lerma", "zone": "Cuauhtémoc", "lat": 19.4316, "lon": -99.1578, "capacity": 21, "bikes_available": 11, "docks_available": 9, "example_outlook": { "15": "ok", "30": "ok", "60": "ok" } },
+    { "id": "demo-08", "name": "Anzures Oriente", "zone": "Anzures", "lat": 19.4295, "lon": -99.1762, "capacity": 25, "bikes_available": 18, "docks_available": 6, "example_outlook": { "15": "ok", "30": "ok", "60": "full" } },
+    { "id": "demo-09", "name": "Anzures Parque", "zone": "Anzures", "lat": 19.4318, "lon": -99.1805, "capacity": 17, "bikes_available": 9, "docks_available": 8, "example_outlook": { "15": "ok", "30": "ok", "60": "ok" } },
+    { "id": "demo-10", "name": "Polanco Masaryk", "zone": "Polanco", "lat": 19.4321, "lon": -99.1918, "capacity": 29, "bikes_available": 24, "docks_available": 4, "example_outlook": { "15": "ok", "30": "full", "60": "full" } },
+    { "id": "demo-11", "name": "Polanco Parque Lincoln", "zone": "Polanco", "lat": 19.4295, "lon": -99.1975, "capacity": 23, "bikes_available": 15, "docks_available": 7, "example_outlook": { "15": "ok", "30": "ok", "60": "ok" } },
+    { "id": "demo-12", "name": "Juárez Bucareli", "zone": "Juárez", "lat": 19.4282, "lon": -99.1545, "capacity": 19, "bikes_available": 6, "docks_available": 0, "example_outlook": { "15": "full", "30": "full", "60": "low" } }
+  ],
+  "missions": [
+    {
+      "id": "demo-mision-1",
+      "from_station_id": "demo-05",
+      "to_station_id": "demo-01",
+      "title": "Lleva una bici de Reforma a Buenavista",
+      "reward": { "kind": "virtual", "label": "Recompensa virtual de ejemplo" },
+      "window_label": "Ejemplo · mañana 7:00–10:00"
+    }
+  ]
+}
