@@ -148,12 +148,63 @@ def build_baseline_from_trips(trips_glob: str, end_date: str | None = None, days
     return base, travel
 
 
+GBFS_ROOT = "https://gbfs.mex.lyftbikes.com/gbfs/en"
+
+
+def station_key(x) -> str | None:
+    """Mismo criterio que prepare_data.py: 'CE-014' -> '14', '271-272' -> '271-272'."""
+    import re
+    if x is None:
+        return None
+    s = str(x).strip().upper().replace("CE-", "").replace("CE", "")
+    s = re.sub(r"\s+", "", s)
+    s = re.sub(r"\.0$", "", s)
+    s = "-".join(p.lstrip("0") or "0" if p.isdigit() else p for p in s.split("-"))
+    return s or None
+
+
+def load_live(fetch=None) -> tuple[dict, dict, dict]:
+    """Estaciones y estado ACTUAL desde el feed GBFS en vivo (dos JSON chicos)."""
+    import requests
+    fetch = fetch or (lambda name: requests.get(f"{GBFS_ROOT}/{name}.json", timeout=20).json())
+    info = fetch("station_information")["data"]["stations"]
+    status = {s["station_id"]: s for s in fetch("station_status")["data"]["stations"]}
+    stations, states = {}, {}
+    for s in info:
+        sid = str(s["station_id"])
+        st = status.get(s["station_id"])
+        if not st or not st.get("is_installed", 1):
+            continue
+        stations[sid] = Station(sid, s.get("name", sid), float(s["lat"]), float(s["lon"]),
+                                int(s.get("capacity") or 0))
+        ts = datetime.fromtimestamp(int(st.get("last_reported", 0)), ZoneInfo("UTC")).isoformat()
+        states[sid] = State(
+            station_id=sid, ts=ts,
+            useful_bikes=int(st.get("num_bikes_available", 0)),       # ya excluye deshabilitadas
+            docks_available=int(st.get("num_docks_available", 0)),
+            docks_disabled=int(st.get("num_docks_disabled", 0) or 0),
+            is_renting=bool(st.get("is_renting", 1)), is_returning=bool(st.get("is_returning", 1)))
+    # equivalencia código del CSV -> station_id, para unir con el baseline
+    keymap = {station_key(s.get("short_name") or s.get("name")): str(s["station_id"]) for s in info}
+    return stations, states, keymap
+
+
 def load() -> Data:
-    data_dir = os.getenv("DATA_DIR")
+    """LIVE=1 → estaciones y estado reales del feed; DATA_DIR → baseline real de viajes."""
     d = load_fixtures()
+    keymap = None
+    if os.getenv("LIVE") == "1":
+        d.stations, d.states, keymap = load_live()
+        d.mode = "VIVO + baseline de EJEMPLO"
+    data_dir = os.getenv("DATA_DIR")
     if data_dir:
         base, travel = build_baseline_from_trips(str(Path(data_dir) / "trips" / "*.parquet"))
-        d.baseline, d.travel, d.mode = base, travel, "REAL"
+        if keymap:  # pasar de códigos del CSV a station_id del feed
+            base = {(keymap[k], dt, b): v for (k, dt, b), v in base.items() if k in keymap}
+            travel = {(keymap[a], keymap[b]): m for (a, b), m in travel.items()
+                      if a in keymap and b in keymap}
+        d.baseline, d.travel = base, travel
+        d.mode = "REAL" if keymap else "baseline REAL + estaciones de EJEMPLO"
     return d
 
 

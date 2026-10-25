@@ -36,6 +36,12 @@ Prueba rápida: `/api/v1/viaje/recommendations?origin=271&destination=14&at=2026
 
 ## Datos
 
-- Modo **EJEMPLO** (por defecto): `fixtures/` con valores inventados. Las respuestas dicen `"mode": "EJEMPLO"`.
-- Modo **REAL**: `DATA_DIR=/ruta/a/data uvicorn ...` usa `data/trips/*.parquet` (rama `data`) para el baseline y las duraciones.
-  Pendiente al corte de las 13:00: leer estaciones de `data/stations.parquet` y el estado actual de C1/C2 reales.
+| Modo | Cómo se activa | Qué usa |
+|---|---|---|
+| EJEMPLO | Por defecto | `fixtures/` con valores inventados |
+| VIVO | `LIVE=1` | Estaciones e inventario reales de ahorita desde el feed GBFS (dos JSON chicos); demanda aún de ejemplo |
+| REAL | `LIVE=1 DATA_DIR=/ruta/a/data` | Lo anterior + demanda y duraciones reales de `data/trips/*.parquet` (rama `data`) |
+
+Ejemplo: `LIVE=1 DATA_DIR=~/Desktop/chilangaton-data/data uvicorn modules.viaje.dev_main:app --port 8003`
+
+La respuesta siempre dice en `mode` qué datos usó. Pendiente: restar las sospechosas reales de C2 (Línea 2) cuando exista su endpoint.
