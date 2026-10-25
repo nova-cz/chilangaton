@@ -25,7 +25,11 @@ def priority():
 def ignored(at: str | None = None):
     """D2 · Bicis ignoradas en `at` (hora CDMX, p. ej. 2026-09-22T08:00). Sin `at`: último dato."""
     when = datetime.fromisoformat(at) if at else None
-    return {"mode": DATA.mode, "items": engine.ignored_bikes(DATA, when)}
+    items = engine.ignored_bikes(DATA, when)
+    summary = {"bici ignorada": 0, "sin movimiento 3+ días": 0}
+    for i in items:
+        summary[i["signal"]] += 1
+    return {"mode": DATA.mode, "summary": summary, "items": items}
 
 
 @router.get("/loss-risk", response_model=dict)
