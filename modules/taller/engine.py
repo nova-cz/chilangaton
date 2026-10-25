@@ -189,8 +189,53 @@ def priority(data: Data, at: datetime | None = None) -> list[dict]:
     return sorted(items, key=lambda i: i["priority_score"], reverse=True)
 
 
-def loss_risk(data: Data) -> list[dict]:
-    """D4. En modo EJEMPLO devuelve el ejemplo de C6."""
+LOSS_SQL = """
+WITH t AS (
+    SELECT CAST(bike_id AS VARCHAR) AS bike_id, start_local, end_key, end_local
+    FROM read_parquet($glob)
+    WHERE start_local IS NOT NULL AND end_local IS NOT NULL AND start_local <= $at
+),
+last AS (                        -- último viaje de cada bici hasta `at`
+    SELECT bike_id,
+           arg_max(end_key, end_local) AS station_key,
+           max(end_local) AS last_arrival,
+           max(start_local) AS last_start
+    FROM t GROUP BY bike_id
+)
+SELECT station_key,
+       CASE
+        WHEN hour(last_arrival) < 7 THEN '00:00-07:00'
+        WHEN hour(last_arrival) < 10 THEN '07:00-10:00'
+        WHEN hour(last_arrival) < 18 THEN '10:00-18:00'
+        WHEN hour(last_arrival) < 21 THEN '18:00-21:00'
+        ELSE '21:00-24:00'
+       END AS time_band,
+       COUNT(*) AS disappeared_bikes
+FROM last
+WHERE station_key IS NOT NULL
+  AND last_start <= last_arrival                    -- no salió después de llegar
+  AND last_arrival <= $at - INTERVAL (CAST($lost AS INTEGER)) DAY
+GROUP BY ALL
+ORDER BY disappeared_bikes DESC, station_key
+"""
+
+
+def loss_risk(data: Data, at: datetime | None = None) -> list[dict]:
+    """D4 · Bicis que dejan de aparecer (C6).
+
+    Cuenta, por estación y franja de su último arribo, las bicis que llegaron ahí y no
+    vuelven a salir en 3 semanas o más hasta `at`. Es riesgo, no robo comprobado: también
+    entran bicis retiradas al taller sin registro público.
+    """
     if data.mode == "EJEMPLO":
         return _example("c6_loss_risk")
-    return []  # TODO D4
+    import duckdb
+    at = (at or latest_time(data)).replace(tzinfo=None)
+    rows = duckdb.execute(LOSS_SQL, {
+        "glob": str(data.trips_dir / "trips_*.parquet"), "at": at, "lost": LOST_AFTER_DAYS,
+    }).fetchall()
+    return [
+        {"station_id": st, "time_band": band, "disappeared_bikes": n,
+          "note": "riesgo, no robo comprobado"}
+        for st, band, n in rows
+    ]
