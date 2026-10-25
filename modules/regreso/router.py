@@ -8,12 +8,14 @@ from shared.contracts.c5_cases_count import CasesCountResponse
 
 from . import returns
 from .cases import CaseNotFound, CaseStore, InvalidTransition
-from .gbfs import FeedProblem, StationFeed
-from .schemas import AssignIn, BikeState, CaseOut, IncidentIn, IncidentOut, ReturnIn, ReturnOut, TransitionIn
+from .gbfs import FeedProblem, StationCatalog, StationFeed
+from .schemas import (AssignIn, BikeState, CaseOut, IncidentIn, IncidentOut, ReturnIn, ReturnOut, StationOut,
+                      TransitionIn)
 
 router = APIRouter(tags=["Línea 5 · Regreso Seguro"])
 
 _feed = StationFeed()
+_catalog = StationCatalog()
 _cases = CaseStore()
 _returns: dict[str, returns.ReturnCheck] = {}
 
@@ -21,6 +23,10 @@ _returns: dict[str, returns.ReturnCheck] = {}
 # Dependencias separadas para que las pruebas puedan cambiarlas.
 def get_feed() -> StationFeed:
     return _feed
+
+
+def get_catalog() -> StationCatalog:
+    return _catalog
 
 
 def get_cases() -> CaseStore:
@@ -47,6 +53,16 @@ async def create_return(body: ReturnIn, feed=Depends(get_feed), store=Depends(ge
     check = returns.start(body.station_id, reading, body.baseline, now)
     store[check.return_id] = check
     return check.out()
+
+
+# Va antes de /returns/{return_id} para que "stations" no se lea como id.
+@router.get("/returns/stations", response_model=list[StationOut])
+async def return_stations(catalog=Depends(get_catalog)):
+    """Catálogo real de estaciones (GBFS) para elegir dónde se ancló."""
+    stations = await catalog.stations()
+    if stations is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "El catálogo de estaciones no responde")
+    return [StationOut.model_validate(s) for s in stations]
 
 
 @router.get("/returns/{return_id}", response_model=ReturnOut)

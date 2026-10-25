@@ -105,6 +105,16 @@ class ClientBaseline(BaseModel):
     observed_at: AwareDatetime
 
 
+class StationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    station_id: str
+    code: str = Field(description='Código visible, p. ej. "14" para CE-014')
+    name: str
+    lat: float
+    lon: float
+
+
 class ReturnIn(BaseModel):
     station_id: str
     baseline: ClientBaseline | None = None

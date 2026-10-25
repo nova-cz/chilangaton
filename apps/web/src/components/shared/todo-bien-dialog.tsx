@@ -1,33 +1,35 @@
 "use client";
 
 import { buttonClasses } from "@/components/ui/button";
-import { helpHref } from "@/features/regreso/channels";
+import { anclajeHref, helpHref } from "@/features/regreso/channels";
 import { cn } from "@/lib/cn";
 import { HeartHandshake } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef } from "react";
 import { speak, vibrate } from "./announce";
-
-/** Botón a todo lo ancho que crece si el texto no cabe (pantallas de 320 px o letra grande). */
-const WIDE = "h-auto min-h-11 w-full justify-center py-2.5 text-center";
+import { WIDE_BUTTON } from "./classes";
 
 /**
  * "¿Todo bien?" de Regreso Seguro. La Línea 3 lo abre a los 45 y 90 min del contador de viaje.
  * Usa <dialog> nativo: atrapa el foco, cierra con Esc y el lector lo anuncia como diálogo.
  *
- * <TodoBienDialog open={min >= 45} minutes={min} station="CE-014" onClose={...} onFindDock={...} />
+ * <TodoBienDialog open={min >= 45} minutes={min} station="CE-014 …" stationId="1" onClose={...} onFindDock={...} />
  */
 export function TodoBienDialog({
   open,
   minutes,
   station,
+  stationId,
   bikeId,
   onClose,
   onFindDock,
 }: {
   open: boolean;
   minutes: number;
+  /** Nombre visible de la estación destino, para el mensaje de ayuda. */
   station?: string;
+  /** station_id del feed: lleva directo a "Anclé aquí" con la estación elegida. */
+  stationId?: string;
   bikeId?: string;
   onClose: () => void;
   /** Si existe, muestra "No encuentro dónde anclar" (la Línea 3 enseña la alternativa). */
@@ -69,7 +71,7 @@ export function TodoBienDialog({
       </p>
 
       <div className="mt-5 grid gap-2">
-        <button type="button" autoFocus onClick={() => ref.current?.close()} className={cn(buttonClasses("dark"), WIDE)}>
+        <button type="button" autoFocus onClick={() => ref.current?.close()} className={cn(buttonClasses("dark"), WIDE_BUTTON)}>
           Todo bien, sigo mi viaje
         </button>
         {onFindDock ? (
@@ -79,15 +81,15 @@ export function TodoBienDialog({
               ref.current?.close();
               onFindDock();
             }}
-            className={cn(buttonClasses("lime"), WIDE)}
+            className={cn(buttonClasses("lime"), WIDE_BUTTON)}
           >
             No encuentro dónde anclar
           </button>
         ) : null}
-        <Link href={helpHref({ kind: "anclaje", station, bikeId })} className={cn(buttonClasses("soft"), WIDE)}>
+        <Link href={anclajeHref(stationId)} className={cn(buttonClasses("soft"), WIDE_BUTTON)}>
           Ya anclé y no se registró
         </Link>
-        <Link href={helpHref({ kind: "robo", station, bikeId })} className={cn(buttonClasses("soft"), WIDE)}>
+        <Link href={helpHref({ kind: "robo", station, bikeId })} className={cn(buttonClasses("soft"), WIDE_BUTTON)}>
           Me robaron la bici o tuve un problema
         </Link>
       </div>

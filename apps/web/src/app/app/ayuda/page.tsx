@@ -1,5 +1,6 @@
 import { buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { WIDE_BUTTON } from "@/components/shared/classes";
 import { Skeleton } from "@/components/ui/state-message";
 import { DENUNCIA_DIGITAL_URL, ECOBICI_PHONE, EMERGENCIAS } from "@/features/regreso/channels";
 import { HelpForm } from "@/features/regreso/help-form";
@@ -10,9 +11,6 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 export const metadata: Metadata = { title: "Ayuda" };
-
-/** Botón a todo lo ancho que crece si el texto no cabe (pantallas de 320 px o letra grande). */
-const WIDE = "h-auto min-h-11 w-full justify-center py-2.5 text-center";
 
 /** R3 · Robo, pérdida y anclaje. Lo urgente (911) va en el HTML inicial y sin animación de entrada. */
 export default function AyudaPage() {
@@ -36,7 +34,7 @@ export default function AyudaPage() {
         <p className="mt-1 text-sm text-ink">
           Primero ponte a salvo. No persigas a nadie ni intentes recuperar la bici por tu cuenta.
         </p>
-        <a href={`tel:${EMERGENCIAS.tel}`} className={cn(buttonClasses("dark"), WIDE, "mt-3")}>
+        <a href={`tel:${EMERGENCIAS.tel}`} className={cn(buttonClasses("dark"), WIDE_BUTTON, "mt-3")}>
           <Phone aria-hidden className="size-4" />
           Llamar al {EMERGENCIAS.label}
         </a>
@@ -58,7 +56,7 @@ export default function AyudaPage() {
           href={DENUNCIA_DIGITAL_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className={cn(buttonClasses("soft"), WIDE, "mt-3")}
+          className={cn(buttonClasses("soft"), WIDE_BUTTON, "mt-3")}
         >
           Hacer denuncia digital
           <ExternalLink aria-hidden className="size-4" />
@@ -68,7 +66,7 @@ export default function AyudaPage() {
 
       <Card className="animate-rise p-5" style={{ animationDelay: "180ms" }}>
         <h2 className="font-semibold">¿Prefieres llamar a ECOBICI?</h2>
-        <a href={`tel:${ECOBICI_PHONE.tel}`} className={cn(buttonClasses("soft"), WIDE, "mt-3")}>
+        <a href={`tel:${ECOBICI_PHONE.tel}`} className={cn(buttonClasses("soft"), WIDE_BUTTON, "mt-3")}>
           <Phone aria-hidden className="size-4" />
           {ECOBICI_PHONE.label}
         </a>
