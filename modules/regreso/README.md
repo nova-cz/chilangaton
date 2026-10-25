@@ -20,4 +20,15 @@ Estados de "Anclé aquí": `vemos_una_mas`, `sin_cambio`, `no_responde` (y `revi
 
 Los casos SIMULADOS llevan `simulated: true`, se muestran con la etiqueta SIMULADO y no cuentan en C5 ni en los indicadores del panel.
 
+### Dónde viven los casos
+
+`CaseStore` guarda los casos **en memoria** del proceso de la API (`router._cases`). No hay base de datos:
+
+- Un reinicio o un nuevo despliegue en Railway borra todos los casos y verificaciones.
+- Con más de una instancia de la API, cada una tendría su propia cola; hoy corre una sola.
+- Por eso `/panel/casos` puede mostrar 0 casos después de un despliegue: es la cola vacía, no un error.
+  Si la API no responde, la pantalla muestra el error o lo último que cargó, nunca 0.
+
+No se llenan casos ficticios en producción; para la demo están los escenarios SIMULADOS de arriba.
+
 Pruebas: `python -m pytest modules/regreso` desde la raíz del repo.
