@@ -75,9 +75,14 @@ def fetch(url):
 def prepare_trips():
     (OUT / "trips").mkdir(parents=True, exist_ok=True)
     for month, url in TRIPS.items():
-        say(f"Viajes {month}: descargando…")
-        raw = fetch(url)
-        df = pd.read_csv(io.BytesIO(raw), dtype=str, encoding_errors="replace")
+        local_csv = OUT / "raw" / "trips" / url.rsplit("/", 1)[-1]  # CSV ya descargado a mano
+        if local_csv.exists():
+            say(f"Viajes {month}: leyendo {local_csv}…")
+            src = local_csv
+        else:
+            say(f"Viajes {month}: descargando…")
+            src = io.BytesIO(fetch(url))
+        df = pd.read_csv(src, dtype=str, encoding_errors="replace")
         df.columns = [ALIASES.get(norm(c), norm(c)) for c in df.columns]
         missing = {"bike_id", "start_station", "start_date", "start_time",
                    "end_station", "end_date", "end_time"} - set(df.columns)
@@ -86,7 +91,7 @@ def prepare_trips():
             continue
         for p in ("start", "end"):
             local = pd.to_datetime(df[f"{p}_date"] + " " + df[f"{p}_time"],
-                                   dayfirst=True, errors="coerce")
+                                   format="%d/%m/%Y %H:%M:%S", errors="coerce")
             df[f"{p}_local"] = local                                   # hora CDMX
             df[f"{p}_utc"] = local.dt.tz_localize("America/Mexico_City",
                                                   ambiguous="NaT", nonexistent="NaT").dt.tz_convert("UTC")
