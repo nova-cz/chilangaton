@@ -3,10 +3,9 @@
 import { Button } from "@/components/ui/button";
 import { Metric, Ring } from "@/components/ui/ring";
 import { Segmented } from "@/components/ui/segmented";
-import { APP_TABS } from "@/features/navigation/routes";
+import { TodoBienDialog } from "@/components/shared/todo-bien-dialog";
 import { cn } from "@/lib/cn";
-import { Check, LifeBuoy, MapPin, Square, Volume2, Vibrate } from "lucide-react";
-import Link from "next/link";
+import { Check, MapPin, Square, Volume2, Vibrate } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { BikeFeedback } from "./bike-feedback";
 import { splitName } from "./format";
@@ -28,12 +27,15 @@ interface Clock {
 /** V5 · contador de 45 min con avisos por texto, voz y vibración. No cierra viajes reales. */
 export function RideTimer({
   stationName,
+  stationId,
   fallbackName,
   graceMin,
   prefs,
   onEnd,
 }: {
   stationName: string;
+  /** station_id del destino: el diálogo de Línea 5 lo usa para "Ya anclé y no se registró". */
+  stationId?: string;
   fallbackName?: string;
   graceMin?: number;
   prefs: TripPrefs;
@@ -45,7 +47,6 @@ export function RideTimer({
   const [check, setCheck] = useState<number | null>(null);
   const [finished, setFinished] = useState(false);
   const fired = useRef(new Set<number>());
-  const dialog = useRef<HTMLDialogElement>(null);
   const root = useRef<HTMLElement>(null);
   useEffect(() => {
     root.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -83,7 +84,8 @@ export function RideTimer({
         if (m === 42)
           say(fb ? `Quedan 3 minutos. Si ${st} está llena, ve a ${splitName(fb).street}.` : `Quedan 3 minutos para anclar en ${st}.`, true);
         if (m === 45 || m === 90) {
-          say(m === 45 ? "Se cumplieron 45 minutos. ¿Todo bien?" : "Llevas 90 minutos. ¿Todo bien?", true);
+          // La voz y la vibración las pone el diálogo compartido de Línea 5 (no se duplican aquí).
+          setNotice(m === 45 ? "Se cumplieron 45 minutos. ¿Todo bien?" : "Llevas 90 minutos. ¿Todo bien?");
           setCheck(m);
         }
       }
@@ -96,13 +98,6 @@ export function RideTimer({
   const left = Math.max(0, LIMIT - elapsed);
   const over = elapsed > LIMIT;
 
-  useEffect(() => {
-    const d = dialog.current;
-    if (!d) return;
-    if (check !== null && !d.open) d.showModal();
-    if (check === null && d.open) d.close();
-  }, [check]);
-
   // Al terminar (ya anclé / detener) pedimos la opinión de la bici (V7) antes de volver al planeador.
   const finish = () => {
     setCheck(null);
@@ -111,7 +106,6 @@ export function RideTimer({
   const setSpeed = (speed: Speed) => setClock({ anchorMs: Date.now(), anchorMin: elapsed, speed });
   const mm = Math.floor(left);
   const ss = Math.floor((left - mm) * 60);
-  const helpReady = APP_TABS.some((t) => t.key === "help" && "ready" in t && t.ready);
   const tone = over ? "danger" : elapsed >= 40 ? "warn" : "ok";
 
   if (finished) return <BikeFeedback stationName={street} onDone={onEnd} />;
@@ -206,37 +200,21 @@ export function RideTimer({
         Este contador es tuyo: no cierra tu viaje en ECOBICI ni cobra nada. Para cerrar, ancla la bici hasta escuchar el aviso del anclaje.
       </p>
 
-      <dialog
-        ref={dialog}
+      <TodoBienDialog
+        open={check !== null}
+        minutes={check ?? LIMIT}
+        station={stationName}
+        stationId={stationId}
         onClose={() => setCheck(null)}
-        aria-labelledby="todo-bien-title"
-        className="m-auto w-[min(92vw,26rem)] rounded-[var(--radius-sheet)] bg-card p-5 text-ink shadow-float backdrop:bg-brand-900/60"
-      >
-        <h2 id="todo-bien-title" className="text-xl font-bold tracking-tight">
-          ¿Todo bien?
-        </h2>
-        <p className="mt-1 text-ink-muted">
-          {check === 90 ? "Llevas 90 minutos con la bici." : "Se cumplieron 45 minutos."} Cuéntanos para ayudarte si hace falta.
-        </p>
-        <div className="mt-4 grid gap-2">
-          <Button variant="dark" className="justify-center" onClick={finish}>
-            <Check aria-hidden className="size-4" /> Sí, ya la anclé
-          </Button>
-          <Button variant="soft" className="justify-center" onClick={() => setCheck(null)}>
-            Sigo en camino
-          </Button>
-          {helpReady ? (
-            <Link href="/app/ayuda" className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-danger-100 font-semibold text-danger-700">
-              <LifeBuoy aria-hidden className="size-4" /> Necesito ayuda
-            </Link>
-          ) : (
-            <p className="rounded-2xl bg-mist-100 px-3.5 py-2.5 text-sm text-ink-muted">
-              <LifeBuoy aria-hidden className="mr-1 inline size-4 align-[-3px]" />
-              La ruta de ayuda (Regreso Seguro) la conecta Línea 5.
-            </p>
-          )}
-        </div>
-      </dialog>
+        onFindDock={
+          fallbackName
+            ? () => {
+                setCheck(null);
+                setNotice(`Si ${street} está llena, ve a ${splitName(fallbackName).street}.`);
+              }
+            : undefined
+        }
+      />
     </section>
   );
 }
