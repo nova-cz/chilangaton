@@ -9,7 +9,7 @@
 | S5 (P1) | Misiones y puntos | `modules/distribucion/missions.py`, `/app/mision/[id]` | Misión punta a punta, puntos congelados al desbloquear, A→B→A sin puntos, doble envío sin doble pago, recompensas en días, ponderación por zona, bono de estación nueva |
 | S6 (P1) | Arcos 3D de flujos | panel (deck.gl `ArcLayer` sobre MapLibre) | Misiones y déficit de Buenavista animados; versión 2D si falla |
 
-Implementados S2, S3 y S4. S6 muestra arcos de promedios observados por zona, reproducción de la serie simulada y alternativa SVG 2D con tabla; S3 publica el déficit de Buenavista y San Rafael agregado, sin desglose por zona. La animación no representa viajes individuales ni misiones aceptadas. S5 conserva por ahora la interfaz DEMO local.
+Implementados S2, S3 y S4. S6 muestra arcos de promedios observados por zona, reproducción de la serie simulada y alternativa SVG 2D con tabla; S3 publica el déficit de Buenavista y San Rafael agregado, sin desglose por zona. La animación no representa viajes individuales ni misiones aceptadas. S5 ya tiene motor y endpoints DEMO en memoria, con pruebas; conserva la interfaz DEMO local, pendiente de conectarse al ledger del servidor. Ver `modules/distribucion/README.md`.
 
 Datos: `git checkout origin/data -- data/ && git reset data/` (ver README de la rama `data`). Día demo: `data/demo/*_demo_day.parquet` (29 sep 2026).
 
