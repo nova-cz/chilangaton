@@ -181,7 +181,7 @@
       "trips_per_day": 0.64
     }
   ],
-  "criterion": "viable si el promedio de contraflujo >= 100 viajes por dia habil (con 10% de adopcion = 10 bicis por dia)",
+  "criterion": "viable si el promedio de contraflujo ≥ 100 viajes por día hábil (con 10% de adopción = 10 bicis por día)",
   "viable": false,
-  "conclusion": "NO VIABLE: 40 viajes de contraflujo por dia habil (umbral 100); a 10% de adopcion serian ~4 bicis por dia."
+  "conclusion": "NO VIABLE: 40 viajes de contraflujo por día hábil (umbral 100); a 10% de adopción serían ~4 bicis por día."
 }

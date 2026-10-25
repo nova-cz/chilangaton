@@ -65,11 +65,11 @@ def run() -> dict:
         "trips_per_day_max": int(per_day.max()),
         "by_zone_pair": [{"from": r.zo, "to": r.zd, "trips_per_day": r.trips_per_day} for r in by_zone.itertuples()],
         "top_station_pairs": top_pairs,
-        "criterion": f"viable si el promedio de contraflujo >= {THRESHOLD_TRIPS_PER_DAY:.0f} viajes por dia habil (con {ADOPTION_REF:.0%} de adopcion = {MIN_BIKES_PER_DAY} bicis por dia)",
+        "criterion": f"viable si el promedio de contraflujo ≥ {THRESHOLD_TRIPS_PER_DAY:.0f} viajes por día hábil (con {ADOPTION_REF:.0%} de adopción = {MIN_BIKES_PER_DAY} bicis por día)",
         "viable": bool(viable),
         "conclusion": (
-            f"{'VIABLE' if viable else 'NO VIABLE'}: {avg:.0f} viajes de contraflujo por dia habil "
-            f"(umbral {THRESHOLD_TRIPS_PER_DAY:.0f}); a {ADOPTION_REF:.0%} de adopcion serian ~{avg * ADOPTION_REF:.0f} bicis por dia."
+            f"{'VIABLE' if viable else 'NO VIABLE'}: {avg:.0f} viajes de contraflujo por día hábil "
+            f"(umbral {THRESHOLD_TRIPS_PER_DAY:.0f}); a {ADOPTION_REF:.0%} de adopción serían ~{avg * ADOPTION_REF:.0f} bicis por día."
         ),
     }
     FIXTURES.mkdir(exist_ok=True)

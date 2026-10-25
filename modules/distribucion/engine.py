@@ -248,12 +248,12 @@ def run_all() -> dict:
         "trips_in_window": len(trips),
         "target_zones": list(TARGET_ZONES),
         "assumptions": [
-            "Dia reproducido: martes 29 de septiembre de 2026, 7:00 a 10:00 hora CDMX, pasos de 15 minutos.",
-            "Inventario inicial: snapshot del feed mas cercano a las 7:00; los viajes reales se reproducen tal cual.",
-            "Salida sin bicis = viaje perdido. Llegada sin anclajes = desvio a la estacion mas cercana con anclaje (<= 500 m).",
-            "Adopcion p %: fraccion de los viajes de contraflujo (Anzures/Polanco/Reforma a Buenavista/San Rafael) que termina en la estacion vacia mas cercana a su destino (<= 500 m); si no hay, termina donde iba.",
+            "Día reproducido: martes 29 de septiembre de 2026, 7:00 a 10:00 hora CDMX, pasos de 15 minutos.",
+            "Inventario inicial: snapshot del feed más cercano a las 7:00; los viajes reales se reproducen tal cual.",
+            "Salida sin bicis = viaje perdido. Llegada sin anclajes = desvío a la estación más cercana con anclaje (≤ 500 m).",
+            "Adopción p %: fracción de los viajes de contraflujo (Anzures/Polanco/Reforma a Buenavista/San Rafael) que termina en la estación vacía más cercana a su destino (≤ 500 m); si no hay, termina donde iba.",
             "Bicis recuperadas antes: las bicis deshabilitadas del feed vuelven a servicio a las 7:00.",
-            f"Semilla fija ({SEED}); zonas aproximadas con circulos (zones.py). Resultado simulado, no es un pronostico.",
+            f"Semilla fija ({SEED}); zonas aproximadas con círculos (zones.py). Resultado simulado, no es un pronóstico.",
         ],
         "scenarios": scenarios,
     }
