@@ -147,7 +147,10 @@ def load_real() -> Data | None:
     d = _load_dir(REAL_DIR, {"stations": "stations.json", "states": "states.json",
                              "c2": "c2_priority.json", "baseline": "baseline.json",
                              "travel": "travel.json"}, "REAL")
+    import re
     d.stations = {k: v for k, v in d.stations.items() if k in d.states}
+    for st in d.stations.values():  # "CE-271-272 Jesús García - …" → "Jesús García - …"
+        st.name = re.sub(r"^CE-?[\w-]+\s+", "", st.name).strip() or st.name
     return d
 
 
@@ -317,6 +320,30 @@ def recommend(data: Data, origin: str, destination: str, now: datetime,
                    "p_useful_bike": o["p_useful_bike"], "light": traffic_light(o["p_useful_bike"]),
                    "text": _label_bike(o["p_useful_bike"], walk_to_origin_min)}
 
+    # Si en el origen podría no haber bici: estaciones cercanas al origen con más probabilidad
+    origin_alts = []
+    if o["p_useful_bike"] < GREEN:
+        so = data.stations[origin]
+        for sid, st in data.stations.items():
+            s = data.states.get(sid)
+            if sid in (origin, destination) or not s or not s.is_renting:
+                continue
+            extra = haversine_m(st.lat, st.lon, so.lat, so.lon) / WALK_M_PER_MIN
+            if extra > max_walk_min:
+                continue
+            p = simulate(data, sid, now, walk_to_origin_min + extra)["p_useful_bike"]
+            if p <= o["p_useful_bike"]:
+                continue
+            origin_alts.append({
+                "station_id": sid, "name": st.name, "extra_walk_min": round(extra, 1),
+                "p_useful_bike": p, "light": traffic_light(p), "useful_bikes_now": s.useful_bikes,
+                "score": round(p - 0.03 * extra, 3),
+                "text": f"Sal de la estación {sid} ({st.name}): {pct(p)}% de bici útil, "
+                        f"{max(1, round(extra))} min más caminando"})
+        origin_alts.sort(key=lambda a: -a["score"])
+        origin_alts = origin_alts[:3]
+    origin_info["useful_bikes_now"] = data.states[origin].useful_bikes
+
     # Destino: ¿habrá lugar al llegar?
     ride, ride_src = travel_minutes(data, origin, destination)
     arrive = now + timedelta(minutes=walk_to_origin_min + ride)
@@ -354,6 +381,12 @@ def recommend(data: Data, origin: str, destination: str, now: datetime,
                         f"a {round(walk)} min caminando de tu destino. +{grace_minutes(detour)} min de gracia"})
         alternatives.sort(key=lambda a: -a["score"])
 
+    if origin_alts:
+        advice_origin = origin_alts[0]["text"] + ". "
+    elif o["p_useful_bike"] < YELLOW:
+        advice_origin = "Tu estación de salida podría no tener bici y no hay otra cerca con más probabilidad. "
+    else:
+        advice_origin = ""
     if not needs_alt:
         advice = "Tu destino tiene lugar. Buen viaje."
     elif not accept_alternative:
@@ -364,7 +397,8 @@ def recommend(data: Data, origin: str, destination: str, now: datetime,
         advice = "Tu destino podría estar lleno y no hay otra estación con lugar dentro de tu caminata máxima."
 
     return {"mode": data.mode, "data_ts": data_ts, "origin": origin_info, "destination": dest_info,
-            "alternatives": alternatives[:3], "advice": advice,
+            "alternatives": alternatives[:3], "origin_alternatives": origin_alts,
+            "advice": advice_origin + advice,
             "preferences": {"max_walk_min": max_walk_min, "accept_alternative": accept_alternative,
                             "avoid_effort": avoid_effort}}
 
@@ -390,6 +424,7 @@ def nearby(data: Data, lat: float, lon: float, now: datetime, limit: int = 5) ->
         s = data.states.get(sid)
         if not s:
             continue
+        walk = max(1, round(walk))  # mismo minuto que se muestra y que usa recommend()
         p = simulate(data, sid, now, walk)["p_useful_bike"]
         rows.append({"station_id": sid, "name": st.name, "walk_min": round(walk, 1),
                      "useful_bikes_now": s.useful_bikes, "p_useful_bike": p,

@@ -8,17 +8,14 @@ import { ArrowDownUp, ChevronDown, Footprints, Repeat2, Settings2, Shuffle } fro
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { DEMO_AT, HOME, getNearby, getRecommendation, getStations, type StationChoices } from "./data";
-import { LIGHT_TONE, cdmxTime, localClock, pct, splitName } from "./format";
+import { DEMO_AT, HOME, STORY, getNearby, getRecommendation, getStations, type StationChoices } from "./data";
+import { LIGHT_TONE, cdmxTime, localClock, pct, splitName, walkMinutes } from "./format";
 import { usePrefs } from "./prefs";
 import { RideTimer } from "./ride-timer";
 import { TripRibbon } from "./trip-ribbon";
 import type { NearbyRow, Recommendation, ViajeStation } from "./types";
 import { ModeBadge } from "./viaje-shell";
 
-/** La historia de la demo: Isabel sale de Buenavista hacia Reforma a las 7:45. */
-const DEFAULT_FROM = "271";
-const DEFAULT_TO = "14";
 
 type Load<T> = { status: "loading" } | { status: "error"; message: string } | { status: "ok"; data: T; mode: string };
 
@@ -33,9 +30,10 @@ export function TripPlanner() {
   const [riding, setRiding] = useState(false);
   const [reload, setReload] = useState(0);
 
-  const from = params.get("from") ?? DEFAULT_FROM;
-  const to = params.get("to") ?? DEFAULT_TO;
-  const walkToOrigin = Math.max(1, Math.round(nearby.find((n) => n.station_id === from)?.walk_min ?? 3));
+  const from = params.get("from") ?? STORY.from;
+  const to = params.get("to") ?? STORY.to;
+  const originStation = stations.status === "ok" ? stations.data.origins.find((s) => s.station_id === from) : undefined;
+  const walkToOrigin = originStation ? walkMinutes(HOME, originStation) : 3;
 
   const setRoute = (next: { from?: string; to?: string }) => {
     const q = new URLSearchParams(params.toString());
@@ -61,15 +59,15 @@ export function TripPlanner() {
   }, [reload]);
 
   useEffect(() => {
-    if (from === to) return;
+    if (from === to || stations.status !== "ok") return;
     let alive = true;
-    getRecommendation(from, to, prefs)
+    getRecommendation(from, to, prefs, walkToOrigin)
       .then((r) => alive && setRec({ status: "ok", data: r, mode: r.mode }))
       .catch((e: unknown) => alive && setRec({ status: "error", message: e instanceof Error ? e.message : "Sin conexión" }));
     return () => {
       alive = false;
     };
-  }, [from, to, prefs, reload]);
+  }, [from, to, prefs, reload, walkToOrigin, stations.status]);
 
   const recData = rec.status === "ok" ? rec.data : null;
   const target = chosen ?? recData?.destination.station_id ?? to;
@@ -96,7 +94,7 @@ export function TripPlanner() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-x-10">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10">
       {/* Columna 1: a dónde vas */}
       <div className="min-w-0 space-y-5">
         <div>
@@ -162,7 +160,8 @@ export function TripPlanner() {
                     <Link href={`/app/estacion/${n.station_id}`} className="min-w-0 flex-1">
                       <span className="block truncate font-semibold hover:underline">{splitName(n.name).street}</span>
                       <span className="block text-sm text-ink-muted">
-                        {Math.max(1, Math.round(n.walk_min))} min a pie · {n.useful_bikes_now} bicis útiles
+                        Estación {n.station_id} · {Math.max(1, Math.round(n.walk_min))} min a pie · {n.useful_bikes_now}{" "}
+                        {n.useful_bikes_now === 1 ? "bici útil" : "bicis útiles"}
                       </span>
                       <span className={cn("block text-sm font-semibold", TONE_TEXT[tone])}>{pct(n.p_useful_bike)}% de bici al llegar</span>
                     </Link>
@@ -202,7 +201,14 @@ export function TripPlanner() {
             onEnd={() => setRiding(false)}
           />
         ) : (
-          <TripRibbon rec={rec.data} walkToOrigin={walkToOrigin} chosen={target} onChoose={setChosen} onStart={() => setRiding(true)} />
+          <TripRibbon
+            rec={rec.data}
+            walkToOrigin={walkToOrigin}
+            chosen={target}
+            onChoose={setChosen}
+            onChooseOrigin={(id) => setRoute({ from: id })}
+            onStart={() => setRiding(true)}
+          />
         )}
         {recData ? (
           <p className="mt-3 px-1 text-xs text-ink-soft">

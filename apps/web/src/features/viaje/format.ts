@@ -41,3 +41,13 @@ export function localClock(atLocal: string): string {
 export function isExampleMode(mode: string): boolean {
   return mode.includes("EJEMPLO");
 }
+
+/** Minutos caminando (75 m/min, igual que el motor). */
+export function walkMinutes(a: { lat: number; lon: number }, b: { lat: number; lon: number }): number {
+  const R = 6371000;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return Math.max(1, Math.round((2 * R * Math.asin(Math.sqrt(h))) / 75));
+}

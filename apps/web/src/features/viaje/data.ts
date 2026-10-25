@@ -12,6 +12,7 @@ const snap = snapshot as unknown as {
   _meta: { at_local: string };
   mode: string;
   home: { lat: number; lon: number; label: string };
+  story: { from: string; to: string };
   stations: ViajeStation[];
   origins: string[];
   destinations: string[];
@@ -22,6 +23,8 @@ const snap = snapshot as unknown as {
 
 export const DEMO_AT = snap._meta.at_local;
 export const HOME = snap.home;
+/** La historia de la demo (Isabel): de Buenavista a Reforma a las 7:45. */
+export const STORY = snap.story;
 export const FORECAST_HORIZONS = [15, 30, 45, 60, 75, 90] as const;
 const isDemo = config.dataMode === "demo";
 const at = process.env.NEXT_PUBLIC_DEMO_AT ?? DEMO_AT;
@@ -65,7 +68,12 @@ export async function getForecast(id: string): Promise<Sourced<{ station: ViajeS
   return { data: { station: r.station, forecast: r.forecast }, mode: r.mode };
 }
 
-export async function getRecommendation(origin: string, destination: string, prefs: TripPrefs): Promise<Recommendation> {
+export async function getRecommendation(
+  origin: string,
+  destination: string,
+  prefs: TripPrefs,
+  walkToOrigin: number,
+): Promise<Recommendation> {
   const walk = prefs.avoidEffort ? 2 : prefs.maxWalk;
   if (isDemo) {
     const r = snap.recommendations[`${origin}>${destination}>${walk}`];
@@ -82,6 +90,7 @@ export async function getRecommendation(origin: string, destination: string, pre
     origin,
     destination,
     at,
+    walk_to_origin: String(walkToOrigin),
     max_walk: String(walk),
     accept_alt: String(prefs.acceptAlternative),
     avoid_effort: String(prefs.avoidEffort),

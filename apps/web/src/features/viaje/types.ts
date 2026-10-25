@@ -48,10 +48,23 @@ export interface Alternative {
   text: string;
 }
 
+export interface OriginAlternative {
+  station_id: string;
+  name: string;
+  extra_walk_min: number;
+  p_useful_bike: number;
+  light: Light;
+  useful_bikes_now: number;
+  score: number;
+  text: string;
+}
+
 export interface Recommendation {
   mode: string;
   data_ts: string;
-  origin: { station_id: string; name: string; p_useful_bike: number; light: Light; text: string };
+  origin: { station_id: string; name: string; p_useful_bike: number; light: Light; text: string; useful_bikes_now?: number };
+  /** Opcional: estaciones cerca del origen con más probabilidad de bici útil. */
+  origin_alternatives?: OriginAlternative[];
   destination: {
     station_id: string;
     name: string;

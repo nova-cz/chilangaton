@@ -20,14 +20,17 @@ export function TripRibbon({
   walkToOrigin,
   chosen,
   onChoose,
+  onChooseOrigin,
   onStart,
 }: {
   rec: Recommendation;
   walkToOrigin: number;
   chosen: string;
   onChoose: (stationId: string) => void;
+  onChooseOrigin: (stationId: string) => void;
   onStart: () => void;
 }) {
+  const originAlt = rec.origin_alternatives?.[0];
   const { origin, destination, alternatives } = rec;
   const best = alternatives[0];
   const others = alternatives.slice(1);
@@ -49,7 +52,47 @@ export function TripRibbon({
           tint="bg-brand-100/80"
         >
           <Odds p={origin.p_useful_bike} kind="bike" what="hay bici útil al llegar" />
+          {typeof origin.useful_bikes_now === "number" ? (
+            <p className="mt-1 text-xs text-ink-soft">
+              Estación {origin.station_id} · ahora {origin.useful_bikes_now} {origin.useful_bikes_now === 1 ? "bici útil" : "bicis útiles"}
+            </p>
+          ) : null}
         </Stop>
+
+        {originAlt ? (
+          <li className="relative pt-3 pb-1 pl-[52px]">
+            <svg aria-hidden className="absolute -top-4 left-[19px] h-14 w-10 overflow-visible" fill="none">
+              <path d="M1.5 0 C1.5 30, 34 22, 34 52" stroke="var(--color-lime-500)" strokeWidth="3" strokeLinecap="round" strokeDasharray="1 7" />
+            </svg>
+            <div className="rounded-[var(--radius-card)] bg-lime-300 p-4 text-brand-900">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-brand-900/70">Mejor sal de la estación {originAlt.station_id}</p>
+                  <Link href={`/app/estacion/${originAlt.station_id}`} className="mt-0.5 block font-bold tracking-tight hover:underline">
+                    {splitName(originAlt.name).street}
+                  </Link>
+                </div>
+                <div className="shrink-0 text-right">
+                  <Metric value={`+${Math.max(1, Math.round(originAlt.extra_walk_min))}`} unit="min" className="text-3xl leading-none" />
+                  <p className="text-[11px] font-semibold text-brand-900/70">a pie</p>
+                </div>
+              </div>
+              <DockStrip p={originAlt.p_useful_bike} kind="bike" className="mt-3" />
+              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold">
+                  {pct(originAlt.p_useful_bike)}% de bici útil · {timesOutOfTen(originAlt.p_useful_bike)} de cada 10 mañanas
+                </p>
+                <button
+                  type="button"
+                  onClick={() => onChooseOrigin(originAlt.station_id)}
+                  className="rounded-full bg-white/70 px-3.5 py-1.5 text-sm font-semibold hover:bg-white"
+                >
+                  Salir de aquí
+                </button>
+              </div>
+            </div>
+          </li>
+        ) : null}
 
         <li className="relative flex items-center gap-3 py-3 pl-[52px]">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-sm font-semibold shadow-soft">
