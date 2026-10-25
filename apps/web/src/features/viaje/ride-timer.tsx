@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { Check, LifeBuoy, MapPin, Square, Volume2, Vibrate } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { BikeFeedback } from "./bike-feedback";
 import { splitName } from "./format";
 import type { TripPrefs } from "./types";
 
@@ -42,6 +43,7 @@ export function RideTimer({
   const [now, setNow] = useState(() => Date.now());
   const [notice, setNotice] = useState<string | null>(null);
   const [check, setCheck] = useState<number | null>(null);
+  const [finished, setFinished] = useState(false);
   const fired = useRef(new Set<number>());
   const dialog = useRef<HTMLDialogElement>(null);
   const root = useRef<HTMLElement>(null);
@@ -101,11 +103,18 @@ export function RideTimer({
     if (check === null && d.open) d.close();
   }, [check]);
 
+  // Al terminar (ya anclé / detener) pedimos la opinión de la bici (V7) antes de volver al planeador.
+  const finish = () => {
+    setCheck(null);
+    setFinished(true);
+  };
   const setSpeed = (speed: Speed) => setClock({ anchorMs: Date.now(), anchorMin: elapsed, speed });
   const mm = Math.floor(left);
   const ss = Math.floor((left - mm) * 60);
   const helpReady = APP_TABS.some((t) => t.key === "help" && "ready" in t && t.ready);
   const tone = over ? "danger" : elapsed >= 40 ? "warn" : "ok";
+
+  if (finished) return <BikeFeedback stationName={street} onDone={onEnd} />;
 
   return (
     <section ref={root} aria-label="Contador del viaje" className="scroll-mt-24 animate-sheet-in rounded-[var(--radius-sheet)] bg-brand-900 p-5 text-white">
@@ -186,10 +195,10 @@ export function RideTimer({
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <Button variant="lime" className="justify-center" onClick={onEnd}>
+        <Button variant="lime" className="justify-center" onClick={finish}>
           <Check aria-hidden className="size-4" /> Ya anclé
         </Button>
-        <Button variant="glass" className="justify-center bg-white/10 text-white hover:bg-white/20" onClick={onEnd}>
+        <Button variant="glass" className="justify-center bg-white/10 text-white hover:bg-white/20" onClick={finish}>
           <Square aria-hidden className="size-4" /> Detener
         </Button>
       </div>
@@ -210,7 +219,7 @@ export function RideTimer({
           {check === 90 ? "Llevas 90 minutos con la bici." : "Se cumplieron 45 minutos."} Cuéntanos para ayudarte si hace falta.
         </p>
         <div className="mt-4 grid gap-2">
-          <Button variant="dark" className="justify-center" onClick={onEnd}>
+          <Button variant="dark" className="justify-center" onClick={finish}>
             <Check aria-hidden className="size-4" /> Sí, ya la anclé
           </Button>
           <Button variant="soft" className="justify-center" onClick={() => setCheck(null)}>
