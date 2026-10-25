@@ -1,12 +1,14 @@
 "use client";
 
 import { DemoBadge } from "@/components/ui/badge";
+import { buttonClasses } from "@/components/ui/button";
 import { Metric, Ring } from "@/components/ui/ring";
 import { Segmented } from "@/components/ui/segmented";
 import { HORIZONS, type DemoStation, type Horizon } from "@/features/demo/types";
 import { bikesStatus, docksStatus, OUTLOOK_COPY, TONE_TEXT, type Tone } from "@/features/stations/status";
 import { cn } from "@/lib/cn";
 import { Bike, Clock3, MapPin, ParkingSquare, X } from "lucide-react";
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 
 /** Colores del pronóstico de ejemplo sobre la barra oscura (contraste AA sobre brand-900). */
@@ -93,9 +95,14 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
           {outlook.label}
         </p>
         <p className="mt-1 text-xs text-white/70">
-          Estado de ejemplo, no es un pronóstico. La probabilidad real llegará con el módulo de viaje (Línea 3).
+          Estado de ejemplo, no es un pronóstico. La probabilidad real está en Viaje.
         </p>
       </section>
+
+      <Link href="/app/viaje" className={cn(buttonClasses("dark", "md"), "mt-3 w-full justify-center")}>
+        <Bike aria-hidden className="size-4" />
+        Planear un viaje
+      </Link>
     </article>
   );
 }
