@@ -29,10 +29,14 @@ export function TripPlanner() {
   const [chosen, setChosen] = useState<string | null>(null);
   const [riding, setRiding] = useState(false);
   const [reload, setReload] = useState(0);
+  // Punto de referencia para "cerca de ti": Buenavista (historia de la demo) hasta que des permiso de ubicación.
+  const [here, setHere] = useState<{ lat: number; lon: number; label: string }>({ lat: HOME.lat, lon: HOME.lon, label: HOME.label });
 
-  const rawFrom = params.get("from") ?? STORY?.from ?? "";
-  const rawTo = params.get("to") ?? STORY?.to ?? "";
   const choices = stations.status === "ok" ? stations.data : null;
+  // En vivo no hay historia prefijada: la persona elige. En repetición, arranca con la historia de Isabel.
+  const isLive = stations.status === "ok" && stations.mode.startsWith("VIVO");
+  const rawFrom = params.get("from") ?? (isLive ? "" : (STORY?.from ?? ""));
+  const rawTo = params.get("to") ?? (isLive ? "" : (STORY?.to ?? ""));
   // "REAL" = datos reales de una mañana pasada (no en vivo): siempre se avisa que es repetición.
   const replayText =
     REPLAY_AT || (stations.status === "ok" && stations.mode === "REAL")
@@ -47,7 +51,7 @@ export function TripPlanner() {
   // Si lo que tenemos es de otro viaje, mostramos "cargando" en vez de datos viejos.
   const rec: Load<Recommendation> = recState.key === tripKey ? recState : { status: "loading" };
   const originStation = stations.status === "ok" ? stations.data.origins.find((s) => s.station_id === from) : undefined;
-  const walkToOrigin = originStation ? walkMinutes(HOME, originStation) : 3;
+  const walkToOrigin = originStation ? walkMinutes(here, originStation) : 3;
 
   const setRoute = (next: { from?: string; to?: string }) => {
     const q = new URLSearchParams(params.toString());
@@ -60,17 +64,33 @@ export function TripPlanner() {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([getStations(), getNearby()])
-      .then(([s, n]) => {
-        if (!alive) return;
-        setStations({ status: "ok", data: s.data, mode: s.mode });
-        setNearby(n.data);
-      })
+    getStations()
+      .then((s) => alive && setStations({ status: "ok", data: s.data, mode: s.mode }))
       .catch((e: unknown) => alive && setStations({ status: "error", message: e instanceof Error ? e.message : "Sin conexión" }));
     return () => {
       alive = false;
     };
   }, [reload]);
+
+  useEffect(() => {
+    let alive = true;
+    getNearby(here.lat, here.lon)
+      .then((n) => alive && setNearby(n.data))
+      .catch(() => alive && setNearby([]));
+    return () => {
+      alive = false;
+    };
+  }, [here.lat, here.lon, reload]);
+
+  // En vivo pedimos la ubicación (redondeada a ~100 m) solo para ordenar estaciones cercanas.
+  useEffect(() => {
+    if (!isLive || !("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => setHere({ lat: Math.round(p.coords.latitude * 1000) / 1000, lon: Math.round(p.coords.longitude * 1000) / 1000, label: "" }),
+      () => {},
+      { timeout: 8000, maximumAge: 60_000 },
+    );
+  }, [isLive]);
 
   useEffect(() => {
     if (!from || !to || from === to || stations.status !== "ok") return;
@@ -170,7 +190,7 @@ export function TripPlanner() {
       {nearby.length ? (
           <section aria-labelledby="cerca" className="min-w-0 max-lg:order-3 lg:col-start-1 lg:self-start">
             <h2 id="cerca" className="text-sm font-semibold text-ink-muted">
-              Cerca de ti en {HOME.label}
+              {here.label ? `Cerca de ti en ${here.label}` : "Cerca de ti"}
             </h2>
             <ul className="mt-2 divide-y divide-line overflow-hidden rounded-[var(--radius-card)] bg-card shadow-soft">
               {nearby.slice(0, 4).map((n) => {

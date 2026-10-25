@@ -289,6 +289,38 @@ def load() -> Data:
     return d
 
 
+class Source:
+    """Datos que usa la API. Con LIVE=1 el estado de las estaciones se refresca cada LIVE_TTL s
+    (si el feed falla, se queda con lo último que tenía y reintenta pronto)."""
+
+    LIVE_TTL = 60
+    RETRY = 15
+
+    def __init__(self):
+        self.want_live = os.getenv("LIVE") == "1" and os.getenv("VIAJE_MODE", "").lower() != "ejemplo"
+        self.base = load_real() if self.want_live else None
+        self.want_live = self.want_live and self.base is not None
+        self.data = self.base if self.want_live else load()
+        self._next = 0.0
+        self._lock = __import__("threading").Lock()
+
+    def get(self) -> Data:
+        if not self.want_live:
+            return self.data
+        import time
+        if time.time() >= self._next:
+            with self._lock:
+                if time.time() >= self._next:
+                    try:
+                        import dataclasses
+                        self.data = merge_live(dataclasses.replace(self.base), *load_live())
+                        self._next = time.time() + self.LIVE_TTL
+                    except Exception as e:
+                        print(f"[viaje] feed en vivo no disponible ({e}); sigo con lo último")
+                        self._next = time.time() + self.RETRY
+        return self.data
+
+
 # ---------------------------------------------------------------- V2 · pronóstico
 def simulate(data: Data, sid: str, start: datetime, minutes: float,
              n: int = N_SCENARIOS, seed: int = 42) -> dict:
