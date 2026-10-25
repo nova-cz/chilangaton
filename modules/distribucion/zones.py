@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-import pandas as pd
+if TYPE_CHECKING:  # pandas solo hace falta en analisis offline, no en la API ni en el motor
+    import pandas as pd
 
 
 @dataclass(frozen=True)
@@ -49,6 +51,8 @@ def zone_of(lat: float, lon: float) -> str | None:
 
 def assign_zones(stations: pd.DataFrame) -> pd.Series:
     """Serie code -> nombre de zona (NaN si queda fuera de todas)."""
+    import pandas as pd
+
     return pd.Series({code: zone_of(row.latitude, row.longitude) for code, row in stations.iterrows()}, name="zone")
 
 
