@@ -24,7 +24,7 @@ Navegador (PWA) ──> Vercel: apps/web (Next.js)
 
 **Mapa**: MapLibre GL 5 con estilo OpenFreeMap Positron (sin API key, datos OSM). La vista 3D agrega una capa `fill-extrusion` con `render_height` de OpenStreetMap; si el estilo no trae la capa `building`, el botón 3D se deshabilita. Sin WebGL → estado de error con acceso a la lista. Cambiar estilo con `NEXT_PUBLIC_MAP_STYLE_URL`.
 
-**S6 (pendiente)**: `@deck.gl/maplibre` (+ `@deck.gl/layers`, misma versión 9.x) como overlay intercalado (`interleaved: true`) añadido con `map.addControl(overlay)` dentro de `StationMap` (o un `FlowMap` hermano) y `ArcLayer` con origen/destino por estación. Solo en el panel; fallback 2D si no hay WebGL o con `prefers-reduced-motion`.
+**S6**: `features/simulator/flow-map.tsx` carga deck.gl 9.4 bajo demanda, con `MapLibreOverlay` intercalado y `ArcLayer`. Lee promedios por par de zonas y centros aproximados del JSON de S2; no representa trayectorias por estación. El contador y círculo muestran la serie simulada agregada de Buenavista y San Rafael, con los controles de adopción y recuperación de S4. Reproducción pausable cada 15 minutos; la animación de los arcos es ilustrativa. `FlowFlat` ofrece un esquema SVG sin WebGL/red si falla el mapa, se elige 2D o se solicita reducir movimiento; siempre hay tabla equivalente. Solo en el panel.
 
 ## API (`services/api`)
 - `core/config.py`: variables `APP_ENV`, `DEMO_MODE`, `CORS_ORIGINS` (CSV), `ENABLED_MODULES` (CSV, vacío = todos). Ver `.env.example`.

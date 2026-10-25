@@ -59,7 +59,7 @@ def run() -> dict:
     result = {
         "label": "DATOS REALES (septiembre 2026), zonas aproximadas",
         "window": {"weekdays_only": True, "start": f"{START_H:02d}:00", "end": f"{END_H:02d}:00", "tz": "America/Mexico_City", "days": len(days)},
-        "zones": {z.name: {"role": z.role, "radius_m": z.radius_m, "stations": zone_counts[z.name]} for z in zones.ZONES},
+        "zones": {z.name: {"role": z.role, "radius_m": z.radius_m, "stations": zone_counts[z.name], "center": [z.lon, z.lat]} for z in zones.ZONES},
         "trips_per_day_avg": round(avg, 1),
         "trips_per_day_min": int(per_day.min()),
         "trips_per_day_max": int(per_day.max()),

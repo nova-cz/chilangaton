@@ -5,15 +5,16 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { StateMessage } from "@/components/ui/state-message";
 import { useState } from "react";
 import { ComparisonTable } from "./comparison-table";
+import { FlowExplorer } from "./flow-explorer";
 import { cdmxTime, delta } from "./format";
 import { RecoveredToggle } from "./recovered-toggle";
 import { ScenarioChart } from "./scenario-chart";
 import { ScenarioPicker } from "./scenario-picker";
 import type { Scenario } from "./scenarios";
-import type { SimulationResults } from "./types";
+import type { ContraflujoResult, SimulationResults } from "./types";
 
 /** Controles + gráfica + comparación + supuestos, todo desde modules/distribucion/fixtures/simulation_results.json. */
-export function SimulatorView({ data }: { data: SimulationResults }) {
+export function SimulatorView({ data, contraflujo }: { data: SimulationResults; contraflujo: ContraflujoResult }) {
   const [scenario, setScenario] = useState<Scenario>(20);
   const [recovered, setRecovered] = useState(false);
   const results = data.scenarios[recovered ? "true" : "false"];
@@ -69,6 +70,7 @@ export function SimulatorView({ data }: { data: SimulationResults }) {
           <StateMessage kind="empty" title="Sin resultados" />
         )}
       </Card>
+      {picked ? <FlowExplorer contraflujo={contraflujo} result={picked} /> : null}
     </>
   );
 }

@@ -40,6 +40,7 @@ export interface SimulationResults {
 
 export interface ContraflujoResult {
   label: string;
+  zones?: Record<string, { role: string; radius_m: number; stations: number; center?: [number, number] }>;
   window: { start: string; end: string; days: number };
   trips_per_day_avg: number;
   trips_per_day_min: number;

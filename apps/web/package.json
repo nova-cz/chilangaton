@@ -11,6 +11,9 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
+    "@deck.gl/core": "9.4.0",
+    "@deck.gl/layers": "9.4.0",
+    "@deck.gl/maplibre": "9.4.0",
     "@serwist/next": "^9.5.13",
     "clsx": "^2.1.1",
     "geist": "^1.8.2",

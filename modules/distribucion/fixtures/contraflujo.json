@@ -11,27 +11,47 @@
     "Anzures": {
       "role": "fills",
       "radius_m": 700,
-      "stations": 16
+      "stations": 16,
+      "center": [
+        -99.179,
+        19.44
+      ]
     },
     "Polanco": {
       "role": "fills",
       "radius_m": 900,
-      "stations": 26
+      "stations": 26,
+      "center": [
+        -99.193,
+        19.436
+      ]
     },
     "Reforma": {
       "role": "fills",
       "radius_m": 900,
-      "stations": 34
+      "stations": 34,
+      "center": [
+        -99.17,
+        19.43
+      ]
     },
     "Buenavista": {
       "role": "empties",
       "radius_m": 700,
-      "stations": 13
+      "stations": 13,
+      "center": [
+        -99.153,
+        19.446
+      ]
     },
     "San Rafael": {
       "role": "empties",
       "radius_m": 650,
-      "stations": 14
+      "stations": 14,
+      "center": [
+        -99.16,
+        19.441
+      ]
     }
   },
   "trips_per_day_avg": 39.8,
