@@ -10,4 +10,6 @@ export interface Priority {
   peak_departures?: number | null;
   /** Opcional: % del tiempo vacía en pico; null = pendiente feed L1 */
   empty_share?: number | null;
+  /** Opcional: código CE del CSV (p. ej. 271-272); station_id es el del feed */
+  short_name?: string | null;
 }

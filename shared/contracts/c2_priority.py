@@ -12,3 +12,4 @@ class Priority(BaseModel):
     # Opcionales (para explicar el score; los consumidores pueden ignorarlos)
     peak_departures: float | None = Field(default=None, description="Salidas promedio por día hábil en pico")
     empty_share: float | None = Field(default=None, description="% del tiempo vacía en pico; None = pendiente feed L1")
+    short_name: str | None = Field(default=None, description="Código CE del CSV (p. ej. 271-272); station_id es el del feed")

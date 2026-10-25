@@ -5,4 +5,6 @@ export interface LossRisk {
   time_band: string;
   disappeared_bikes: number;
   note: "riesgo, no robo comprobado";
+  /** Opcional: código CE del CSV (p. ej. 271-272); station_id es el del feed */
+  short_name?: string | null;
 }
