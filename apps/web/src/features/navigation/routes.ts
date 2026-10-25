@@ -28,7 +28,7 @@ export interface NavItem {
 export const PANEL_NAV: NavItem[] = [
   { href: "/panel", label: "Resumen", icon: LayoutDashboard, owner: "Línea 4", ready: true },
   { href: "/panel/bici-util", label: "Bici útil", icon: Gauge, owner: "Línea 1", ready: true },
-  { href: "/panel/taller", label: "Taller", icon: Wrench, owner: "Línea 2", ready: false },
+  { href: "/panel/taller", label: "Taller", icon: Wrench, owner: "Línea 2", ready: true },
   { href: "/panel/casos", label: "Incidentes y casos", icon: ShieldAlert, owner: "Línea 5", ready: true },
   { href: "/panel/simulador", label: "Simulador", icon: FlaskConical, owner: "Línea 4", ready: true },
   { href: "/panel/supervision", label: "Supervisión", icon: ClipboardCheck, owner: "Línea 1", ready: true },
