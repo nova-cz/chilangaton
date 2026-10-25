@@ -36,9 +36,12 @@ def ignored(at: str | None = None):
 
 
 @router.get("/loss-risk", response_model=dict)
-def loss_risk():
-    items = [LossRisk(**r).model_dump() for r in engine.loss_risk(DATA)]
-    return {"mode": DATA.mode, "items": items}
+def loss_risk(at: str | None = None, limit: int = 50):
+    """D4 · Estaciones y franjas donde más bicis dejan de aparecer (C6). Riesgo, no robo comprobado."""
+    when = datetime.fromisoformat(at) if at else None
+    items = [LossRisk(**r).model_dump() for r in engine.loss_risk(DATA, when)]
+    total = sum(i["disappeared_bikes"] for i in items)
+    return {"mode": DATA.mode, "total_bikes": total, "items": items[:limit]}
 
 
 @router.get("/reports", response_model=dict)
