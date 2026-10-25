@@ -1,0 +1,105 @@
+import { apiGet } from "@/lib/api";
+import { config } from "@/lib/config";
+import snapshot from "./demo-snapshot.json";
+import type { ForecastPoint, NearbyRow, Recommendation, TripPrefs, ViajeStation } from "./types";
+
+/**
+ * Única puerta de datos de Línea 3.
+ * - demo: escenario fijo exportado del motor (`python -m modules.viaje.export_demo`), martes 29 sep 07:45.
+ * - api: FastAPI /api/v1/viaje/*. En la demo en vivo fijamos la misma hora con `at` para que la historia cuadre.
+ */
+const snap = snapshot as unknown as {
+  _meta: { at_local: string };
+  mode: string;
+  home: { lat: number; lon: number; label: string };
+  story: { from: string; to: string };
+  stations: ViajeStation[];
+  origins: string[];
+  destinations: string[];
+  nearby: NearbyRow[];
+  forecast: Record<string, ForecastPoint[]>;
+  recommendations: Record<string, Omit<Recommendation, "preferences">>;
+};
+
+export const DEMO_AT = snap._meta.at_local;
+export const HOME = snap.home;
+/** La historia de la demo (Isabel): de Buenavista a Reforma a las 7:45. */
+export const STORY = snap.story;
+export const FORECAST_HORIZONS = [15, 30, 45, 60, 75, 90] as const;
+const isDemo = config.dataMode === "demo";
+/**
+ * Con API y sin NEXT_PUBLIC_DEMO_AT se usa la hora real de ahorita (la API debe correr con LIVE=1).
+ * En modo demo, o si fijas DEMO_AT, es una REPETICIÓN de esa mañana y la pantalla lo dice.
+ */
+const fixedAt = isDemo ? DEMO_AT : process.env.NEXT_PUBLIC_DEMO_AT;
+const at = fixedAt ? `&at=${fixedAt}` : "";
+export const REPLAY_AT: string | null = fixedAt ?? null;
+
+export interface Sourced<T> {
+  data: T;
+  /** "EJEMPLO", "VIVO + baseline de EJEMPLO", "REAL"… lo decide el motor. */
+  mode: string;
+}
+
+export interface StationChoices {
+  origins: ViajeStation[];
+  destinations: ViajeStation[];
+}
+
+/** En demo solo se ofrecen los pares que trae el escenario; con API, todas las estaciones. */
+export async function getStations(): Promise<Sourced<StationChoices>> {
+  if (isDemo) {
+    const pick = (ids: string[]) => snap.stations.filter((s) => ids.includes(s.station_id));
+    return { data: { origins: pick(snap.origins), destinations: pick(snap.destinations) }, mode: snap.mode };
+  }
+  const r = await apiGet<{ mode: string; stations: ViajeStation[] }>(`/viaje/stations?${at.slice(1)}`);
+  return { data: { origins: r.stations, destinations: r.stations }, mode: r.mode };
+}
+
+export async function getNearby(lat = HOME.lat, lon = HOME.lon): Promise<Sourced<NearbyRow[]>> {
+  if (isDemo) return { data: snap.nearby, mode: snap.mode };
+  const r = await apiGet<{ mode: string; stations: NearbyRow[] }>(`/viaje/nearby?lat=${lat}&lon=${lon}${at}&limit=6`);
+  return { data: r.stations, mode: r.mode };
+}
+
+export async function getForecast(id: string): Promise<Sourced<{ station: ViajeStation; forecast: ForecastPoint[] }> | null> {
+  if (isDemo) {
+    const station = snap.stations.find((s) => s.station_id === id);
+    const forecast = snap.forecast[id];
+    return station && forecast ? { data: { station, forecast }, mode: snap.mode } : null;
+  }
+  const r = await apiGet<{ mode: string; station: ViajeStation; forecast: ForecastPoint[] }>(
+    `/viaje/stations/${encodeURIComponent(id)}/forecast?horizons=${FORECAST_HORIZONS.join(",")}${at}`,
+  );
+  return { data: { station: r.station, forecast: r.forecast }, mode: r.mode };
+}
+
+export async function getRecommendation(
+  origin: string,
+  destination: string,
+  prefs: TripPrefs,
+  walkToOrigin: number,
+): Promise<Recommendation> {
+  const walk = prefs.avoidEffort ? 2 : prefs.maxWalk;
+  if (isDemo) {
+    const r = snap.recommendations[`${origin}>${destination}>${walk}`];
+    if (!r) throw new Error("Ese viaje no está en la repetición de la mañana. Prueba con otro origen o destino.");
+    if (prefs.acceptAlternative || r.alternatives.length === 0) return r;
+    // Misma regla que el motor cuando no aceptas otra estación.
+    return {
+      ...r,
+      alternatives: [],
+      advice: "Tu destino podría estar lleno. Elegiste no cambiar de estación: te avisaremos antes de llegar.",
+    };
+  }
+  const q = new URLSearchParams({
+    origin,
+    destination,
+    ...(fixedAt ? { at: fixedAt } : {}),
+    walk_to_origin: String(walkToOrigin),
+    max_walk: String(walk),
+    accept_alt: String(prefs.acceptAlternative),
+    avoid_effort: String(prefs.avoidEffort),
+  });
+  return apiGet<Recommendation>(`/viaje/recommendations?${q}`);
+}

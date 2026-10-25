@@ -1,6 +1,6 @@
-import { BikeIllustration } from "@/components/brand/bike-illustration";
 import { Badge, DemoBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { BikeHero } from "@/components/three/bike-hero";
 import type { DemoMission, DemoStation } from "@/features/demo/types";
 import { cn } from "@/lib/cn";
 import { Gift, MapPin, Navigation } from "lucide-react";
@@ -26,20 +26,18 @@ export function MissionCard({
       aria-labelledby={`mission-${mission.id}`}
       className={cn("overflow-hidden rounded-[var(--radius-sheet)] bg-lime-100", className)}
     >
-      <div className="flex items-start gap-2 p-4 pb-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <Badge tone="dark">Misión</Badge>
-            <DemoBadge />
-          </div>
-          <h2 id={`mission-${mission.id}`} className="mt-2 text-lg leading-snug font-bold">
-            {mission.title}
-          </h2>
+      <div className="p-4 pb-0">
+        <div className="flex items-center gap-2">
+          <Badge tone="dark">Misión</Badge>
+          <DemoBadge />
         </div>
-        <BikeIllustration className="w-28 shrink-0 lg:w-32" />
+        <h2 id={`mission-${mission.id}`} className="mt-2 text-2xl leading-tight font-bold tracking-tight">
+          {mission.title}
+        </h2>
       </div>
+      <BikeHero className="h-44 w-full lg:h-52" />
 
-      <ol className="mx-4 grid gap-1.5" aria-label="Ruta de la misión">
+      <ol className="mx-4 -mt-2 grid gap-1.5" aria-label="Ruta de la misión">
         <RouteStop label="Recoge en" name={from.name} dot="bg-brand-500" />
         <RouteStop label="Deja en" name={to.name} dot="bg-brand-900" />
       </ol>

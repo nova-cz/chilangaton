@@ -28,7 +28,7 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
           <MapPin aria-hidden className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 id={`station-${station.id}`} className="truncate text-lg font-bold tracking-tight lg:text-xl">
+          <h2 id={`station-${station.id}`} className="truncate text-xl font-bold tracking-tight">
             {station.name}
           </h2>
           <div className="mt-0.5 flex items-center gap-2">
@@ -48,6 +48,7 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
 
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Tile
+          delay={40}
           tint="bg-brand-100/70"
           iconTint="bg-brand-500 text-white"
           icon={<Bike aria-hidden className="size-4" />}
@@ -56,6 +57,7 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
           status={bikes}
         />
         <Tile
+          delay={90}
           tint="bg-lime-100"
           iconTint="bg-lime-300 text-brand-900"
           icon={<ParkingSquare aria-hidden className="size-4" />}
@@ -63,7 +65,7 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
           value={station.docks_available}
           status={docks}
         />
-        <div className="flex flex-col items-center justify-center rounded-3xl bg-mist-100 p-2.5">
+        <div className="flex animate-rise flex-col items-center justify-center rounded-3xl bg-mist-100 p-2.5" style={{ animationDelay: "140ms" }}>
           <Ring value={occupancy} size={58} stroke={6} trackClass="text-white" barClass="text-brand-700">
             <Metric value={Math.round(occupancy * 100)} unit="%" className="text-base" />
           </Ring>
@@ -99,6 +101,7 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
 }
 
 function Tile({
+  delay,
   tint,
   iconTint,
   icon,
@@ -106,6 +109,7 @@ function Tile({
   value,
   status,
 }: {
+  delay: number;
   tint: string;
   iconTint: string;
   icon: ReactNode;
@@ -114,10 +118,10 @@ function Tile({
   status: { tone: Tone; label: string };
 }) {
   return (
-    <div className={cn("flex flex-col items-center rounded-3xl p-2.5 text-center", tint)}>
+    <div className={cn("flex animate-rise flex-col items-center rounded-3xl p-2.5 text-center", tint)} style={{ animationDelay: `${delay}ms` }}>
       <span className={cn("grid size-9 place-items-center rounded-full", iconTint)}>{icon}</span>
       <p className="mt-1.5 text-[11px] font-semibold text-ink-muted">{label}</p>
-      <Metric value={value} className="text-2xl lg:text-3xl" />
+      <Metric value={value} className="text-5xl leading-none" />
       <p className={cn("text-[11px] leading-tight font-semibold", TONE_TEXT[status.tone])}>{status.label}</p>
     </div>
   );
