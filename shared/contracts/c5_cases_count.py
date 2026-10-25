@@ -11,6 +11,7 @@ from pydantic import AwareDatetime, BaseModel, Field
 
 class CasesCount(BaseModel):
     station_id: str = Field(description='station_id del feed GBFS (no el código "CE-xxx")')
+    short_name: str | None = Field(None, description='Código CE normalizado ("14" para CE-014): la llave para unir con otras líneas')
     open_cases: int = Field(ge=0, description="Casos abiertos cuya última estación conocida es esta")
     reincorporated: int = Field(ge=0, description="Casos que terminaron con la bici reincorporada en esta estación")
 

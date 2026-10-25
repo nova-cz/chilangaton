@@ -3,20 +3,22 @@ import type { ExampleOutlook } from "@/features/demo/types";
 export type Tone = "ok" | "warn" | "danger";
 
 /** Semáforo siempre con texto (nunca solo color). */
-export function bikesStatus(bikes: number): { tone: Tone; label: string } {
+export function bikesStatus(bikes: number | null): { tone: Tone; label: string } {
+  if (bikes === null) return { tone: "warn", label: "Sin dato de bicis" };
   if (bikes === 0) return { tone: "danger", label: "Sin bicis" };
   if (bikes <= 3) return { tone: "warn", label: "Pocas bicis" };
   return { tone: "ok", label: "Hay bicis" };
 }
 
-export function docksStatus(docks: number): { tone: Tone; label: string } {
+export function docksStatus(docks: number | null): { tone: Tone; label: string } {
+  if (docks === null) return { tone: "warn", label: "Sin dato de anclajes" };
   if (docks === 0) return { tone: "danger", label: "Sin anclajes" };
   if (docks <= 3) return { tone: "warn", label: "Pocos anclajes" };
   return { tone: "ok", label: "Hay anclajes" };
 }
 
 /** Peor de los dos estados: define el color del marcador. */
-export function stationTone(bikes: number, docks: number): Tone {
+export function stationTone(bikes: number | null, docks: number | null): Tone {
   const order: Tone[] = ["ok", "warn", "danger"];
   const a = order.indexOf(bikesStatus(bikes).tone);
   const b = order.indexOf(docksStatus(docks).tone);

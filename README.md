@@ -16,8 +16,10 @@ npm run dev
 # API (http://localhost:8000/health · docs en /docs) — desde la raíz del repo
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
-uvicorn services.api.main:app --reload
+LIVE=1 uvicorn services.api.main:app --reload
 ```
+
+Viaje consulta la API por defecto y actualiza el planeador cada minuto cuando no está corriendo el contador. El mapa de `/app` conserva sus 12 estaciones DEMO. Para ensayar sin API, inicia la web con `NEXT_PUBLIC_DATA_MODE=demo npm run dev`: se identifica como repetición histórica, no como estado en vivo. Si ya tienes `.env.local` con `NEXT_PUBLIC_DATA_MODE=demo`, cambia esa variable a `api` para conectarte al feed.
 
 Verificación: `npm run lint && npm run typecheck && npm run build` (en `apps/web`) y `pytest` (en la raíz).
 

@@ -34,12 +34,16 @@ export interface SimulationResults {
   stations: number;
   trips_in_window: number;
   target_zones: string[];
+  target_station_hours?: number;
+  excluded_stations?: number;
+  excluded_trips?: number;
   assumptions: string[];
   scenarios: Record<"true" | "false", Record<string, ScenarioResult>>;
 }
 
 export interface ContraflujoResult {
   label: string;
+  zones?: Record<string, { role: string; radius_m: number; stations: number; center?: [number, number] }>;
   window: { start: string; end: string; days: number };
   trips_per_day_avg: number;
   trips_per_day_min: number;

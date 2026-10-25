@@ -13,7 +13,11 @@ Router FastAPI en `router.py` (`router`), montado bajo `/api/v1`. Todo en memori
 | `GET /cases/{id}` | Ficha del caso con su historial |
 | `POST /cases/{id}/transitions` | Mueve el caso; 409 si la transición no vale o la quiere hacer la app/sistema |
 | `POST /cases/{id}/assign` | Asigna a un Guardián |
+| `GET /scenarios` | Los 3 escenarios SIMULADOS de R4 (estación desconectada, sustracción, traslado a taller) |
+| `POST /scenarios/{key}/run` | Crea un caso SIMULADO y lo lleva a su resultado esperado; no entra a C5 |
 
 Estados de "Anclé aquí": `vemos_una_mas`, `sin_cambio`, `no_responde` (y `revisando` mientras corre la ventana). Nunca "viaje cerrado".
+
+Los casos SIMULADOS llevan `simulated: true`, se muestran con la etiqueta SIMULADO y no cuentan en C5 ni en los indicadores del panel.
 
 Pruebas: `python -m pytest modules/regreso` desde la raíz del repo.

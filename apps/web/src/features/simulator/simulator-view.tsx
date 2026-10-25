@@ -5,20 +5,27 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { StateMessage } from "@/components/ui/state-message";
 import { useState } from "react";
 import { ComparisonTable } from "./comparison-table";
+import { FlowExplorer } from "./flow-explorer";
 import { cdmxTime, delta } from "./format";
 import { RecoveredToggle } from "./recovered-toggle";
 import { ScenarioChart } from "./scenario-chart";
+import { ScenarioDashboard } from "./scenario-dashboard";
 import { ScenarioPicker } from "./scenario-picker";
 import type { Scenario } from "./scenarios";
-import type { SimulationResults } from "./types";
+import type { ContraflujoResult, SimulationResults } from "./types";
 
 /** Controles + gráfica + comparación + supuestos, todo desde modules/distribucion/fixtures/simulation_results.json. */
-export function SimulatorView({ data }: { data: SimulationResults }) {
+export function SimulatorView({ data, contraflujo }: { data: SimulationResults; contraflujo: ContraflujoResult }) {
   const [scenario, setScenario] = useState<Scenario>(20);
   const [recovered, setRecovered] = useState(false);
   const results = data.scenarios[recovered ? "true" : "false"];
   const none = results["0"];
   const picked = results[String(scenario)];
+  const allResults = Object.values(data.scenarios).flatMap((group) => Object.values(group));
+  const scaleMaximums = {
+    hours: Math.max(5, Math.ceil(Math.max(...allResults.map((s) => s.totals.empty_station_hours_target)) / 5) * 5),
+    bikes: Math.max(1, ...allResults.map((s) => s.totals.bikes_moved)),
+  };
   const maxGap = Math.max(
     0,
     ...(results["20"]?.series ?? []).map((p, i) => Math.abs(p.empty_stations_target - (none?.series[i]?.empty_stations_target ?? p.empty_stations_target))),
@@ -31,8 +38,10 @@ export function SimulatorView({ data }: { data: SimulationResults }) {
         <RecoveredToggle checked={recovered} onChange={setRecovered} />
       </div>
 
+      <ScenarioDashboard results={results} selected={scenario} onSelect={setScenario} targetHours={data.target_station_hours} scaleMaximums={scaleMaximums} />
+
       {none && picked ? (
-        <p className="rounded-2xl bg-brand-900 px-4 py-3 text-sm text-white" role="status" aria-live="polite">
+        <p className="sr-only" role="status" aria-live="polite">
           Con {scenario} % de adopción{recovered ? " y bicis recuperadas antes" : ""}, las horas estación-vacía en Buenavista y San Rafael pasan de{" "}
           <strong>{none.totals.empty_station_hours_target} h</strong> a <strong>{picked.totals.empty_station_hours_target} h</strong>:{" "}
           {delta(picked.totals.empty_station_hours_target, none.totals.empty_station_hours_target, "h")}.
@@ -41,7 +50,7 @@ export function SimulatorView({ data }: { data: SimulationResults }) {
 
       <div className="grid items-start gap-6 xl:grid-cols-[1.6fr_1fr]">
         <Card>
-          <CardHeader title="Escenarios de adopción" description="Estaciones sin bicis en Buenavista y San Rafael cada 15 minutos." action={<SimulatedBadge />} />
+          <CardHeader title="Evolución durante la mañana" description="Estaciones sin bicis en Buenavista y San Rafael cada 15 minutos." action={<SimulatedBadge />} />
           <ScenarioChart results={results} selected={scenario} />
           <p className="px-5 pb-5 text-xs text-ink-muted">
             Las líneas casi se encíman: la diferencia máxima entre 0 % y 20 % es de {maxGap} {maxGap === 1 ? "estación" : "estaciones"}.
@@ -57,6 +66,7 @@ export function SimulatorView({ data }: { data: SimulationResults }) {
             <li className="py-3 text-ink-muted">
               {data.stations} estaciones y {data.trips_in_window.toLocaleString("es-MX")} viajes reales del {data.date}.
             </li>
+            {data.excluded_stations !== undefined ? <li className="py-3 text-ink-muted">{data.excluded_stations} estaciones excluidas · {data.excluded_trips ?? 0} viajes fuera del escenario.</li> : null}
           </ul>
         </Card>
       </div>
@@ -69,6 +79,7 @@ export function SimulatorView({ data }: { data: SimulationResults }) {
           <StateMessage kind="empty" title="Sin resultados" />
         )}
       </Card>
+      {picked ? <FlowExplorer contraflujo={contraflujo} result={picked} /> : null}
     </>
   );
 }

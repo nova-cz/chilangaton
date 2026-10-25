@@ -1,13 +1,13 @@
 "use client";
 
-import type { DemoStation } from "@/features/demo/types";
+import type { Station } from "@/features/stations/types";
 import { cn } from "@/lib/cn";
 
 export type StationFilter = "all" | "bikes" | "docks";
 
-export function filterStations(stations: DemoStation[], filter: StationFilter) {
-  if (filter === "bikes") return stations.filter((s) => s.bikes_available > 0);
-  if (filter === "docks") return stations.filter((s) => s.docks_available > 0);
+export function filterStations(stations: Station[], filter: StationFilter) {
+  if (filter === "bikes") return stations.filter((s) => (s.bikes_available ?? 0) > 0 && s.is_renting !== false);
+  if (filter === "docks") return stations.filter((s) => (s.docks_available ?? 0) > 0 && s.is_returning !== false);
   return stations;
 }
 
@@ -17,14 +17,14 @@ const OPTIONS: { value: StationFilter; label: string }[] = [
   { value: "docks", label: "Con anclajes" },
 ];
 
-/** Chips de filtro con conteo real de los datos DEMO cargados. */
+/** Chips de filtro con conteo de las estaciones cargadas. */
 export function FilterChips({
   stations,
   value,
   onChange,
   className,
 }: {
-  stations: DemoStation[];
+  stations: Station[];
   value: StationFilter;
   onChange: (value: StationFilter) => void;
   className?: string;

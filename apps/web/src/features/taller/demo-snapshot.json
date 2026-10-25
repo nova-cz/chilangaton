@@ -1,9 +1,14 @@
 {
+ "_meta": {
+  "at_local": "2026-09-29T07:45",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "generado_por": "python -m modules.taller.export_web"
+ },
  "mode": "REAL",
- "ts": "2026-09-29T13:45:00+00:00",
  "totals": {
-  "stations": 286,
-  "suspected": 667
+  "suspected": 667.0,
+  "stations_flagged": 286,
+  "lost_bikes": 235
  },
  "priority": [
   {
@@ -17,8 +22,7 @@
    ],
    "peak_departures": 272.8,
    "empty_share": null,
-   "short_name": "271-272",
-   "name": "Jesús García - Carlos J. Meneses"
+   "short_name": "271-272"
   },
   {
    "station_id": "553",
@@ -31,8 +35,7 @@
    ],
    "peak_departures": 86.6,
    "empty_share": null,
-   "short_name": "553",
-   "name": "Jaime Torres Bodet - Ribera de San Cosme"
+   "short_name": "553"
   },
   {
    "station_id": "266-267",
@@ -45,8 +48,7 @@
    ],
    "peak_departures": 98.8,
    "empty_share": null,
-   "short_name": "266-267",
-   "name": "Jesús García - Carlos J. Meneses"
+   "short_name": "266-267"
   },
   {
    "station_id": "107-108",
@@ -59,8 +61,7 @@
    ],
    "peak_departures": 87.0,
    "empty_share": null,
-   "short_name": "107-108",
-   "name": "Tolsa-Balderas"
+   "short_name": "107-108"
   },
   {
    "station_id": "158-159",
@@ -73,8 +74,7 @@
    ],
    "peak_departures": 103.5,
    "empty_share": null,
-   "short_name": "158-159",
-   "name": "Huatabampo-Eje 1 Pte. Av. Cuauhtémoc"
+   "short_name": "158-159"
   },
   {
    "station_id": "38",
@@ -87,8 +87,7 @@
    ],
    "peak_departures": 136.7,
    "empty_share": null,
-   "short_name": "38",
-   "name": "Cozumel - Puebla"
+   "short_name": "38"
   },
   {
    "station_id": "43",
@@ -101,8 +100,7 @@
    ],
    "peak_departures": 71.4,
    "empty_share": null,
-   "short_name": "43",
-   "name": "Revillagigedo - Juárez"
+   "short_name": "43"
   },
   {
    "station_id": "560",
@@ -115,8 +113,7 @@
    ],
    "peak_departures": 63.4,
    "empty_share": null,
-   "short_name": "560",
-   "name": "Doctor Liceaga - Eje Central"
+   "short_name": "560"
   },
   {
    "station_id": "268-269",
@@ -129,8 +126,7 @@
    ],
    "peak_departures": 61.5,
    "empty_share": null,
-   "short_name": "268-269",
-   "name": "Luis Donaldo Colosio - Av. Jesús García"
+   "short_name": "268-269"
   },
   {
    "station_id": "174",
@@ -143,8 +139,7 @@
    ],
    "peak_departures": 82.3,
    "empty_share": null,
-   "short_name": "174",
-   "name": "Joaquín Garcia Icazbalceta-Ignacio Manuel Altamirano"
+   "short_name": "174"
   },
   {
    "station_id": "390-391",
@@ -157,8 +152,7 @@
    ],
    "peak_departures": 91.1,
    "empty_share": null,
-   "short_name": "390-391",
-   "name": "Oso-Félix Cuevas"
+   "short_name": "390-391"
   },
   {
    "station_id": "64",
@@ -171,8 +165,7 @@
    ],
    "peak_departures": 104.5,
    "empty_share": null,
-   "short_name": "64",
-   "name": "Sonora - Ámsterdam"
+   "short_name": "64"
   },
   {
    "station_id": "621",
@@ -185,8 +178,7 @@
    ],
    "peak_departures": 64.6,
    "empty_share": null,
-   "short_name": "621",
-   "name": "Lago Poniente - Calzada de Tlalpan"
+   "short_name": "621"
   },
   {
    "station_id": "563",
@@ -199,8 +191,7 @@
    ],
    "peak_departures": 85.4,
    "empty_share": null,
-   "short_name": "563",
-   "name": "Doctor Velasco - Niños Héroes"
+   "short_name": "563"
   },
   {
    "station_id": "1",
@@ -213,8 +204,7 @@
    ],
    "peak_departures": 105.5,
    "empty_share": null,
-   "short_name": "1",
-   "name": "Río Sena-Río Balsas"
+   "short_name": "1"
   },
   {
    "station_id": "163",
@@ -227,8 +217,7 @@
    ],
    "peak_departures": 43.8,
    "empty_share": null,
-   "short_name": "163",
-   "name": "Toluca-Bajío"
+   "short_name": "163"
   },
   {
    "station_id": "183",
@@ -241,8 +230,7 @@
    ],
    "peak_departures": 56.7,
    "empty_share": null,
-   "short_name": "183",
-   "name": "Gabino Barreda-Guillermo Prieto"
+   "short_name": "183"
   },
   {
    "station_id": "548",
@@ -255,8 +243,7 @@
    ],
    "peak_departures": 124.6,
    "empty_share": null,
-   "short_name": "548",
-   "name": "Dr. Mariano Azuela - Jose Antonio Alzate"
+   "short_name": "548"
   },
   {
    "station_id": "273-274",
@@ -269,8 +256,7 @@
    ],
    "peak_departures": 93.6,
    "empty_share": null,
-   "short_name": "273-274",
-   "name": "Luis Donaldo Colosio - Av. Jesús García"
+   "short_name": "273-274"
   },
   {
    "station_id": "635",
@@ -283,8 +269,7 @@
    ],
    "peak_departures": 53.0,
    "empty_share": null,
-   "short_name": "635",
-   "name": "Calzada Santa Cruz - Antillas"
+   "short_name": "635"
   },
   {
    "station_id": "507",
@@ -297,8 +282,7 @@
    ],
    "peak_departures": 39.0,
    "empty_share": null,
-   "short_name": "507",
-   "name": "Mar Mediterráneo - Azcapotzalco"
+   "short_name": "507"
   },
   {
    "station_id": "644",
@@ -311,8 +295,7 @@
    ],
    "peak_departures": 66.0,
    "empty_share": null,
-   "short_name": "644",
-   "name": "Monrovia - Popocatépetl (Eje 8 Sur)"
+   "short_name": "644"
   },
   {
    "station_id": "575",
@@ -325,8 +308,7 @@
    ],
    "peak_departures": 32.4,
    "empty_share": null,
-   "short_name": "575",
-   "name": "Fernando Ramírez - Eje Central"
+   "short_name": "575"
   },
   {
    "station_id": "14",
@@ -339,8 +321,7 @@
    ],
    "peak_departures": 80.5,
    "empty_share": null,
-   "short_name": "14",
-   "name": "Reforma - Río de Plata"
+   "short_name": "14"
   },
   {
    "station_id": "492",
@@ -353,358 +334,7 @@
    ],
    "peak_departures": 80.5,
    "empty_share": null,
-   "short_name": "492",
-   "name": "Lago Cuitzeo - Felipe Carrillo Puerto"
-  },
-  {
-   "station_id": "584",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 5.0,
-   "priority_score": 0.054,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 61.8,
-   "empty_share": null,
-   "short_name": "584",
-   "name": "Enrique Granados - José Peón Contreras (Eje 3)"
-  },
-  {
-   "station_id": "494",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 3.0,
-   "priority_score": 0.052,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 99.6,
-   "empty_share": null,
-   "short_name": "494",
-   "name": "Tláloc - Calzada México Tacuba"
-  },
-  {
-   "station_id": "237-238",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 3.0,
-   "priority_score": 0.052,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 99.7,
-   "empty_share": null,
-   "short_name": "237-238",
-   "name": "Andrés Bello-George Eliot"
-  },
-  {
-   "station_id": "648",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 6.0,
-   "priority_score": 0.052,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 50.0,
-   "empty_share": null,
-   "short_name": "648",
-   "name": "Rafael Olivia - 20 de agosto"
-  },
-  {
-   "station_id": "549",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 7.0,
-   "priority_score": 0.052,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 42.7,
-   "empty_share": null,
-   "short_name": "549",
-   "name": "Sor Juana Ines de la Cruz - Dr. Atl"
-  },
-  {
-   "station_id": "52",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 4.0,
-   "priority_score": 0.05,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 72.0,
-   "empty_share": null,
-   "short_name": "52",
-   "name": "Hidalgo - Trujano"
-  },
-  {
-   "station_id": "41",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 5.0,
-   "priority_score": 0.049,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 56.4,
-   "empty_share": null,
-   "short_name": "41",
-   "name": "Reforma - Av. de la República"
-  },
-  {
-   "station_id": "29",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 3.0,
-   "priority_score": 0.046,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 88.5,
-   "empty_share": null,
-   "short_name": "29",
-   "name": "Reforma - Bucareli"
-  },
-  {
-   "station_id": "520",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 7.0,
-   "priority_score": 0.043,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 35.1,
-   "empty_share": null,
-   "short_name": "520",
-   "name": "Salónica - Eje 3 Norte Camarones"
-  },
-  {
-   "station_id": "145",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 4.0,
-   "priority_score": 0.04,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 57.3,
-   "empty_share": null,
-   "short_name": "145",
-   "name": "Yucatán-Chiapas"
-  },
-  {
-   "station_id": "270",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 3.0,
-   "priority_score": 0.035,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 66.0,
-   "empty_share": null,
-   "short_name": "270",
-   "name": "De la República-Ponciano Arriaga"
-  },
-  {
-   "station_id": "608",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 4.0,
-   "priority_score": 0.034,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 48.4,
-   "empty_share": null,
-   "short_name": "608",
-   "name": "Ahorro Postal - Francisco Márquez"
-  },
-  {
-   "station_id": "176",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 5.0,
-   "priority_score": 0.034,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 39.5,
-   "empty_share": null,
-   "short_name": "176",
-   "name": "Av. Jesús García-Luis Donaldo Colosio"
-  },
-  {
-   "station_id": "36",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 2.0,
-   "priority_score": 0.033,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 94.5,
-   "empty_share": null,
-   "short_name": "36",
-   "name": "Puebla - Veracruz"
-  },
-  {
-   "station_id": "495",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 2.0,
-   "priority_score": 0.033,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 93.2,
-   "empty_share": null,
-   "short_name": "495",
-   "name": "Amado Nervo - de los Maestros"
-  },
-  {
-   "station_id": "541",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 5.0,
-   "priority_score": 0.032,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 36.6,
-   "empty_share": null,
-   "short_name": "541",
-   "name": "Eligio Ancona - Naranjo"
-  },
-  {
-   "station_id": "192-193",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 2.0,
-   "priority_score": 0.03,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 85.9,
-   "empty_share": null,
-   "short_name": "192-193",
-   "name": "Rubén Darío.Reforma"
-  },
-  {
-   "station_id": "280",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 4.0,
-   "priority_score": 0.029,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 41.6,
-   "empty_share": null,
-   "short_name": "280",
-   "name": "Anaxágoras-Obrero Mundial"
-  },
-  {
-   "station_id": "162",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 4.0,
-   "priority_score": 0.029,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 41.3,
-   "empty_share": null,
-   "short_name": "162",
-   "name": "Tehuantepec-Medellín"
-  },
-  {
-   "station_id": "291",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 3.0,
-   "priority_score": 0.028,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 52.7,
-   "empty_share": null,
-   "short_name": "291",
-   "name": "Magdalena-División Del Norte"
-  },
-  {
-   "station_id": "260",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 3.0,
-   "priority_score": 0.028,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 52.7,
-   "empty_share": null,
-   "short_name": "260",
-   "name": "Av. Juárez-Balderas"
-  },
-  {
-   "station_id": "28",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 2.0,
-   "priority_score": 0.028,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 80.8,
-   "empty_share": null,
-   "short_name": "28",
-   "name": "Toledo- Tokio"
-  },
-  {
-   "station_id": "111",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 2.0,
-   "priority_score": 0.027,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 76.8,
-   "empty_share": null,
-   "short_name": "111",
-   "name": "Guillermo Prieto - Joaquín Velázquez de León"
-  },
-  {
-   "station_id": "398",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 3.0,
-   "priority_score": 0.027,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 52.0,
-   "empty_share": null,
-   "short_name": "398",
-   "name": "Juan Sánchez Azcona-Félix Cuevas"
-  },
-  {
-   "station_id": "571",
-   "ts": "2026-09-29T13:45:00+00:00",
-   "suspected_expected": 4.0,
-   "priority_score": 0.027,
-   "top_signals": [
-    "bici ignorada",
-    "sale mucho en pico"
-   ],
-   "peak_departures": 38.1,
-   "empty_share": null,
-   "short_name": "571",
-   "name": "Manuel M. Flores - Calzada San Antonio Abad"
+   "short_name": "492"
   }
  ],
  "loss_risk": [
@@ -713,168 +343,256 @@
    "time_band": "10:00-18:00",
    "disappeared_bikes": 4,
    "note": "riesgo, no robo comprobado",
-   "short_name": "56",
-   "name": "Alvaro Obregón - Medellin"
+   "short_name": "56"
   },
   {
    "station_id": "18",
    "time_band": "07:00-10:00",
    "disappeared_bikes": 3,
    "note": "riesgo, no robo comprobado",
-   "short_name": "18",
-   "name": "Reforma - Río Rhin"
+   "short_name": "18"
   },
   {
    "station_id": "194",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 3,
    "note": "riesgo, no robo comprobado",
-   "short_name": "194",
-   "name": "Circuito Mahatma Gandhi-Reforma"
+   "short_name": "194"
   },
   {
    "station_id": "582",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 3,
    "note": "riesgo, no robo comprobado",
-   "short_name": "582",
-   "name": "Antonio Solis-San Antonio Abad"
+   "short_name": "582"
   },
   {
    "station_id": "103",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "103",
-   "name": "Joaquín Velázquez de León - García Icazbalceta"
+   "short_name": "103"
   },
   {
    "station_id": "123",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "123",
-   "name": "Claudio Bernard-Dr. Lavista"
+   "short_name": "123"
   },
   {
    "station_id": "130",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "130",
-   "name": "Mérida-Durango"
+   "short_name": "130"
   },
   {
    "station_id": "134",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "134",
-   "name": "Álvaro Obregón-Orizaba"
+   "short_name": "134"
   },
   {
    "station_id": "14",
    "time_band": "07:00-10:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "14",
-   "name": "Reforma - Río de Plata"
+   "short_name": "14"
   },
   {
    "station_id": "195",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "195",
-   "name": "Reforma-Circuito Mahatma Gandhi"
+   "short_name": "195"
   },
   {
    "station_id": "20",
    "time_band": "18:00-21:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "20",
-   "name": "Reforma- Río Támesis"
+   "short_name": "20"
   },
   {
    "station_id": "29",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "29",
-   "name": "Reforma - Bucareli"
+   "short_name": "29"
   },
   {
    "station_id": "291",
    "time_band": "07:00-10:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "291",
-   "name": "Magdalena-División Del Norte"
+   "short_name": "291"
   },
   {
    "station_id": "450",
    "time_band": "18:00-21:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "450",
-   "name": "Ramos Arizpe- Av México Tenochtitlan"
+   "short_name": "450"
   },
   {
    "station_id": "553",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "553",
-   "name": "Jaime Torres Bodet - Ribera de San Cosme"
+   "short_name": "553"
   },
   {
    "station_id": "555",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "555",
-   "name": "Ribera de San Cosme - Insurgentes Centro"
+   "short_name": "555"
   },
   {
    "station_id": "561",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "561",
-   "name": "Dr. Jiménez - Dr. Lavista"
+   "short_name": "561"
   },
   {
    "station_id": "599",
    "time_band": "18:00-21:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "599",
-   "name": "La Morena - Zempoala"
+   "short_name": "599"
   },
   {
    "station_id": "625",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "625",
-   "name": "Zempoala - Angel Urraza"
+   "short_name": "625"
   },
   {
    "station_id": "93",
    "time_band": "10:00-18:00",
    "disappeared_bikes": 2,
    "note": "riesgo, no robo comprobado",
-   "short_name": "93",
-   "name": "Palma Norte-República de Cuba"
+   "short_name": "93"
+  },
+  {
+   "station_id": "1",
+   "time_band": "21:00-24:00",
+   "disappeared_bikes": 1,
+   "note": "riesgo, no robo comprobado",
+   "short_name": "1"
+  },
+  {
+   "station_id": "1",
+   "time_band": "10:00-18:00",
+   "disappeared_bikes": 1,
+   "note": "riesgo, no robo comprobado",
+   "short_name": "1"
+  },
+  {
+   "station_id": "10",
+   "time_band": "10:00-18:00",
+   "disappeared_bikes": 1,
+   "note": "riesgo, no robo comprobado",
+   "short_name": "10"
+  },
+  {
+   "station_id": "106",
+   "time_band": "18:00-21:00",
+   "disappeared_bikes": 1,
+   "note": "riesgo, no robo comprobado",
+   "short_name": "106"
+  },
+  {
+   "station_id": "107-108",
+   "time_band": "10:00-18:00",
+   "disappeared_bikes": 1,
+   "note": "riesgo, no robo comprobado",
+   "short_name": "107-108"
   }
  ],
- "loss_total": 235,
+ "names": {
+  "107-108": "Tolsa-Balderas",
+  "29": "Reforma - Bucareli",
+  "93": "Palma Norte-República de Cuba",
+  "123": "Claudio Bernard-Dr. Lavista",
+  "268-269": "Luis Donaldo Colosio - Av. Jesús García",
+  "273-274": "Luis Donaldo Colosio - Av. Jesús García",
+  "271-272": "Jesús García - Carlos J. Meneses",
+  "158-159": "Huatabampo-Eje 1 Pte. Av. Cuauhtémoc",
+  "195": "Reforma-Circuito Mahatma Gandhi",
+  "134": "Álvaro Obregón-Orizaba",
+  "43": "Revillagigedo - Juárez",
+  "10": "Reforma - Ramírez",
+  "450": "Ramos Arizpe- Av México Tenochtitlan",
+  "555": "Ribera de San Cosme - Insurgentes Centro",
+  "174": "Joaquín Garcia Icazbalceta-Ignacio Manuel Altamirano",
+  "183": "Gabino Barreda-Guillermo Prieto",
+  "20": "Reforma- Río Támesis",
+  "14": "Reforma - Río de Plata",
+  "1": "Río Sena-Río Balsas",
+  "103": "Joaquín Velázquez de León - García Icazbalceta",
+  "18": "Reforma - Río Rhin",
+  "38": "Cozumel - Puebla",
+  "266-267": "Jesús García - Carlos J. Meneses",
+  "553": "Jaime Torres Bodet - Ribera de San Cosme",
+  "130": "Mérida-Durango",
+  "194": "Circuito Mahatma Gandhi-Reforma",
+  "163": "Toluca-Bajío",
+  "291": "Magdalena-División Del Norte",
+  "390-391": "Oso-Félix Cuevas",
+  "492": "Lago Cuitzeo - Felipe Carrillo Puerto",
+  "507": "Mar Mediterráneo - Azcapotzalco",
+  "563": "Doctor Velasco - Niños Héroes",
+  "560": "Doctor Liceaga - Eje Central",
+  "548": "Dr. Mariano Azuela - Jose Antonio Alzate",
+  "575": "Fernando Ramírez - Eje Central",
+  "635": "Calzada Santa Cruz - Antillas",
+  "561": "Dr. Jiménez - Dr. Lavista",
+  "599": "La Morena - Zempoala",
+  "106": "San Jerónimo-José María Pino Suarez",
+  "644": "Monrovia - Popocatépetl (Eje 8 Sur)",
+  "621": "Lago Poniente - Calzada de Tlalpan",
+  "625": "Zempoala - Angel Urraza",
+  "582": "Antonio Solis-San Antonio Abad",
+  "64": "Sonora - Ámsterdam",
+  "56": "Alvaro Obregón - Medellin"
+ },
  "validation": {
-  "ignored_rate": 0.16201762382254634,
-  "others_rate": 0.012283907238229093,
+  "moments": [
+   "2026-09-01T08:00",
+   "2026-09-02T08:00",
+   "2026-09-03T08:00",
+   "2026-09-04T08:00",
+   "2026-09-07T08:00",
+   "2026-09-08T08:00",
+   "2026-09-09T08:00",
+   "2026-09-10T08:00",
+   "2026-09-11T08:00",
+   "2026-09-14T08:00",
+   "2026-09-15T08:00",
+   "2026-09-17T08:00",
+   "2026-09-18T08:00",
+   "2026-09-21T08:00",
+   "2026-09-22T08:00",
+   "2026-09-23T08:00",
+   "2026-09-24T08:00",
+   "2026-09-25T08:00"
+  ],
+  "ignored": {
+   "bikes": 16455,
+   "gone_72h": 2666,
+   "rate": 0.16201762382254634
+  },
+  "others": {
+   "bikes": 71150,
+   "gone_72h": 874,
+   "rate": 0.012283907238229093
+  },
   "ratio": 13.2,
-  "ignored_bikes": 16455,
   "definition": "Ancladas hace menos de 72 h; 'desaparece' = no vuelve a salir en las siguientes 72 h. Es una señal, no un diagnóstico."
  }
 }

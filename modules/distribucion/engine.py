@@ -37,6 +37,13 @@ class Station:
     bikes: int  # bicis disponibles en el inventario inicial
     disabled: int  # bicis deshabilitadas que ocupan anclaje
     zone: str | None = None
+    is_renting: bool = True
+    is_returning: bool = True
+    is_installed: bool = True
+
+    @property
+    def operational(self) -> bool:
+        return self.capacity > 0 and self.is_installed and self.is_renting and self.is_returning
 
 
 @dataclass(frozen=True)
@@ -81,6 +88,11 @@ def simulate(
     return_final: bool = False,
 ) -> dict:
     """Corre un escenario. `adoption` es una fraccion 0-1. Misma semilla y entradas = mismo resultado."""
+    eligible = [s for s in stations if s.operational]
+    if len(eligible) != len(stations):
+        # Los índices de vecinos de una lista sin filtrar dejan de ser válidos.
+        stations = eligible
+        neighbors = None
     idx = {s.code: i for i, s in enumerate(stations)}
     cap = [s.capacity for s in stations]
     bikes = [max(0, min(s.bikes, s.capacity)) for s in stations]
@@ -217,20 +229,24 @@ def run_all() -> dict:
     from .zones import zone_of
 
     info = load_stations()
-    feed = load_feed()
-    target_utc = (START + CDMX_UTC_OFFSET).replace(tzinfo=None)
-    snaps = feed.ts_utc.dt.tz_convert("UTC").dt.tz_localize(None).drop_duplicates()
-    snap = snaps.iloc[(snaps - target_utc).abs().argmin()]
-    inv = feed[feed.ts_utc.dt.tz_convert("UTC").dt.tz_localize(None) == snap].drop_duplicates("code").set_index("code")
+    feed = load_feed(at_utc=START + CDMX_UTC_OFFSET)
+    if feed.empty:
+        raise ValueError("No hay inventario del feed para inicializar S3")
+    snap = feed.ts_utc.iloc[0]
+    inv = feed.drop_duplicates("code").set_index("code")
 
     stations = [
-        Station(code, float(info.latitude[code]), float(info.longitude[code]), int(r.capacity), int(r.bikes), int(r.disabled), zone_of(float(info.latitude[code]), float(info.longitude[code])))
+        Station(code, float(info.latitude[code]), float(info.longitude[code]), int(r.capacity), int(r.bikes), int(r.disabled), zone_of(float(info.latitude[code]), float(info.longitude[code])), bool(r.is_renting), bool(r.is_returning), bool(r.is_installed))
         for code, r in inv.iterrows()
         if code in info.index and r.capacity > 0
     ]
+    stations = [s for s in stations if s.operational]
     df = load_trips()
     df = df[((df.t_out >= START) & (df.t_out < END)) | ((df.t_in >= START) & (df.t_in < END))]
     trips = [Trip(r.origin, r.dest, r.t_out.to_pydatetime(), r.t_in.to_pydatetime()) for r in df.itertuples()]
+    input_trips = len(trips)
+    codes = {s.code for s in stations}
+    trips = [t for t in trips if t.origin in codes and t.dest in codes]
     nb = build_neighbors(stations)
 
     scenarios: dict[str, dict[str, dict]] = {}
@@ -245,12 +261,19 @@ def run_all() -> dict:
         "window": {"start": "07:00", "end": "10:00", "tz": "America/Mexico_City", "step_minutes": STEP_MIN},
         "inventory_snapshot_utc": snap.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "stations": len(stations),
+        "excluded_stations": len(inv) - len(stations),
         "trips_in_window": len(trips),
+        "input_trips_in_window": input_trips,
+        "excluded_trips": input_trips - len(trips),
         "target_zones": list(TARGET_ZONES),
+        "target_stations": sum(s.zone in TARGET_ZONES for s in stations),
+        "target_station_hours": sum(s.zone in TARGET_ZONES for s in stations) * (END - START).total_seconds() / 3600,
         "assumptions": [
             "Día reproducido: martes 29 de septiembre de 2026, 7:00 a 10:00 hora CDMX, pasos de 15 minutos.",
             "Inventario inicial: snapshot del feed más cercano a las 7:00; los viajes reales se reproducen tal cual.",
-            "Salida sin bicis = viaje perdido. Llegada sin anclajes = desvío a la estación más cercana con anclaje (≤ 500 m).",
+            "Solo estaciones instaladas, con retiro y devolución habilitados y capacidad positiva en el snapshot inicial; este estado se mantiene durante la ventana. Los cierres no cuentan como bicis deshabilitadas ni se recuperan.",
+            "Los viajes que tocan estaciones excluidas no se reproducen ni se cuentan como viajes no servidos.",
+            "Salida sin bicis = viaje no servido dentro del modelo, no demanda insatisfecha observada. Llegada sin anclajes = desvío a la estación abierta más cercana con anclaje (≤ 500 m).",
             "Adopción p %: fracción de los viajes de contraflujo (Anzures/Polanco/Reforma a Buenavista/San Rafael) que termina en la estación vacía más cercana a su destino (≤ 500 m); si no hay, termina donde iba.",
             "Bicis recuperadas antes: las bicis deshabilitadas del feed vuelven a servicio a las 7:00.",
             f"Semilla fija ({SEED}); zonas aproximadas con círculos (zones.py). Resultado simulado, no es un pronóstico.",

@@ -11,6 +11,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from shared.contracts.c5_cases_count import CasesCount, CasesCountResponse
+from shared.contracts.station_ids import feed_to_ce
 
 from .schemas import Actor, BikeState, CaseEvent, IncidentIn, IncidentType
 
@@ -68,6 +69,7 @@ class Case:
     created_at: datetime
     updated_at: datetime
     assigned_to: str | None = None
+    simulated: bool = False
     history: list[CaseEvent] = field(default_factory=list)
 
     @property
@@ -78,10 +80,20 @@ class Case:
     def was_recovered(self) -> bool:
         return any(e.to_state is S.RECUPERADA for e in self.history)
 
+    @property
+    def next_states(self) -> list[BikeState]:
+        """Estados a los que una persona (Guardián u operador) puede mover el caso ahora."""
+        return [to for to in TRANSITIONS[self.state] if _taller_rule_ok(self, to)]
+
     def log(self, now: datetime, to: BikeState, actor: Actor, note: str | None) -> None:
         self.history.append(CaseEvent(ts=now, from_state=self.state, to_state=to, actor=actor, note=note))
         self.state = to
         self.updated_at = now
+
+
+def _taller_rule_ok(case: Case, to: BikeState) -> bool:
+    # reincorporada solo cuenta bicis que de verdad se recuperaron; si no, vuelve a en_estacion.
+    return case.state is not S.TALLER or (to is S.REINCORPORADA) == case.was_recovered
 
 
 def check_transition(case: Case, to: BikeState, actor: Actor) -> None:
@@ -89,8 +101,7 @@ def check_transition(case: Case, to: BikeState, actor: Actor) -> None:
         raise InvalidTransition(f"No se puede pasar de {case.state} a {to}")
     if actor not in HUMANS and (case.state, to) not in AUTOMATIC:
         raise InvalidTransition(f"De {case.state} a {to} lo decide un Guardián o el operador")
-    # reincorporada solo cuenta bicis que de verdad se recuperaron; si no, vuelve a en_estacion.
-    if case.state is S.TALLER and (to is S.REINCORPORADA) != case.was_recovered:
+    if not _taller_rule_ok(case, to):
         expected = S.REINCORPORADA if case.was_recovered else S.EN_ESTACION
         raise InvalidTransition(f"Desde taller esta bici pasa a {expected}")
 
@@ -103,7 +114,7 @@ class CaseStore:
 
     def _open_duplicate(self, incident: IncidentIn) -> Case | None:
         for case in self._cases.values():
-            if not case.is_open:
+            if not case.is_open or case.simulated:
                 continue
             if incident.bike_id and case.bike_id == incident.bike_id:
                 return case
@@ -111,8 +122,9 @@ class CaseStore:
                 return case
         return None
 
-    def open(self, incident: IncidentIn, now: datetime) -> tuple[Case, bool]:
-        """Abre un caso, o suma el reporte al caso abierto de la misma bici o verificación."""
+    def open(self, incident: IncidentIn, now: datetime, simulated: bool = False) -> tuple[Case, bool]:
+        """Abre un caso, o suma el reporte al caso abierto de la misma bici o verificación.
+        `simulated` solo lo usan los escenarios de scenarios.py; nunca llega desde la API."""
         if dup := self._open_duplicate(incident):
             dup.log(now, dup.state, incident.source, incident.note or f"Reporte adicional: {incident.type}")
             return dup, False
@@ -126,6 +138,7 @@ class CaseStore:
             bike_id=incident.bike_id,
             return_id=incident.return_id,
             user_hash=incident.user_hash,
+            simulated=simulated,
             created_at=now,
             updated_at=now,
         )
@@ -173,7 +186,7 @@ class CaseStore:
         """Contrato C5 para la Línea 1."""
         by_station: dict[str, list[int]] = defaultdict(lambda: [0, 0])
         for case in self._cases.values():
-            if case.station_id is None:
+            if case.station_id is None or case.simulated:  # lo SIMULADO no entra al contrato
                 continue
             if case.is_open:
                 by_station[case.station_id][0] += 1
@@ -181,6 +194,6 @@ class CaseStore:
                 by_station[case.station_id][1] += 1
         return CasesCountResponse(
             generated_at=now,
-            stations=[CasesCount(station_id=sid, open_cases=o, reincorporated=r)
+            stations=[CasesCount(station_id=sid, short_name=feed_to_ce(sid), open_cases=o, reincorporated=r)
                       for sid, (o, r) in sorted(by_station.items())],
         )

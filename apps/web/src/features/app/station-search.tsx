@@ -1,18 +1,18 @@
 "use client";
 
-import type { DemoStation } from "@/features/demo/types";
+import type { Station } from "@/features/stations/types";
 import { bikesStatus, normalize, TONE_DOT } from "@/features/stations/status";
 import { cn } from "@/lib/cn";
 import { MapPin, Search, X } from "lucide-react";
 import { useId, useMemo, useState } from "react";
 
-/** Búsqueda de estaciones (combobox accesible) sobre datos DEMO. */
+/** Búsqueda de estaciones (combobox accesible) sobre el catálogo cargado. */
 export function StationSearch({
   stations,
   onPick,
   className,
 }: {
-  stations: DemoStation[];
+  stations: Station[];
   onPick: (id: string) => void;
   className?: string;
 }) {
@@ -90,12 +90,12 @@ export function StationSearch({
         <ul
           id={listId}
           role="listbox"
-          aria-label="Resultados (datos DEMO)"
+          aria-label="Resultados de estaciones"
           className="glass absolute inset-x-0 top-14 z-30 animate-fade-in overflow-hidden rounded-3xl p-1.5"
         >
           {results.length === 0 ? (
             <li className="px-4 py-3 text-sm text-ink-muted" role="option" aria-selected={false} aria-disabled>
-              Sin resultados en los datos DEMO.
+              No encontramos estaciones con esa búsqueda.
             </li>
           ) : (
             results.map((station, index) => {
@@ -122,7 +122,7 @@ export function StationSearch({
                   </span>
                   <span className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">
                     <span aria-hidden className={cn("size-2 rounded-full", TONE_DOT[status.tone])} />
-                    {station.bikes_available} bicis
+                    {station.bikes_available ?? "—"} bicis
                   </span>
                 </li>
               );

@@ -8,7 +8,7 @@ const ROWS: { label: string; key: keyof ScenarioTotals; unit?: string; fmt?: (n:
   { label: "Horas estación llena · Buenavista y San Rafael", key: "full_station_hours_target", unit: "h" },
   { label: "Horas estación vacía · toda la red", key: "empty_station_hours", unit: "h" },
   { label: "Horas estación llena · toda la red", key: "full_station_hours", unit: "h" },
-  { label: "Viajes perdidos (salida sin bicis)", key: "lost_trips", fmt: nf0.format },
+  { label: "Viajes no servidos en el modelo", key: "lost_trips", fmt: nf0.format },
   { label: "Bicis movidas por misiones", key: "bikes_moved", fmt: nf0.format },
 ];
 

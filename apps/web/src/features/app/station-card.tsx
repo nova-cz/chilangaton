@@ -1,10 +1,12 @@
 "use client";
 
-import { DemoBadge } from "@/components/ui/badge";
+import { ModeBadge } from "@/features/viaje/viaje-shell";
+import { cdmxStamp } from "@/features/viaje/format";
 import { buttonClasses } from "@/components/ui/button";
 import { Metric, Ring } from "@/components/ui/ring";
 import { Segmented } from "@/components/ui/segmented";
-import { HORIZONS, type DemoStation, type Horizon } from "@/features/demo/types";
+import { HORIZONS, type Horizon } from "@/features/demo/types";
+import type { Station } from "@/features/stations/types";
 import { bikesStatus, docksStatus, OUTLOOK_COPY, TONE_TEXT, type Tone } from "@/features/stations/status";
 import { cn } from "@/lib/cn";
 import { Bike, Clock3, MapPin, ParkingSquare, X } from "lucide-react";
@@ -16,12 +18,15 @@ const DARK_TONE_TEXT: Record<Tone, string> = { ok: "text-lime-300", warn: "text-
 const DARK_TONE_DOT: Record<Tone, string> = { ok: "bg-lime-300", warn: "bg-warning-500", danger: "bg-danger-500" };
 
 /** Tarjeta flotante de estación: bicis, anclajes y horizonte con estado de EJEMPLO. */
-export function StationCard({ station, onClose }: { station: DemoStation; onClose: () => void }) {
+export function StationCard({ station, mode, onClose }: { station: Station; mode: string; onClose: () => void }) {
   const [horizon, setHorizon] = useState<Horizon>(15);
-  const bikes = bikesStatus(station.bikes_available);
-  const docks = docksStatus(station.docks_available);
-  const outlook = OUTLOOK_COPY[station.example_outlook[`${horizon}`]];
-  const occupancy = station.bikes_available / station.capacity;
+  const bikes = station.is_renting === false ? { tone: "danger" as const, label: "No permite retirar" } : bikesStatus(station.bikes_available);
+  const docks = station.is_returning === false ? { tone: "danger" as const, label: "No permite devolver" } : docksStatus(station.docks_available);
+  const outlook = station.example_outlook ? OUTLOOK_COPY[station.example_outlook[`${horizon}`]] : null;
+  const occupancy = station.docks_available !== null && station.capacity > 0
+    ? Math.max(0, Math.min(1, (station.capacity - station.docks_available) / station.capacity)) : null;
+  const demo = mode === "DEMO" || mode.includes("EJEMPLO");
+  const stationId = encodeURIComponent(station.id);
 
   return (
     <article aria-labelledby={`station-${station.id}`} className="animate-sheet-in">
@@ -35,7 +40,7 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
           </h2>
           <div className="mt-0.5 flex items-center gap-2">
             <span className="text-sm text-ink-muted">{station.zone}</span>
-            <DemoBadge />
+            <ModeBadge mode={demo ? "EJEMPLO" : mode} />
           </div>
         </div>
         <button
@@ -68,14 +73,14 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
           status={docks}
         />
         <div className="flex animate-rise flex-col items-center justify-center rounded-3xl bg-mist-100 p-2.5" style={{ animationDelay: "140ms" }}>
-          <Ring value={occupancy} size={58} stroke={6} trackClass="text-white" barClass="text-brand-700">
-            <Metric value={Math.round(occupancy * 100)} unit="%" className="text-base" />
+          <Ring value={occupancy ?? 0} size={58} stroke={6} trackClass="text-white" barClass="text-brand-700">
+            <Metric value={occupancy === null ? "—" : Math.round(occupancy * 100)} unit={occupancy === null ? undefined : "%"} className="text-base" />
           </Ring>
           <p className="mt-1.5 text-center text-[11px] font-semibold text-ink-muted">Ocupación de {station.capacity}</p>
         </div>
       </div>
 
-      <section className="mt-3 rounded-3xl bg-brand-900 p-3.5 text-white" aria-label="Estado de ejemplo por horizonte">
+      {demo && outlook ? <section className="mt-3 rounded-3xl bg-brand-900 p-3.5 text-white" aria-label="Estado de ejemplo por horizonte">
         <div className="flex items-center justify-between gap-2">
           <p className="flex items-center gap-1.5 text-sm font-semibold">
             <Clock3 aria-hidden className="size-4 text-lime-300" />
@@ -97,11 +102,14 @@ export function StationCard({ station, onClose }: { station: DemoStation; onClos
         <p className="mt-1 text-xs text-white/70">
           Estado de ejemplo, no es un pronóstico. La probabilidad real está en Viaje.
         </p>
-      </section>
+      </section> : <div className="mt-3 rounded-3xl bg-brand-50 p-3 text-sm text-ink-muted">
+        <p>{mode.startsWith("VIVO") ? "Actualización" : "Registro histórico"}: {cdmxStamp(station.data_ts)} · CDMX.</p>
+        <Link href={`/app/estacion/${stationId}`} className="mt-2 inline-block font-semibold text-brand-700 underline">Ver estación y pronóstico</Link>
+      </div>}
 
-      <Link href="/app/viaje" className={cn(buttonClasses("dark", "md"), "mt-3 w-full justify-center")}>
+      <Link href={demo || station.is_renting === false ? "/app/viaje" : `/app/viaje?from=${stationId}`} className={cn(buttonClasses("dark", "md"), "mt-3 w-full justify-center")}>
         <Bike aria-hidden className="size-4" />
-        Planear un viaje
+        {demo || station.is_renting === false ? "Planear un viaje" : "Salir de aquí"}
       </Link>
     </article>
   );
@@ -121,14 +129,14 @@ function Tile({
   iconTint: string;
   icon: ReactNode;
   label: string;
-  value: number;
+  value: number | null;
   status: { tone: Tone; label: string };
 }) {
   return (
     <div className={cn("flex animate-rise flex-col items-center rounded-3xl p-2.5 text-center", tint)} style={{ animationDelay: `${delay}ms` }}>
       <span className={cn("grid size-9 place-items-center rounded-full", iconTint)}>{icon}</span>
       <p className="mt-1.5 text-[11px] font-semibold text-ink-muted">{label}</p>
-      <Metric value={value} className="text-5xl leading-none" />
+      <Metric value={value ?? "—"} className="text-5xl leading-none" />
       <p className={cn("text-[11px] leading-tight font-semibold", TONE_TEXT[status.tone])}>{status.label}</p>
     </div>
   );

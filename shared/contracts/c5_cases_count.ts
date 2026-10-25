@@ -10,6 +10,8 @@
 export interface CasesCount {
   /** station_id del feed GBFS (no el código "CE-xxx") */
   station_id: string;
+  /** Código CE normalizado ("14" para CE-014): la llave para unir con otras líneas (ver station_ids.md) */
+  short_name?: string | null;
   /** Casos abiertos cuya última estación conocida es esta */
   open_cases: number;
   /** Casos que terminaron con la bici reincorporada al servicio en esta estación */

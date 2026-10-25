@@ -70,7 +70,7 @@ def test_flujo_de_caso_y_conteo(env):
     assert r.status_code == 409
 
     r = client.get("/api/v1/cases/count")
-    assert r.json()["stations"] == [{"station_id": "1", "open_cases": 1, "reincorporated": 0}]
+    assert r.json()["stations"] == [{"station_id": "1", "short_name": "710", "open_cases": 1, "reincorporated": 0}]
 
     r = client.get("/api/v1/cases", params={"open": "true"})
     assert [c["case_id"] for c in r.json()] == [case["case_id"]]
@@ -95,3 +95,13 @@ def test_catalogo_caido(env):
     client, _, _ = env
     client.app.dependency_overrides[regreso.get_catalog] = lambda: FakeCatalog(None)
     assert client.get("/api/v1/returns/stations").status_code == 503
+
+
+def test_escenarios_por_api(env):
+    client, _, _ = env
+    keys = [s["key"] for s in client.get("/api/v1/scenarios").json()]
+    assert keys == ["estacion_desconectada", "sustraccion", "traslado_a_taller"]
+    r = client.post("/api/v1/scenarios/sustraccion/run").json()
+    assert r["passed"] and r["obtained"] == "reincorporada" and r["case"]["simulated"]
+    assert client.get("/api/v1/cases/count").json()["stations"] == []
+    assert client.post("/api/v1/scenarios/nope/run").status_code == 404

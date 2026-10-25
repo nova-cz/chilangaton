@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 
 import duckdb
@@ -47,17 +48,31 @@ def load_trips(data_dir: Path = DATA_DIR) -> pd.DataFrame:
     return df
 
 
-def load_feed(data_dir: Path = DATA_DIR) -> pd.DataFrame:
-    """Feed GBFS: una fila por estacion y snapshot. `ts_utc` es UTC; `ts_local` es hora CDMX (UTC-6, sin horario de verano)."""
+def load_feed(data_dir: Path = DATA_DIR, *, at_utc: datetime | None = None) -> pd.DataFrame:
+    """GBFS con estado operativo. `at_utc` limita la carga al snapshot más cercano en DuckDB."""
     con = duckdb.connect()
     con.execute("SET TimeZone='UTC'")
+    path = (data_dir / FEED_PARQUET).as_posix()
+    where = ""
+    params: list[object] = [path]
+    if at_utc is not None:
+        where = """WHERE committed_at_utc = (
+            SELECT committed_at_utc FROM read_parquet(?)
+            ORDER BY abs(epoch(committed_at_utc) - epoch(CAST(? AS TIMESTAMP)))
+            LIMIT 1
+        )"""
+        params.extend([path, at_utc])
     df = con.execute(
         f"""
         SELECT short_name, committed_at_utc AS ts_utc, capacity, num_bikes_available AS bikes,
-               num_bikes_disabled AS disabled, num_docks_available AS docks
-        FROM '{(data_dir / FEED_PARQUET).as_posix()}'
-        """
+               num_bikes_disabled AS disabled, num_docks_available AS docks,
+               coalesce(is_installed, false) AS is_installed,
+               coalesce(is_renting, false) AS is_renting,
+               coalesce(is_returning, false) AS is_returning
+        FROM read_parquet(?) {where}
+        """, params
     ).df()
+    con.close()
     df["code"] = df.pop("short_name").map(normalize_code)
     df["ts_utc"] = pd.to_datetime(df["ts_utc"], utc=True)
     df["ts_local"] = (df["ts_utc"] - pd.Timedelta(hours=6)).dt.tz_localize(None)

@@ -103,7 +103,7 @@ export function setBuildings3d(map: MlMap, enabled: boolean): boolean {
   const source = findBuildingSource(map);
   if (!source) return false;
   if (!map.getLayer(BUILDINGS_3D_LAYER)) {
-    const firstSymbol = map.getStyle()?.layers.find((layer) => layer.type === "symbol")?.id;
+    const firstSymbol = map.getStyle()?.layers?.find((layer) => layer.type === "symbol")?.id;
     map.addLayer(
       {
         id: BUILDINGS_3D_LAYER,

@@ -24,7 +24,7 @@ Navegador (PWA) ──> Vercel: apps/web (Next.js)
 
 **Mapa**: MapLibre GL 5 con estilo OpenFreeMap Positron (sin API key, datos OSM). La vista 3D agrega una capa `fill-extrusion` con `render_height` de OpenStreetMap; si el estilo no trae la capa `building`, el botón 3D se deshabilita. Sin WebGL → estado de error con acceso a la lista. Cambiar estilo con `NEXT_PUBLIC_MAP_STYLE_URL`.
 
-**S6 (pendiente)**: `@deck.gl/maplibre` (+ `@deck.gl/layers`, misma versión 9.x) como overlay intercalado (`interleaved: true`) añadido con `map.addControl(overlay)` dentro de `StationMap` (o un `FlowMap` hermano) y `ArcLayer` con origen/destino por estación. Solo en el panel; fallback 2D si no hay WebGL o con `prefers-reduced-motion`.
+**S6**: `features/simulator/flow-map.tsx` carga deck.gl 9.4 bajo demanda, con `MapLibreOverlay` intercalado y `ArcLayer`. Lee promedios por par de zonas y centros aproximados del JSON de S2; no representa trayectorias por estación. El contador y círculo muestran la serie simulada agregada de Buenavista y San Rafael, con los controles de adopción y recuperación de S4. Reproducción pausable cada 15 minutos; la animación de los arcos es ilustrativa. `FlowFlat` ofrece un esquema SVG sin WebGL/red si falla el mapa, se elige 2D o se solicita reducir movimiento; siempre hay tabla equivalente. Solo en el panel.
 
 ## API (`services/api`)
 - `core/config.py`: variables `APP_ENV`, `DEMO_MODE`, `CORS_ORIGINS` (CSV), `ENABLED_MODULES` (CSV, vacío = todos). Ver `.env.example`.
@@ -35,5 +35,22 @@ Navegador (PWA) ──> Vercel: apps/web (Next.js)
 **Vercel** (web): New Project → repo → *Root Directory* `apps/web` → Framework Next.js. Build `npm run build` (incluye Serwist). Variables: ver `apps/web/.env.example`. Deja activa la opción de incluir archivos fuera del root (lee `shared/fixtures`).
 
 **Railway** (API): New Service → repo (root del repo). Usa `railway.json` (Railpack, `uvicorn services.api.main:app --host 0.0.0.0 --port $PORT`, healthcheck `/health`) y `.python-version`. Variables: `DEMO_MODE`, `CORS_ORIGINS=https://<tu-app>.vercel.app`.
+
+**Conexión mapa → viaje**: `/app` usa por defecto `NEXT_PUBLIC_DATA_MODE=api` y consulta
+`GET /api/v1/viaje/stations`. Conserva `station_id` para los enlaces a
+`/app/estacion/<id>` y `/app/viaje?from=<id>`, los valores desconocidos se muestran como `—`
+y las estaciones que no permiten retirar/devolver no entran en esos filtros.
+El mapa dibuja todas las estaciones en GeoJSON y limita los botones DOM a 80 visibles;
+la lista y la búsqueda ofrecen el catálogo completo. El modo `demo` sigue siendo explícito.
+`REAL` es un registro histórico (se muestra su fecha), no un dato en vivo;
+solo la respuesta `VIVO` se etiqueta como tal. S3 conserva `SIMULADO` porque compara escenarios.
+
+Al desplegar, configura **Vercel** con `NEXT_PUBLIC_DATA_MODE=api` y
+`NEXT_PUBLIC_API_URL=https://<api>.up.railway.app` (requiere un nuevo build).
+En **Railway**, configura `CORS_ORIGINS=https://<frontend>.vercel.app`, sin `/` final;
+si hay más dominios, sepáralos con comas. El permiso CORS ya lo aplica FastAPI;
+el dominio concreto se añade cuando exista el despliegue. Verifica `/health`
+(`modules.loaded` debe incluir `viaje`) y abre `/app` desde la URL publicada.
+No publiques con `NEXT_PUBLIC_API_URL=http://localhost:8000`.
 
 Ninguno de los dos requiere secretos para S1.

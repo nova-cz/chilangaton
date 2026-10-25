@@ -14,6 +14,7 @@ import { FORECAST_HORIZONS, getForecast } from "./data";
 import { LIGHT_LABEL, LIGHT_TONE, cdmxStamp, lightOf, pct, splitName } from "./format";
 import type { ForecastPoint, ViajeStation } from "./types";
 import { ModeBadge } from "./viaje-shell";
+import { config } from "@/lib/config";
 
 type Load =
   | { status: "loading" }
@@ -29,11 +30,14 @@ export function StationForecast({ id }: { id: string }) {
 
   useEffect(() => {
     let alive = true;
-    getForecast(id)
+    const refresh = () => getForecast(id)
       .then((r) => alive && setState(r ? { status: "ok", ...r.data, mode: r.mode } : { status: "missing" }))
       .catch((e: unknown) => alive && setState({ status: "error", message: e instanceof Error ? e.message : "Sin conexión" }));
+    void refresh();
+    const timer = config.dataMode === "api" ? window.setInterval(refresh, 60_000) : null;
     return () => {
       alive = false;
+      if (timer !== null) window.clearInterval(timer);
     };
   }, [id]);
 
@@ -107,11 +111,13 @@ export function StationForecast({ id }: { id: string }) {
         Estado del {cdmxStamp(station.data_ts)} (hora CDMX). “Útiles” descuenta las bicis que podrían estar dañadas.
       </p>
 
-      {mode === "REAL" && (station.ignored_bikes ?? 0) >= 1 ? (
+      {(mode === "REAL" || mode === "VIVO + baseline REAL") && (station.ignored_bikes ?? 0) >= 1 ? (
         <p role="note" className="mt-3 flex gap-2.5 rounded-2xl bg-warning-100 px-3.5 py-3 text-sm text-ink">
           <Wrench aria-hidden className="mt-0.5 size-4 shrink-0 text-warning-700" />
           <span>
-            {station.ignored_bikes === 1
+            {mode.startsWith("VIVO")
+              ? `El análisis histórico identifica ${station.ignored_bikes} ${station.ignored_bikes === 1 ? "bici sin uso frecuente" : "bicis sin uso frecuente"} en esta estación. No confirma su estado actual.`
+              : station.ignored_bikes === 1
               ? "Hay 1 bici que lleva rato aquí sin que nadie la tome; podría estar descompuesta."
               : `Hay ${station.ignored_bikes} bicis que llevan rato aquí sin que nadie las tome; algunas podrían estar descompuestas.`}{" "}
             Es una pista, no una certeza.

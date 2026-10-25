@@ -76,6 +76,13 @@ export function TripPlanner() {
     };
   }, [reload]);
 
+  // Mantiene vigente la recomendación; no desmonta el contador durante un viaje.
+  useEffect(() => {
+    if (!isLive || riding) return;
+    const timer = window.setInterval(() => setReload((n) => n + 1), 60_000);
+    return () => window.clearInterval(timer);
+  }, [isLive, riding]);
+
   useEffect(() => {
     let alive = true;
     getNearby(here.lat, here.lon)

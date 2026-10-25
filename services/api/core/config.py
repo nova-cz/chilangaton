@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     # DEMO: expone /api/v1/demo/* con fixtures inventados. Apagar en cuanto haya datos reales.
     demo_mode: bool = True
     # Lista separada por comas. Ej: "https://equilibici.vercel.app,http://localhost:3000"
-    cors_origins: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["http://localhost:3000"])
+    cors_origins: Annotated[list[str], NoDecode] = Field(default_factory=lambda: ["http://localhost:3000", "http://localhost:3100"])
     # Vacío = cargar todos los módulos de modules/*. Ej: "distribucion,viaje"
     enabled_modules: Annotated[list[str], NoDecode] = Field(default_factory=list)
     api_prefix: str = "/api/v1"
