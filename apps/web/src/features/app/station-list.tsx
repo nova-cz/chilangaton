@@ -1,8 +1,8 @@
 "use client";
 
-import { DemoBadge } from "@/components/ui/badge";
+import { ModeBadge } from "@/features/viaje/viaje-shell";
 import { StateMessage } from "@/components/ui/state-message";
-import type { DemoStation } from "@/features/demo/types";
+import type { Station } from "@/features/stations/types";
 import { bikesStatus, docksStatus, TONE_DOT, TONE_TEXT } from "@/features/stations/status";
 import { cn } from "@/lib/cn";
 import { ChevronRight } from "lucide-react";
@@ -10,23 +10,25 @@ import { ChevronRight } from "lucide-react";
 /** Lista equivalente al mapa (misma información, accesible con lector de pantalla). */
 export function StationList({
   stations,
+  mode,
   selectedId,
   onSelect,
 }: {
-  stations: DemoStation[];
+  stations: Station[];
+  mode: string;
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
   if (stations.length === 0) {
-    return <StateMessage kind="empty" title="No hay estaciones para mostrar" description="Los datos DEMO están vacíos." />;
+    return <StateMessage kind="empty" title="No hay estaciones para mostrar" description="Prueba otro filtro." />;
   }
   const zones = [...new Set(stations.map((s) => s.zone))];
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold tracking-tight">Estaciones del corredor</h2>
-        <DemoBadge />
+        <h2 className="text-lg font-bold tracking-tight">Estaciones</h2>
+        <ModeBadge mode={mode === "DEMO" ? "EJEMPLO" : mode} />
       </div>
       {zones.map((zone) => (
         <section key={zone} aria-labelledby={`zone-${zone}`}>
@@ -52,7 +54,7 @@ export function StationList({
                       )}
                     >
                       <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-50 text-lg font-bold text-brand-900 tabular-nums">
-                        {station.bikes_available}
+                        {station.bikes_available ?? "—"}
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-semibold">{station.name}</span>
@@ -63,7 +65,7 @@ export function StationList({
                           </span>
                           <span className={cn("flex items-center gap-1", TONE_TEXT[docks.tone])}>
                             <span aria-hidden className={cn("size-1.5 rounded-full", TONE_DOT[docks.tone])} />
-                            {station.docks_available} anclajes · {docks.label}
+                            {station.docks_available ?? "—"} anclajes · {docks.label}
                           </span>
                         </span>
                       </span>

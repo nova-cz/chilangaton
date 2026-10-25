@@ -36,4 +36,21 @@ Navegador (PWA) ──> Vercel: apps/web (Next.js)
 
 **Railway** (API): New Service → repo (root del repo). Usa `railway.json` (Railpack, `uvicorn services.api.main:app --host 0.0.0.0 --port $PORT`, healthcheck `/health`) y `.python-version`. Variables: `DEMO_MODE`, `CORS_ORIGINS=https://<tu-app>.vercel.app`.
 
+**Conexión mapa → viaje**: `/app` usa por defecto `NEXT_PUBLIC_DATA_MODE=api` y consulta
+`GET /api/v1/viaje/stations`. Conserva `station_id` para los enlaces a
+`/app/estacion/<id>` y `/app/viaje?from=<id>`, los valores desconocidos se muestran como `—`
+y las estaciones que no permiten retirar/devolver no entran en esos filtros.
+El mapa dibuja todas las estaciones en GeoJSON y limita los botones DOM a 80 visibles;
+la lista y la búsqueda ofrecen el catálogo completo. El modo `demo` sigue siendo explícito.
+`REAL` es un registro histórico (se muestra su fecha), no un dato en vivo;
+solo la respuesta `VIVO` se etiqueta como tal. S3 conserva `SIMULADO` porque compara escenarios.
+
+Al desplegar, configura **Vercel** con `NEXT_PUBLIC_DATA_MODE=api` y
+`NEXT_PUBLIC_API_URL=https://<api>.up.railway.app` (requiere un nuevo build).
+En **Railway**, configura `CORS_ORIGINS=https://<frontend>.vercel.app`, sin `/` final;
+si hay más dominios, sepáralos con comas. El permiso CORS ya lo aplica FastAPI;
+el dominio concreto se añade cuando exista el despliegue. Verifica `/health`
+(`modules.loaded` debe incluir `viaje`) y abre `/app` desde la URL publicada.
+No publiques con `NEXT_PUBLIC_API_URL=http://localhost:8000`.
+
 Ninguno de los dos requiere secretos para S1.

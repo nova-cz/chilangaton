@@ -1,6 +1,6 @@
 "use client";
 
-import type { DemoStation } from "@/features/demo/types";
+import type { Station } from "@/features/stations/types";
 import { stationTone, type Tone } from "@/features/stations/status";
 import { StateMessage } from "@/components/ui/state-message";
 import { config } from "@/lib/config";
@@ -29,7 +29,7 @@ const MIN_HEIGHT = 4;
 const TONE_COLOR: Record<Tone, string> = { ok: "#22c470", warn: "#e6a23c", danger: "#d84949" };
 
 export interface StationMapProps {
-  stations: DemoStation[];
+  stations: Station[];
   selectedId?: string | null;
   onSelect?: (id: string | null) => void;
   /** Vista 3D: edificios con alturas de OpenStreetMap y estaciones como columnas (si el estilo las trae). */
@@ -90,11 +90,11 @@ function disc(lon: number, lat: number, radiusM: number, sides = 14): [number, n
   return ring;
 }
 
-function stationHeight(bikes: number) {
-  return Math.max(bikes * METERS_PER_BIKE, MIN_HEIGHT);
+function stationHeight(bikes: number | null) {
+  return Math.max((bikes ?? 0) * METERS_PER_BIKE, MIN_HEIGHT);
 }
 
-function stationsGeoJson(stations: DemoStation[]): FeatureCollection {
+function stationsGeoJson(stations: Station[]): FeatureCollection {
   const features: Feature[] = [];
   for (const s of stations) {
     const tone = stationTone(s.bikes_available, s.docks_available);
@@ -124,7 +124,10 @@ function setColumnHeights(map: MlMap, grow: number, pulse: number, selectedId: s
   ]);
 }
 
-function ensureStationLayers(map: MlMap, stations: DemoStation[]) {
+function ensureStationLayers(map: MlMap, stations: Station[]) {
+  // getStyle puede existir sin layers mientras llega el estilo remoto.
+  const style = map.getStyle();
+  if (!style?.layers) return;
   const data = stationsGeoJson(stations);
   const source = map.getSource(SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
   if (source) {
@@ -132,7 +135,7 @@ function ensureStationLayers(map: MlMap, stations: DemoStation[]) {
     return;
   }
   map.addSource(SOURCE_ID, { type: "geojson", data });
-  const firstSymbol = map.getStyle()?.layers.find((layer) => layer.type === "symbol")?.id;
+  const firstSymbol = style.layers.find((layer) => layer.type === "symbol")?.id;
   map.addLayer(
     {
       id: HALO_LAYER,
@@ -298,7 +301,11 @@ export default function StationMap({
     map.on("error", () => {
       if (!loaded) setStatus("error"); // después de cargar, un tile fallido no es fatal
     });
-    map.on("click", () => callbacks.current.onSelect?.(null));
+    map.on("click", (event) => {
+      const layers = [COLUMNS_LAYER, HALO_LAYER].filter((id) => map.getLayer(id));
+      const hit = layers.length ? map.queryRenderedFeatures(event.point, { layers })[0] : undefined;
+      callbacks.current.onSelect?.(hit?.properties?.id ?? null);
+    });
     map.on("move", updateLifts);
     const markers = markersRef.current;
     return () => {
@@ -317,28 +324,43 @@ export default function StationMap({
     if (!map || status !== "ready") return;
     ensureStationLayers(map, stations);
     const markers = markersRef.current;
-    for (const { marker } of markers.values()) marker.remove();
-    markers.clear();
-    for (const station of stations) {
-      const tone = stationTone(station.bikes_available, station.docks_available);
-      const wrapper = document.createElement("div");
-      const el = document.createElement("button");
-      wrapper.appendChild(el);
-      el.type = "button";
-      el.textContent = String(station.bikes_available);
-      el.setAttribute(
-        "aria-label",
-        `${station.name}: ${station.bikes_available} bicis y ${station.docks_available} anclajes libres (DEMO)`,
-      );
-      el.addEventListener("click", (event) => {
-        event.stopPropagation();
-        callbacks.current.onSelect?.(station.id);
-      });
-      const marker = new maplibregl.Marker({ element: wrapper }).setLngLat([station.lon, station.lat]).addTo(map);
-      markers.set(station.id, { marker, el, tone, height: stationHeight(station.bikes_available), selected: false });
-    }
-    paintMarkers(markers, live.current.selectedId);
-    updateLifts();
+    const refreshMarkers = () => {
+      // Las 677 estaciones se dibujan en una fuente GPU. Solo los botones visibles
+      // (máximo 80) usan DOM; las demás columnas siguen siendo seleccionables.
+      const bounds = map.getBounds();
+      const visible = stations.filter((s) => bounds.contains([s.lon, s.lat]));
+      const selected = stations.find((s) => s.id === live.current.selectedId);
+      const shown = (selected ? [selected, ...visible.filter((s) => s.id !== selected.id)] : visible).slice(0, 80);
+      const ids = new Set(shown.map((s) => s.id));
+      for (const [id, entry] of markers) {
+        if (!ids.has(id)) { entry.marker.remove(); markers.delete(id); }
+      }
+      for (const station of shown) {
+        if (markers.has(station.id)) continue;
+        const tone = stationTone(station.bikes_available, station.docks_available);
+        const wrapper = document.createElement("div");
+        const el = document.createElement("button");
+        wrapper.appendChild(el);
+        el.type = "button";
+        el.textContent = String(station.bikes_available ?? "—");
+        el.setAttribute("aria-label", `${station.name}: ${station.bikes_available ?? "sin dato de"} bicis y ${station.docks_available ?? "sin dato de"} anclajes libres`);
+        el.addEventListener("click", (event) => {
+          event.stopPropagation();
+          callbacks.current.onSelect?.(station.id);
+        });
+        const marker = new maplibregl.Marker({ element: wrapper }).setLngLat([station.lon, station.lat]).addTo(map);
+        markers.set(station.id, { marker, el, tone, height: stationHeight(station.bikes_available), selected: false });
+      }
+      paintMarkers(markers, live.current.selectedId);
+      updateLifts();
+    };
+    refreshMarkers();
+    map.on("moveend", refreshMarkers);
+    return () => {
+      map.off("moveend", refreshMarkers);
+      for (const { marker } of markers.values()) marker.remove();
+      markers.clear();
+    };
   }, [stations, status]);
 
   // Selección: marcador, resalte, pulso de la columna y cámara.
@@ -346,7 +368,7 @@ export default function StationMap({
     paintMarkers(markersRef.current, selectedId);
     const map = mapRef.current;
     if (!map || status !== "ready") return;
-    map.setFilter(SELECTED_LAYER, ["all", ["==", ["get", "kind"], "halo"], ["==", ["get", "id"], selectedId ?? ""]]);
+    if (map.getLayer(SELECTED_LAYER)) map.setFilter(SELECTED_LAYER, ["all", ["==", ["get", "kind"], "halo"], ["==", ["get", "id"], selectedId ?? ""]]);
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let cancel = () => {};
     if (selectedId && !reduceMotion) {
@@ -405,7 +427,7 @@ export default function StationMap({
 
   return (
     <div className={cn("relative h-full w-full overflow-hidden bg-[#f2efea]", className)}>
-      <div ref={containerRef} className="h-full w-full" aria-label="Mapa de estaciones (datos DEMO)" role="region" />
+      <div ref={containerRef} className="h-full w-full" aria-label="Mapa de estaciones" role="region" />
       <div
         aria-hidden={status === "ready"}
         className={cn(

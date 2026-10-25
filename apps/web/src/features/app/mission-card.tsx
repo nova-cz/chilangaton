@@ -1,7 +1,8 @@
 import { Badge, DemoBadge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BikeHero } from "@/components/three/bike-hero";
-import type { DemoMission, DemoStation } from "@/features/demo/types";
+import type { DemoMission } from "@/features/demo/types";
+import type { Station } from "@/features/stations/types";
 import { cn } from "@/lib/cn";
 import { Gift, MapPin, Navigation } from "lucide-react";
 
@@ -13,7 +14,7 @@ export function MissionCard({
   className,
 }: {
   mission: DemoMission;
-  stations: DemoStation[];
+  stations: Station[];
   onShowStation?: (id: string) => void;
   className?: string;
 }) {

@@ -24,6 +24,6 @@ Propuestas de la Línea 4; se congelan con el equipo, no unilateralmente.
 | C3 `forecast` (L3 → L4) | Elegibilidad de misiones | ver plan unificado |
 
 ## Integración pendiente del esqueleto
-- Sustituir fixtures DEMO de `/app` por C1/C3 tras el corte A (`NEXT_PUBLIC_DATA_MODE=api`).
+- `/app` conectado al catálogo de Línea 3 (`/viaje/stations`): IDs reales, enlaces al planeador y pronóstico, modo/fecha visibles. DEMO solo con `NEXT_PUBLIC_DATA_MODE=demo`.
 - Línea 5: reemplazar primitivas de `components/ui` por las accesibles de `components/shared` cuando existan.
 - Crear proyectos en Vercel y Railway (requiere login de quien administre las cuentas).

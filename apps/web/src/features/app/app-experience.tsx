@@ -2,15 +2,17 @@
 
 import { Logo } from "@/components/brand/logo";
 import { StationMap } from "@/components/map";
-import { DemoBadge } from "@/components/ui/badge";
+import { ModeBadge } from "@/features/viaje/viaje-shell";
+import { cdmxStamp } from "@/features/viaje/format";
+import { StateMessage } from "@/components/ui/state-message";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { Segmented } from "@/components/ui/segmented";
-import type { DemoDataset } from "@/features/demo/types";
+import type { StationDataset } from "@/features/stations/types";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { Box, LayoutDashboard, List, LocateFixed, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BottomNav, type AppView } from "./bottom-nav";
 import { BottomSheet, type SheetSnap } from "./bottom-sheet";
 import { FilterChips, filterStations, type StationFilter } from "./filter-chips";
@@ -24,7 +26,7 @@ import { StationSearch } from "./station-search";
 const PEEK = 250;
 
 /** Pantalla principal /app: mapa 3D + búsqueda + filtros + bottom sheet + lista equivalente. */
-export function AppExperience({ data }: { data: DemoDataset }) {
+export function AppExperience({ data }: { data: StationDataset }) {
   const { stations: allStations, missions } = data;
   const [view, setView] = useState<AppView>("map");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -36,7 +38,7 @@ export function AppExperience({ data }: { data: DemoDataset }) {
   const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
-  const stations = filterStations(allStations, filter);
+  const stations = useMemo(() => filterStations(allStations, filter), [allStations, filter]);
   const selected = stations.find((s) => s.id === selectedId) ?? null;
   const mission = missions[0];
   const showMap = view !== "list";
@@ -49,6 +51,7 @@ export function AppExperience({ data }: { data: DemoDataset }) {
   };
   // Elegir una estación (lista, búsqueda o resumen) siempre lleva al mapa, donde vive su ficha.
   const pickStation = (id: string) => {
+    setFilter("all");
     setSelectedId(id);
     setSnap("compact");
     setView("map");
@@ -60,6 +63,8 @@ export function AppExperience({ data }: { data: DemoDataset }) {
 
   const overview = (
     <MapOverview
+      mode={data.label}
+      generatedAt={data.generatedAt}
       stations={stations}
       onPick={pickStation}
       showList={isDesktop || snap === "expanded"}
@@ -71,9 +76,9 @@ export function AppExperience({ data }: { data: DemoDataset }) {
   ) : null;
 
   const panelContent = selected ? (
-    <StationCard key={selected.id} station={selected} onClose={clearSelection} />
+    <StationCard key={selected.id} mode={data.label} station={selected} onClose={clearSelection} />
   ) : view === "missions" ? (
-    missionCard
+    (missionCard ?? <StateMessage kind="empty" title="No hay misiones disponibles" description="Las misiones de ejemplo se consultan en la sección Misiones." />)
   ) : view === "map" || isDesktop ? (
     overview
   ) : null;
@@ -93,7 +98,7 @@ export function AppExperience({ data }: { data: DemoDataset }) {
         {view3d ? <MapIcon aria-hidden className="size-4" /> : <Box aria-hidden className="size-4" />}
         {view3d ? "2D" : "3D"}
       </Button>
-      <Button variant="glass" size="icon" aria-label="Encuadrar el corredor" onClick={() => setRecenter((n) => n + 1)}>
+      <Button variant="glass" size="icon" aria-label="Encuadrar las estaciones" onClick={() => setRecenter((n) => n + 1)}>
         <LocateFixed aria-hidden className="size-5" />
       </Button>
     </>
@@ -123,7 +128,7 @@ export function AppExperience({ data }: { data: DemoDataset }) {
       ) : (
         <div className="absolute inset-0 overflow-y-auto px-4 pt-[196px] pb-40 lg:pt-[196px] lg:pr-8 lg:pb-8 lg:pl-[468px]">
           <div key="list" className="mx-auto max-w-2xl animate-rise">
-            <StationList stations={stations} selectedId={selected?.id ?? null} onSelect={pickStation} />
+            <StationList mode={data.label} stations={stations} selectedId={selected?.id ?? null} onSelect={pickStation} />
           </div>
         </div>
       )}
@@ -135,7 +140,7 @@ export function AppExperience({ data }: { data: DemoDataset }) {
             <div className="glass flex h-14 items-center justify-between rounded-full pr-1.5 pl-2.5">
               <Logo subtitle="Bicis útiles, a tiempo" />
               <div className="flex items-center gap-1.5">
-                <DemoBadge />
+                <ModeBadge mode={data.label === "DEMO" ? "EJEMPLO" : data.label} />
                 <Link
                   href="/panel"
                   className={buttonClasses("dark", "icon", "size-10 lg:hidden")}
@@ -145,6 +150,7 @@ export function AppExperience({ data }: { data: DemoDataset }) {
                 </Link>
               </div>
             </div>
+            {data.label !== "DEMO" ? <p className="glass rounded-full px-3 py-1 text-xs text-ink-muted">{data.label.startsWith("VIVO") ? "Actualización" : "Registro histórico"}: {cdmxStamp(data.generatedAt)} · CDMX</p> : null}
             <StationSearch stations={allStations} onPick={pickStation} />
             {view !== "missions" ? <FilterChips stations={allStations} value={filter} onChange={setFilter} /> : null}
           </div>
