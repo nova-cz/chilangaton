@@ -71,6 +71,7 @@ class CaseOut(BaseModel):
     created_at: AwareDatetime
     updated_at: AwareDatetime
     history: list[CaseEvent]
+    next_states: list[BikeState] = Field(description="A dónde puede moverlo un Guardián u operador ahora")
 
 
 class IncidentOut(BaseModel):

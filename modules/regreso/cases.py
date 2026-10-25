@@ -78,10 +78,20 @@ class Case:
     def was_recovered(self) -> bool:
         return any(e.to_state is S.RECUPERADA for e in self.history)
 
+    @property
+    def next_states(self) -> list[BikeState]:
+        """Estados a los que una persona (Guardián u operador) puede mover el caso ahora."""
+        return [to for to in TRANSITIONS[self.state] if _taller_rule_ok(self, to)]
+
     def log(self, now: datetime, to: BikeState, actor: Actor, note: str | None) -> None:
         self.history.append(CaseEvent(ts=now, from_state=self.state, to_state=to, actor=actor, note=note))
         self.state = to
         self.updated_at = now
+
+
+def _taller_rule_ok(case: Case, to: BikeState) -> bool:
+    # reincorporada solo cuenta bicis que de verdad se recuperaron; si no, vuelve a en_estacion.
+    return case.state is not S.TALLER or (to is S.REINCORPORADA) == case.was_recovered
 
 
 def check_transition(case: Case, to: BikeState, actor: Actor) -> None:
@@ -89,8 +99,7 @@ def check_transition(case: Case, to: BikeState, actor: Actor) -> None:
         raise InvalidTransition(f"No se puede pasar de {case.state} a {to}")
     if actor not in HUMANS and (case.state, to) not in AUTOMATIC:
         raise InvalidTransition(f"De {case.state} a {to} lo decide un Guardián o el operador")
-    # reincorporada solo cuenta bicis que de verdad se recuperaron; si no, vuelve a en_estacion.
-    if case.state is S.TALLER and (to is S.REINCORPORADA) != case.was_recovered:
+    if not _taller_rule_ok(case, to):
         expected = S.REINCORPORADA if case.was_recovered else S.EN_ESTACION
         raise InvalidTransition(f"Desde taller esta bici pasa a {expected}")
 

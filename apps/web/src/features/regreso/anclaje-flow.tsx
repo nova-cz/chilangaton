@@ -14,6 +14,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { bikesTotal, regresoApi, type ReturnCheck, type ReturnStatus, type StationOption } from "./api";
 import { formatCdmxTime, helpHref } from "./channels";
+import { stripZeros } from "./stations";
 
 const POLL_MS = 10_000; // el feed se actualiza cada ~10 s
 const GIVE_UP_AFTER_MS = 60_000; // si la API no responde un minuto después de la ventana, dejamos de insistir
@@ -248,10 +249,49 @@ function Result({
               {status === "sin_cambio" ? "Ya volví a empujar: revisar otra vez" : "Revisar otra vez"}
             </Button>
             {help}
+            <ReportForReview check={check} />
           </>
         )}
       </div>
     </Card>
+  );
+}
+
+/** Abre un caso "anclaje" con esta verificación como evidencia, para que lo revise un Guardián. */
+function ReportForReview({ check }: { check: ReturnCheck }) {
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const send = async () => {
+    setState("sending");
+    try {
+      await regresoApi.openIncident({
+        type: "anclaje",
+        source: "app",
+        station_id: check.station_id,
+        return_id: check.return_id,
+      });
+      setState("sent");
+    } catch {
+      setState("error");
+    }
+  };
+  if (state === "sent") {
+    return (
+      <p role="status" className="text-sm font-semibold text-ink">
+        Listo: un Guardián de Equilibici lo revisará. Esto no sustituye tu reporte a ECOBICI.
+      </p>
+    );
+  }
+  return (
+    <>
+      <Button variant="ghost" className={WIDE_BUTTON} onClick={send} disabled={state === "sending"}>
+        {state === "sending" ? "Enviando…" : "Pedir que un Guardián lo revise"}
+      </Button>
+      {state === "error" ? (
+        <p role="alert" className="text-sm font-semibold text-danger-700">
+          No se pudo enviar. Intenta de nuevo.
+        </p>
+      ) : null}
+    </>
   );
 }
 
@@ -261,14 +301,6 @@ function distanceKm(a: { lat: number; lon: number }, b: { lat: number; lon: numb
   const dLon = (b.lon - a.lon) * rad;
   const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
   return 12742 * Math.asin(Math.sqrt(h));
-}
-
-/** "014" → "14", "080-081" → "80-81". */
-function stripZeros(code: string): string {
-  return code
-    .split("-")
-    .map((part) => part.replace(/^0+(?=\d)/, ""))
-    .join("-");
 }
 
 function formatDistance(km: number): string {

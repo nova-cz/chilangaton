@@ -98,3 +98,13 @@ def test_conteo_c5_por_estacion():
 
     counts = {c.station_id: (c.open_cases, c.reincorporated) for c in store.counts(at(5)).stations}
     assert counts == {"1": (1, 0), "2": (1, 0), "3": (0, 1)}
+
+
+def test_siguientes_estados_respetan_la_regla_de_taller():
+    store = CaseStore()
+    case, _ = store.open(IncidentIn(type=IncidentType.DISCREPANCIA, station_id="1"), T0)
+    assert set(case.next_states) == {S.EN_ESTACION, S.TRASLADO, S.TALLER, S.LOCALIZADA}
+    store.transition(case.case_id, S.TALLER, G, at(1))
+    assert case.next_states == [S.EN_ESTACION]
+    store.transition(case.case_id, S.EN_ESTACION, G, at(2))
+    assert case.next_states == []

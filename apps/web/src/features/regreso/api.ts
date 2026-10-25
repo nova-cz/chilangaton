@@ -32,6 +32,53 @@ export interface StationOption {
   lon: number;
 }
 
+export type BikeState =
+  | "en_estacion"
+  | "en_viaje"
+  | "traslado"
+  | "taller"
+  | "devolucion_en_duda"
+  | "en_revision"
+  | "localizada"
+  | "recuperada"
+  | "reincorporada";
+
+export type IncidentType = "robo" | "perdida" | "anclaje" | "viaje_largo" | "discrepancia";
+export type Actor = "app" | "sistema" | "guardian" | "operador";
+
+export interface CaseEvent {
+  ts: string;
+  from_state: BikeState | null;
+  to_state: BikeState;
+  actor: Actor;
+  note: string | null;
+}
+
+export interface Case {
+  case_id: string;
+  type: IncidentType;
+  source: Actor;
+  state: BikeState;
+  is_open: boolean;
+  station_id: string | null;
+  bike_id: string | null;
+  return_id: string | null;
+  assigned_to: string | null;
+  created_at: string;
+  updated_at: string;
+  history: CaseEvent[];
+  next_states: BikeState[];
+}
+
+export interface IncidentIn {
+  type: IncidentType;
+  source: Actor;
+  station_id?: string;
+  bike_id?: string;
+  return_id?: string;
+  note?: string;
+}
+
 async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${config.apiUrl}${config.apiPrefix}${path}`, {
     method: "POST",
@@ -49,6 +96,12 @@ export const regresoApi = {
   stations: () => apiGet<StationOption[]>("/returns/stations"),
   startReturn: (stationId: string) => apiPost<ReturnCheck>("/returns", { station_id: stationId }),
   checkReturn: (returnId: string) => apiGet<ReturnCheck>(`/returns/${encodeURIComponent(returnId)}`, { cache: "no-store" }),
+  cases: () => apiGet<Case[]>("/cases", { cache: "no-store" }),
+  openIncident: (body: IncidentIn) => apiPost<{ case: Case; created: boolean }>("/incidents", body),
+  transition: (caseId: string, body: { to_state: BikeState; actor: Actor; note?: string }) =>
+    apiPost<Case>(`/cases/${encodeURIComponent(caseId)}/transitions`, body),
+  assign: (caseId: string, body: { guardian_id: string; actor: Actor }) =>
+    apiPost<Case>(`/cases/${encodeURIComponent(caseId)}/assign`, body),
 };
 
 export function bikesTotal(snapshot: StationSnapshot | null): number | null {
