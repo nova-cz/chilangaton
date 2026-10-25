@@ -1,12 +1,13 @@
 import { cn } from "@/lib/cn";
 import type { ButtonHTMLAttributes } from "react";
 
-type Variant = "primary" | "dark" | "soft" | "ghost" | "glass";
+type Variant = "primary" | "dark" | "lime" | "soft" | "ghost" | "glass";
 type Size = "sm" | "md" | "icon";
 
 const VARIANTS: Record<Variant, string> = {
   primary: "bg-brand-500 text-white hover:bg-brand-600 shadow-soft",
   dark: "bg-brand-900 text-white hover:bg-brand-700 shadow-soft",
+  lime: "bg-lime-300 text-brand-900 hover:bg-lime-200",
   soft: "bg-brand-100 text-brand-900 hover:bg-brand-200",
   ghost: "text-ink hover:bg-ink/5",
   glass: "glass text-ink hover:bg-white",

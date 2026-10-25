@@ -18,6 +18,14 @@
   --color-brand-700: #0b5a40;
   --color-brand-900: #063f2e; /* Dark Green */
 
+  /* Acento lima para CTA sobre fondo oscuro (estilo de referencia) */
+  --color-lime-100: #f1fadc;
+  --color-lime-200: #e2f5b8;
+  --color-lime-300: #cdee8a;
+  --color-lime-500: #a6d94a;
+  /* Pastel neutro para variar tarjetas */
+  --color-mist-100: #eceffa;
+
   --color-ink: #12251b; /* Main Text */
   --color-ink-muted: #4b5f54;
   --color-ink-soft: #6f8177;

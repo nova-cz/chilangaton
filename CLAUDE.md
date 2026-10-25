@@ -25,7 +25,7 @@ Al crear tu ruta, pon `ready: true` en `apps/web/src/features/navigation/routes.
 - Cada quien edita solo `modules/<su_línea>/` y sus rutas. Nada de tocar módulos ajenos.
 - Módulo API: `modules/<línea>/router.py` exporta `router = APIRouter(...)`; se monta solo. Prefijo `/api/v1`. Agrega `engine.py`, `tests/`, `fixtures/` según necesites.
 - Errores API: `{"error": {"code", "message"}}`. Fetch desde web con `apiGet()` de `src/lib/api.ts`.
-- UI: componentes base en `src/components/ui` (Button, Badge, Card, Segmented, StateMessage). Semáforo **siempre con texto**. Cada mapa tiene lista equivalente.
+- UI: componentes base en `src/components/ui` (Button con variante `lime`, Badge, Card, Segmented `tone="dark"`, Ring/Metric, StateMessage). Estilo: tarjetas pastel (`brand-100`, `lime-100`, `mist-100`), barras `brand-900` con CTA lima, números grandes con unidad pequeña. Ilustraciones propias (`components/brand`), nunca fotos ni logos de terceros. Semáforo **siempre con texto**. Cada mapa tiene lista equivalente.
 - Hora: se guarda en UTC, se muestra en hora CDMX.
 
 ## DEMO vs. real (regla de honestidad)

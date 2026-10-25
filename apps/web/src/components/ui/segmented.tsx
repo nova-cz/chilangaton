@@ -16,6 +16,7 @@ export function Segmented<T extends string | number>({
   onChange,
   className,
   size = "md",
+  tone = "light",
 }: {
   label: string;
   options: SegmentedOption<T>[];
@@ -23,9 +24,11 @@ export function Segmented<T extends string | number>({
   onChange: (value: T) => void;
   className?: string;
   size?: "sm" | "md";
+  /** "dark": para barras oscuras, con activo en lima. */
+  tone?: "light" | "dark";
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className={cn("inline-flex rounded-full bg-ink/5 p-1", className)}>
+    <div role="radiogroup" aria-label={label} className={cn("inline-flex rounded-full p-1", tone === "dark" ? "bg-white/10" : "bg-ink/5", className)}>
       {options.map((option) => {
         const active = option.value === value;
         return (
@@ -39,7 +42,13 @@ export function Segmented<T extends string | number>({
             className={cn(
               "flex-1 rounded-full font-semibold whitespace-nowrap transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40",
               size === "sm" ? "h-8 px-3 text-xs" : "h-9 px-4 text-sm",
-              active ? "bg-white text-ink shadow-soft" : "text-ink-muted hover:text-ink",
+              tone === "dark"
+                ? active
+                  ? "bg-lime-300 text-brand-900"
+                  : "text-white/70 hover:text-white"
+                : active
+                  ? "bg-white text-ink shadow-soft"
+                  : "text-ink-muted hover:text-ink",
             )}
           >
             {option.label}

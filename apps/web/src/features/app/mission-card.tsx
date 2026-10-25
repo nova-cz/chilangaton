@@ -1,7 +1,9 @@
+import { BikeIllustration } from "@/components/brand/bike-illustration";
 import { Badge, DemoBadge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { DemoMission, DemoStation } from "@/features/demo/types";
 import { cn } from "@/lib/cn";
-import { ArrowRight, Gift } from "lucide-react";
+import { Gift, MapPin, Navigation } from "lucide-react";
 
 /** Misión de rebalanceo de EJEMPLO. La lógica real (puntos, antiabuso) es S5. */
 export function MissionCard({
@@ -22,42 +24,57 @@ export function MissionCard({
   return (
     <article
       aria-labelledby={`mission-${mission.id}`}
-      className={cn("relative overflow-hidden rounded-[var(--radius-card)] bg-brand-900 p-4 text-white", className)}
+      className={cn("overflow-hidden rounded-[var(--radius-sheet)] bg-lime-100", className)}
     >
-      <div aria-hidden className="absolute -top-16 -right-10 size-44 rounded-full bg-brand-500/30 blur-2xl" />
-      <div className="relative flex items-center gap-2">
-        <Badge tone="brand">Misión</Badge>
-        <DemoBadge />
+      <div className="flex items-start gap-2 p-4 pb-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <Badge tone="dark">Misión</Badge>
+            <DemoBadge />
+          </div>
+          <h2 id={`mission-${mission.id}`} className="mt-2 text-lg leading-snug font-bold">
+            {mission.title}
+          </h2>
+        </div>
+        <BikeIllustration className="w-28 shrink-0 lg:w-32" />
       </div>
-      <h2 id={`mission-${mission.id}`} className="relative mt-2 text-lg leading-snug font-bold">
-        {mission.title}
-      </h2>
-      <div className="relative mt-3 flex items-center gap-2 text-sm">
-        <StationChip label={from.name} onClick={onShowStation ? () => onShowStation(from.id) : undefined} />
-        <ArrowRight aria-label="hacia" className="size-4 shrink-0 text-brand-300" />
-        <StationChip label={to.name} onClick={onShowStation ? () => onShowStation(to.id) : undefined} />
+
+      <ol className="mx-4 grid gap-1.5" aria-label="Ruta de la misión">
+        <RouteStop label="Recoge en" name={from.name} dot="bg-brand-500" />
+        <RouteStop label="Deja en" name={to.name} dot="bg-brand-900" />
+      </ol>
+
+      <div className="m-2 mt-3 rounded-[1.6rem] bg-brand-900 p-3 text-white">
+        <div className="flex items-center justify-between gap-3 px-1">
+          <span className="flex items-center gap-2 text-sm font-semibold">
+            <Gift aria-hidden className="size-4 text-lime-300" />
+            {mission.reward.label}
+          </span>
+          <span className="text-xs text-white/70">{mission.window_label}</span>
+        </div>
+        {onShowStation ? (
+          <Button variant="lime" className="mt-3 w-full justify-center" onClick={() => onShowStation(from.id)}>
+            <Navigation aria-hidden className="size-4" /> Ver punto de inicio
+          </Button>
+        ) : null}
+        <p className="mt-2 px-1 text-[11px] text-white/70">
+          Sin canje real: Equilibici no está conectado a ECOBICI ni otorga recompensas.
+        </p>
       </div>
-      <div className="relative mt-3 flex items-center justify-between gap-3 rounded-2xl bg-white/10 px-3 py-2.5">
-        <span className="flex items-center gap-2 text-sm font-semibold">
-          <Gift aria-hidden className="size-4 text-brand-300" />
-          {mission.reward.label}
-        </span>
-        <span className="text-xs text-white/75">{mission.window_label}</span>
-      </div>
-      <p className="relative mt-2 text-[11px] text-white/70">
-        Sin canje real: Equilibici no está conectado a ECOBICI ni otorga recompensas.
-      </p>
     </article>
   );
 }
 
-function StationChip({ label, onClick }: { label: string; onClick?: () => void }) {
-  const cls = "min-w-0 truncate rounded-full bg-white/12 px-3 py-1.5 font-medium";
-  return onClick ? (
-    <button type="button" onClick={onClick} className={cn(cls, "hover:bg-white/20")}>
-      {label}
-    </button>
-  ) : (
-    <span className={cls}>{label}</span>
+function RouteStop({ label, name, dot }: { label: string; name: string; dot: string }) {
+  return (
+    <li className="flex items-center gap-3 rounded-2xl bg-white/80 px-3 py-2">
+      <span className={cn("grid size-7 place-items-center rounded-full text-white", dot)}>
+        <MapPin aria-hidden className="size-3.5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[11px] font-semibold text-ink-muted">{label}</span>
+        <span className="block truncate text-sm font-semibold">{name}</span>
+      </span>
+    </li>
   );
 }
