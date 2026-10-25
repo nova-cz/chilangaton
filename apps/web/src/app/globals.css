@@ -48,6 +48,9 @@
 
   --animate-sheet-in: sheet-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
   --animate-fade-in: fade-in 220ms ease-out;
+  --animate-rise: rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pop: pop 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-float-slow: float-slow 6s ease-in-out infinite;
 
   @keyframes sheet-in {
     from {
@@ -57,6 +60,29 @@
     to {
       transform: translateY(0);
       opacity: 1;
+    }
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(10px) scale(0.985);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes pop {
+    from {
+      transform: scale(0.7);
+    }
+    to {
+      transform: scale(1.1);
+    }
+  }
+  @keyframes float-slow {
+    50% {
+      transform: translateY(-4px);
     }
   }
   @keyframes fade-in {
@@ -92,6 +118,18 @@
     background-color: rgb(255 255 255 / 0.86);
     backdrop-filter: blur(12px) saturate(1.4);
     -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  }
+}
+
+/* Variante casi opaca para el bottom sheet y la navegación: el mapa no debe transparentarse bajo el texto. */
+@utility opaque-pane {
+  background-color: rgb(255 255 255 / 0.97);
+  border: 1px solid rgb(255 255 255 / 0.8);
+  box-shadow: var(--shadow-float);
+  @supports (backdrop-filter: blur(1px)) {
+    background-color: rgb(255 255 255 / 0.94);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
   }
 }
 
