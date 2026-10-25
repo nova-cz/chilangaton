@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+/*
+ * Tokens de Equilibici. Paleta inspirada en el verde de ECOBICI, refinada para contraste AA.
+ * Úsalos como clases de Tailwind: bg-brand-500, text-ink, text-ink-muted, bg-surface, etc.
+ */
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --color-brand-50: #f1faf4;
+  --color-brand-100: #ddf3e4;
+  --color-brand-200: #b9e6c9;
+  --color-brand-300: #7fd1a0;
+  --color-brand-400: #22c470;
+  --color-brand-500: #009b4d; /* Primary Green */
+  --color-brand-600: #007f3f; /* texto verde sobre blanco (AA) */
+  --color-brand-700: #0b5a40;
+  --color-brand-900: #063f2e; /* Dark Green */
+
+  /* Acento lima para CTA sobre fondo oscuro (estilo de referencia) */
+  --color-lime-100: #f1fadc;
+  --color-lime-200: #e2f5b8;
+  --color-lime-300: #cdee8a;
+  --color-lime-500: #a6d94a;
+  /* Pastel neutro para variar tarjetas */
+  --color-mist-100: #eceffa;
+
+  --color-ink: #12251b; /* Main Text */
+  --color-ink-muted: #4b5f54;
+  --color-ink-soft: #6f8177;
+  --color-line: #e3ebe6;
+  --color-surface: #f4f7f5;
+  --color-card: #ffffff;
+
+  --color-warning-500: #e6a23c;
+  --color-warning-100: #fdf1dc;
+  --color-warning-700: #8a5a0b; /* texto ámbar AA */
+  --color-danger-500: #d84949;
+  --color-danger-100: #fbe3e3;
+  --color-danger-700: #a8302f; /* texto rojo AA */
+
+  --radius-card: 1.5rem;
+  --radius-sheet: 2rem;
+
+  --shadow-soft: 0 1px 2px rgb(6 63 46 / 0.05), 0 8px 24px -8px rgb(6 63 46 / 0.14);
+  --shadow-float: 0 2px 6px rgb(6 63 46 / 0.06), 0 18px 40px -12px rgb(6 63 46 / 0.24);
+
+  --animate-sheet-in: sheet-in 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-in: fade-in 220ms ease-out;
+  --animate-rise: rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-pop: pop 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-float-slow: float-slow 6s ease-in-out infinite;
+
+  @keyframes sheet-in {
+    from {
+      transform: translateY(16px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  @keyframes rise {
+    from {
+      transform: translateY(10px) scale(0.985);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+  @keyframes pop {
+    from {
+      transform: scale(0.7);
+    }
+    to {
+      transform: scale(1.1);
+    }
+  }
+  @keyframes float-slow {
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-surface text-ink antialiased;
+    font-family: var(--font-sans);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-brand-400);
+    outline-offset: 2px;
+  }
+}
+
+/* Vidrio sutil: blur bajo para no castigar el rendimiento móvil y fondo casi opaco para legibilidad. */
+@utility glass {
+  background-color: rgb(255 255 255 / 0.9);
+  border: 1px solid rgb(255 255 255 / 0.7);
+  box-shadow: var(--shadow-float);
+  @supports (backdrop-filter: blur(1px)) {
+    background-color: rgb(255 255 255 / 0.86);
+    backdrop-filter: blur(12px) saturate(1.4);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  }
+}
+
+/* Variante casi opaca para el bottom sheet y la navegación: el mapa no debe transparentarse bajo el texto. */
+@utility opaque-pane {
+  background-color: rgb(255 255 255 / 0.97);
+  border: 1px solid rgb(255 255 255 / 0.8);
+  box-shadow: var(--shadow-float);
+  @supports (backdrop-filter: blur(1px)) {
+    background-color: rgb(255 255 255 / 0.94);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
+}
+
+@utility pt-safe {
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Controles de MapLibre en armonía con el sistema. */
+.maplibregl-ctrl-group {
+  border-radius: 1rem !important;
+  box-shadow: var(--shadow-soft) !important;
+  overflow: hidden;
+}
+.maplibregl-ctrl-attrib {
+  font-size: 10px;
+}
