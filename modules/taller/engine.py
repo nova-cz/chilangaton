@@ -13,10 +13,12 @@ Tareas pendientes (ver plan unificado):
 import json
 import logging
 import os
-from zoneinfo import ZoneInfo
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
+
+from shared.contracts import station_ids
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS = REPO_ROOT / "shared" / "contracts"
@@ -106,16 +108,9 @@ def latest_time(data: Data) -> datetime | None:
 
 
 # ---------- Ids de estación ----------
-_STATIONS_MAP: dict[str, str] | None = None
-
-
 def feed_ids() -> dict[str, str]:
-    """Código CE del CSV (271-272) -> station_id del feed. Sale de real/stations_map.json."""
-    global _STATIONS_MAP
-    if _STATIONS_MAP is None:
-        path = REAL_DIR / "stations_map.json"
-        _STATIONS_MAP = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
-    return _STATIONS_MAP
+    """Código CE del CSV (271-272) -> station_id del feed. Mapa único: shared/contracts/stations_map.json."""
+    return station_ids.ce_to_feed_map()
 
 
 def with_ids(item: dict, key: str, ids: str = "ce") -> dict:
