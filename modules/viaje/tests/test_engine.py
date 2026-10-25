@@ -58,3 +58,12 @@ def test_endpoints_web():
     f = c.get(f"/api/v1/viaje/stations/{sid}/forecast", params={"horizons": "15,45,90"}).json()
     assert [x["horizon_min"] for x in f["forecast"]] == [15, 45, 90] and f["station"]["station_id"] == sid
     assert c.get("/api/v1/viaje/stations/no-existe/forecast").status_code == 404
+
+
+def test_c3_varias_estaciones():
+    from fastapi.testclient import TestClient
+    from services.api.main import create_app
+
+    c = TestClient(create_app())
+    r = c.get("/api/v1/viaje/forecast").json()
+    assert r["forecast"] and set(r["forecast"][0]) == {"station_id", "ts", "horizon_min", "p_useful_bike", "p_free_dock"}

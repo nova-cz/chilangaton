@@ -5,6 +5,8 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, HTTPException, Query
 
+from shared.contracts.c3_forecast import ForecastResponse
+
 from . import engine
 
 router = APIRouter(prefix="/viaje", tags=["Línea 3 · Viaje"])
@@ -44,6 +46,18 @@ def forecast(station_id: str, at: str | None = None,
     hs = tuple(sorted({max(1, min(180, int(h))) for h in horizons.split(",")}))
     return {"mode": DATA.mode, "station": engine.station_row(DATA, station_id),
             "forecast": engine.forecast(DATA, station_id, _now(at), hs)}
+
+
+@router.get("/forecast", response_model=ForecastResponse)
+def forecast_many(station_ids: str | None = Query(None, description="Ids separados por coma; vacío = todas"),
+                  at: str | None = None,
+                  horizons: str = Query("15,30,60", pattern=r"^\d{1,3}(,\d{1,3}){0,11}$")):
+    """C3 para varias estaciones (simulador de Línea 4, panel de Línea 1)."""
+    ids = [i.strip() for i in station_ids.split(",") if i.strip()] if station_ids else sorted(DATA.states)
+    _check(*ids)
+    hs = tuple(sorted({max(1, min(180, int(h))) for h in horizons.split(",")}))
+    now = _now(at)
+    return {"mode": DATA.mode, "forecast": [p for i in ids for p in engine.forecast(DATA, i, now, hs)]}
 
 
 @router.get("/recommendations")
