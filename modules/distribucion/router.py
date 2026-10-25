@@ -8,6 +8,7 @@ Pendiente (P1): GET /missions, POST /missions/{id}/accept. Ver docs/frontend-roa
 """
 
 import json
+from enum import IntEnum
 from functools import lru_cache
 from pathlib import Path
 
@@ -15,7 +16,12 @@ from fastapi import APIRouter, HTTPException, Query
 
 router = APIRouter(tags=["distribucion"])
 FIXTURES = Path(__file__).parent / "fixtures"
-SCENARIOS = (0, 5, 10, 20)
+
+class Scenario(IntEnum):
+    baseline = 0
+    low = 5
+    medium = 10
+    high = 20
 
 
 @lru_cache(maxsize=4)
@@ -33,11 +39,9 @@ def contraflujo() -> dict:
 
 @router.get("/simulation/results")
 def simulation_results(
-    scenario: int | None = Query(None, description="Adopción en %; sin valor devuelve los cuatro escenarios."),
+    scenario: Scenario | None = Query(None, description="Adopción en %; sin valor devuelve los cuatro escenarios."),
     recovered: bool = Query(False, description="Bicis deshabilitadas vuelven a servicio a las 7:00."),
 ) -> dict:
-    if scenario is not None and scenario not in SCENARIOS:
-        raise HTTPException(status_code=422, detail=f"scenario debe ser uno de {list(SCENARIOS)}")
     data = _load("simulation_results.json")
     group = data["scenarios"][str(recovered).lower()]
     meta = {k: v for k, v in data.items() if k != "scenarios"}
