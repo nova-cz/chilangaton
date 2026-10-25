@@ -1,7 +1,39 @@
+# --- Referencias visuales privadas: NUNCA se suben ---
+appvieja/
+inspogoal/
+referencias/
+*.heic
+Screenshot*.png
+Captura*.png
+
+# --- Datos (viven en la rama `data`, ver su README) ---
 data/
-__pycache__/
-.pytest_cache/
-.venv/
+*.parquet
+
+# --- Secretos ---
+.env
+.env.*
+!.env.example
+*.pem
+
+# --- Node / Next.js ---
 node_modules/
 .next/
-.env
+out/
+.vercel/
+*.tsbuildinfo
+apps/web/public/sw.js
+apps/web/public/sw.js.map
+apps/web/public/swe-worker-*.js
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+
+# --- Sistema ---
+.DS_Store
+npm-debug.log*

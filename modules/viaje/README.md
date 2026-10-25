@@ -4,12 +4,18 @@ Motor de pronóstico (V2) y recomendación (V3). Funciona solo, con datos de eje
 
 ## Correr
 
+Sigue la estructura de la API común (`services/api`, rama de Miguel): `services/api/main.py` monta solo
+este `router.py` en `/api/v1`. Desde la raíz del repo:
+
 ```
-pip install fastapi uvicorn numpy duckdb pandas pyarrow pytest
-uvicorn modules.viaje.dev_main:app --reload --port 8003
+pip install -r requirements-dev.txt numpy duckdb requests
+uvicorn services.api.main:app --reload
 ```
 
-Docs: http://localhost:8003/docs · Pruebas: `python -m pytest -q modules/viaje/tests`
+Docs: http://localhost:8000/docs · Pruebas: `pytest modules/viaje`
+
+**Al integrar en `dev`:** agregar al `requirements.txt` de la raíz `numpy`, `duckdb` y `requests`
+(duckdb solo se usa con `DATA_DIR` y requests con `LIVE=1`; numpy siempre).
 
 ## Endpoints (`/api/v1/viaje`)
 
@@ -42,6 +48,6 @@ Prueba rápida: `/api/v1/viaje/recommendations?origin=271&destination=14&at=2026
 | VIVO | `LIVE=1` | Estaciones e inventario reales de ahorita desde el feed GBFS (dos JSON chicos); demanda aún de ejemplo |
 | REAL | `LIVE=1 DATA_DIR=/ruta/a/data` | Lo anterior + demanda y duraciones reales de `data/trips/*.parquet` (rama `data`) |
 
-Ejemplo: `LIVE=1 DATA_DIR=~/Desktop/chilangaton-data/data uvicorn modules.viaje.dev_main:app --port 8003`
+Ejemplo: `LIVE=1 DATA_DIR=~/Desktop/chilangaton-data/data uvicorn services.api.main:app --reload`
 
 La respuesta siempre dice en `mode` qué datos usó. Pendiente: restar las sospechosas reales de C2 (Línea 2) cuando exista su endpoint.
