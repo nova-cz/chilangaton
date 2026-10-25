@@ -21,4 +21,9 @@ export interface UsefulBikes {
   suspected_expected?: number | null;
   /** Horas seguidas con al menos una bici deshabilitada (reloj de 36 h). */
   disabled_hours?: number | null;
+  name?: string | null;
+  /** Código CE (p. ej. 271-272). */
+  short_name?: string | null;
+  lat?: number | null;
+  lon?: number | null;
 }

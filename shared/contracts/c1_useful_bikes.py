@@ -32,3 +32,7 @@ class UsefulBikes(BaseModel):
     suspected_expected: float | None = Field(None, description="Lo que se restó, tomado de C2")
     disabled_hours: float | None = Field(
         None, description="Horas seguidas con al menos una bici deshabilitada (reloj de 36 h)")
+    name: str | None = None
+    short_name: str | None = Field(None, description="Código CE (p. ej. 271-272)")
+    lat: float | None = None
+    lon: float | None = None

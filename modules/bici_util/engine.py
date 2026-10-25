@@ -224,6 +224,10 @@ def stations(data: Data, at: datetime | None = None) -> list[dict]:
             "capacity": st.capacity if st else None,
             "suspected_expected": float(r.suspected_expected),
             "disabled_hours": round(streaks.get(r.station_id, 0.0), 1),
+            "name": st.name if st else None,
+            "short_name": st.short_name if st else None,
+            "lat": st.lat if st else None,
+            "lon": st.lon if st else None,
         })
     return sorted(out, key=lambda x: x["station_id"])
 

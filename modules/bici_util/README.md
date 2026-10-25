@@ -24,6 +24,14 @@ Docs: http://localhost:8001/docs · Pruebas: `python -m pytest -q modules/bici_u
 `at` fija la hora de la demo (hora CDMX), p. ej. `2026-09-29T08:00`. Sin `at`, la última foto.
 Prueba rápida: `/api/v1/bici-util/stations/141?at=2026-09-29T08:00` (Buenavista CE-271-272).
 
+## Pantallas (U5)
+
+- `/panel/bici-util`: 4 KPI de la foto, mapa 2D (MapLibre, capa de círculos) con tabla equivalente, detalle por estación y gráfica por hora con versión en tabla.
+- `/panel/supervision`: los 3 indicadores con "cumple / no cumple", estaciones vacías por hora contra 6% y tabla del reloj de 36 h.
+- Datos: con `NEXT_PUBLIC_DATA_MODE=api` leen `/api/v1/bici-util/*`; si no, la foto REAL grabada en `apps/web/src/features/bici-util/demo-snapshot.json` (29 sep 8:00). Si la API falla, se muestra la foto grabada con etiqueta DEMO.
+- Regenerar la foto: `DATA_DIR=data python -m modules.bici_util.export_demo`.
+- Pasan axe-core (WCAG 2.2 AA) y no hay desborde horizontal a 375 px.
+
 ## Cómo calcula
 
 - **IDs:** `station_id` es el del feed GBFS, no el código CE. Buenavista CE-271-272 es `141`; CE-014 Reforma–Río de Plata es `267`. El código CE va en `short_name`.
