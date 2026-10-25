@@ -122,13 +122,29 @@ def with_ids(item: dict, key: str, ids: str = "ce") -> dict:
 
 # ---------- D5 · Reportes ----------
 REPORT_DEDUPE_MIN = 30           # mismo usuario, estación, bici y tipo: cuenta una sola vez
+WITHDRAWAL_DISCARD_MIN = 5       # reporte y retiro de la misma bici por el mismo usuario en 5 min: se descarta
+CONFIDENCE_BASE = {"taller": 0.9, "deteccion": 0.6, "usuario": 0.5}
+CORROBORATION_H = 24             # otra persona reportando lo mismo en 24 h sube la confianza
+MIN_CONFIDENCE = 0.5             # por debajo no cuenta como señal en la prioridad
 RECENT_REPORTS_H = 24            # reportes que se vuelven señal en la prioridad
 
 
 def _read_reports(path: Path) -> list[dict]:
     if not path.exists():
         return []
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    by_id: dict[str, dict] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.strip():
+            r = json.loads(line)
+            by_id[r["report_id"]] = r          # el archivo solo agrega: gana la última versión
+    return list(by_id.values())
+
+
+def _save(data: Data, report: dict) -> None:
+    if data.reports_file is not None:
+        data.reports_file.parent.mkdir(parents=True, exist_ok=True)
+        with data.reports_file.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(report, ensure_ascii=False) + "\n")
 
 
 def known_stations(data: Data) -> set[str] | None:
@@ -161,23 +177,62 @@ def add_report(data: Data, report: dict) -> tuple[dict, bool]:
                 and report.get("user_hash") is not None \
                 and (created - _parse_ts(r["created_at"])).total_seconds() < REPORT_DEDUPE_MIN * 60:
             return r, False
+    report.setdefault("status", "valido")
     data.reports.append(report)
-    if data.reports_file is not None:
-        data.reports_file.parent.mkdir(parents=True, exist_ok=True)
-        with data.reports_file.open("a", encoding="utf-8") as f:
-            f.write(json.dumps(report, ensure_ascii=False) + "\n")
+    _save(data, report)
     return report, True
 
 
+def register_withdrawal(data: Data, bike_id: str, user_hash: str, taken_at: datetime) -> list[dict]:
+    """Descarta los reportes de la misma persona sobre esa bici hechos hasta 5 min antes de retirarla.
+
+    Es la forma de apartar una bici: se reporta como dañada para que nadie más la tome y luego se usa.
+    Devuelve los reportes descartados.
+    """
+    dropped = []
+    for r in data.reports:
+        if r.get("status") == "descartado" or r.get("bike_id") != bike_id or r.get("user_hash") != user_hash:
+            continue
+        gap = (taken_at - _parse_ts(r["created_at"])).total_seconds()
+        if 0 <= gap <= WITHDRAWAL_DISCARD_MIN * 60:
+            r["status"] = "descartado"
+            r["discard_reason"] = f"La misma persona retiró la bici {WITHDRAWAL_DISCARD_MIN} min o menos después de reportarla"
+            _save(data, r)
+            dropped.append(r)
+    return dropped
+
+
+def confidence(report: dict, reports: list[dict]) -> float:
+    """0 a 1. Base por fuente, +0.2 si otra persona reportó lo mismo en 24 h, 0 si se descartó.
+
+    Es una señal interna para ordenar el taller: no se publica por persona ni genera multas.
+    """
+    if report.get("status") == "descartado":
+        return 0.0
+    score = CONFIDENCE_BASE.get(report.get("source", "usuario"), 0.5)
+    here = _parse_ts(report["created_at"])
+    for o in reports:
+        if (o is not report and o.get("status") != "descartado" and o["station_id"] == report["station_id"]
+                and o.get("user_hash") != report.get("user_hash")
+                and (o.get("bike_id") == report.get("bike_id") or report.get("bike_id") is None)
+                and abs((_parse_ts(o["created_at"]) - here).total_seconds()) <= CORROBORATION_H * 3600):
+            score += 0.2
+            break
+    return round(min(score, 1.0), 2)
+
+
 def list_reports(data: Data, station_id: str | None = None) -> list[dict]:
-    items = [r for r in data.reports if station_id is None or r["station_id"] == station_id]
+    items = [{**r, "confidence": confidence(r, data.reports)}
+             for r in data.reports if station_id is None or r["station_id"] == station_id]
     return sorted(items, key=lambda r: r["created_at"], reverse=True)
 
 
 def recent_reports_by_station(data: Data, at_utc: datetime) -> dict[str, int]:
-    """Reportes de las últimas 24 h hasta `at_utc`, por estación."""
+    """Reportes válidos y con confianza suficiente de las últimas 24 h hasta `at_utc`, por estación."""
     counts: dict[str, int] = {}
     for r in data.reports:
+        if r.get("status") == "descartado" or confidence(r, data.reports) < MIN_CONFIDENCE:
+            continue
         age_h = (at_utc - _parse_ts(r["created_at"])).total_seconds() / 3600
         if 0 <= age_h < RECENT_REPORTS_H:
             counts[r["station_id"]] = counts.get(r["station_id"], 0) + 1
