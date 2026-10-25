@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+numpy
+duckdb
+pandas
+pyarrow
+pytest
+httpx
