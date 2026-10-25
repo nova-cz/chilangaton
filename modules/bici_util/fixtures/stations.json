@@ -1,0 +1,8 @@
+[
+ {"station_id": "141", "short_name": "271-272", "name": "CE-271-272 Jesús García - Carlos J. Meneses (Buenavista)", "lat": 19.4437, "lon": -99.1525, "capacity": 75},
+ {"station_id": "134", "short_name": "273-274", "name": "CE-273-274 Luis Donaldo Colosio - Av. Jesús García (Buenavista)", "lat": 19.4427, "lon": -99.153, "capacity": 71},
+ {"station_id": "267", "short_name": "014", "name": "CE-014 Reforma - Río de Plata", "lat": 19.4245, "lon": -99.1732, "capacity": 39},
+ {"station_id": "295", "short_name": "018", "name": "CE-018 Reforma - Río Rhin", "lat": 19.4288, "lon": -99.1644, "capacity": 39},
+ {"station_id": "279", "short_name": "027", "name": "CE-027 Reforma - Havre", "lat": 19.4292, "lon": -99.1627, "capacity": 43},
+ {"station_id": "136", "short_name": "012", "name": "CE-012 Río Lerma - Villalongín", "lat": 19.4322, "lon": -99.1617, "capacity": 15}
+]
