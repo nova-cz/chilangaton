@@ -27,11 +27,11 @@ export interface NavItem {
 
 export const PANEL_NAV: NavItem[] = [
   { href: "/panel", label: "Resumen", icon: LayoutDashboard, owner: "Línea 4", ready: true },
-  { href: "/panel/bici-util", label: "Disponibilidad", icon: Gauge, owner: "Línea 1", ready: false },
+  { href: "/panel/bici-util", label: "Bici útil", icon: Gauge, owner: "Línea 1", ready: true },
   { href: "/panel/taller", label: "Taller", icon: Wrench, owner: "Línea 2", ready: false },
   { href: "/panel/casos", label: "Incidentes y casos", icon: ShieldAlert, owner: "Línea 5", ready: false },
   { href: "/panel/simulador", label: "Simulador", icon: FlaskConical, owner: "Línea 4", ready: true },
-  { href: "/panel/supervision", label: "Supervisión", icon: ClipboardCheck, owner: "Línea 1", ready: false },
+  { href: "/panel/supervision", label: "Supervisión", icon: ClipboardCheck, owner: "Línea 1", ready: true },
 ];
 
 /** Pestañas de la app móvil. `view` cambia la vista dentro de /app; `href` navega a otra ruta. */
