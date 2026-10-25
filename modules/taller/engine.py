@@ -35,7 +35,9 @@ CDMX = ZoneInfo("America/Mexico_City")
 class Data:
     mode: str                      # "EJEMPLO" | "REAL"
     trips_dir: Path | None = None
-    reports: list[dict] = field(default_factory=list)   # D5: en memoria por ahora
+    reports: list[dict] = field(default_factory=list)   # D5
+    reports_file: Path | None = None                     # REAL: se guardan en DATA_DIR/reports/
+    _stations: set[str] | None = None
 
 
 def _example(name: str) -> list[dict]:
@@ -48,7 +50,9 @@ def load() -> Data:
         trips = Path(data_dir).resolve() / "trips"
         if any(trips.glob("trips_*.parquet")):
             logging.info("taller: modo REAL con %s", trips)
-            return Data(mode="REAL", trips_dir=trips)
+            reports_file = trips.parent / "reports" / "reports.jsonl"
+            return Data(mode="REAL", trips_dir=trips, reports_file=reports_file,
+                        reports=_read_reports(reports_file))
         logging.warning("taller: DATA_DIR=%r no tiene trips/trips_*.parquet; uso EJEMPLO", data_dir)
     else:
         logging.info("taller: sin DATA_DIR; modo EJEMPLO")
@@ -94,6 +98,68 @@ def latest_time(data: Data) -> datetime | None:
     import duckdb
     glob = str(data.trips_dir / "trips_*.parquet")
     return duckdb.execute("SELECT max(start_local) FROM read_parquet(?)", [glob]).fetchone()[0]
+
+
+# ---------- D5 · Reportes ----------
+REPORT_DEDUPE_MIN = 30           # mismo usuario, estación, bici y tipo: cuenta una sola vez
+RECENT_REPORTS_H = 24            # reportes que se vuelven señal en la prioridad
+
+
+def _read_reports(path: Path) -> list[dict]:
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def known_stations(data: Data) -> set[str] | None:
+    """Códigos de estación vistos en los viajes. None en modo EJEMPLO (no se valida)."""
+    if data.mode != "REAL":
+        return None
+    if data._stations is None:
+        import duckdb
+        glob = str(data.trips_dir / "trips_*.parquet")
+        rows = duckdb.execute(
+            "SELECT DISTINCT start_key FROM read_parquet(?) WHERE start_key IS NOT NULL "
+            "UNION SELECT DISTINCT end_key FROM read_parquet(?) WHERE end_key IS NOT NULL",
+            [glob, glob]).fetchall()
+        data._stations = {r[0] for r in rows}
+    return data._stations
+
+
+def _parse_ts(value: str) -> datetime:
+    return datetime.fromisoformat(value)
+
+
+def add_report(data: Data, report: dict) -> tuple[dict, bool]:
+    """Guarda un reporte. Devuelve (reporte, nuevo). Si es duplicado reciente, devuelve el original."""
+    created = _parse_ts(report["created_at"])
+    for r in reversed(data.reports):
+        if (r["station_id"], r.get("bike_id"), r["type"], r.get("user_hash")) == (
+                report["station_id"], report.get("bike_id"), report["type"], report.get("user_hash")) \
+                and report.get("user_hash") is not None \
+                and (created - _parse_ts(r["created_at"])).total_seconds() < REPORT_DEDUPE_MIN * 60:
+            return r, False
+    data.reports.append(report)
+    if data.reports_file is not None:
+        data.reports_file.parent.mkdir(parents=True, exist_ok=True)
+        with data.reports_file.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(report, ensure_ascii=False) + "\n")
+    return report, True
+
+
+def list_reports(data: Data, station_id: str | None = None) -> list[dict]:
+    items = [r for r in data.reports if station_id is None or r["station_id"] == station_id]
+    return sorted(items, key=lambda r: r["created_at"], reverse=True)
+
+
+def recent_reports_by_station(data: Data, at_utc: datetime) -> dict[str, int]:
+    """Reportes de las últimas 24 h hasta `at_utc`, por estación."""
+    counts: dict[str, int] = {}
+    for r in data.reports:
+        age_h = (at_utc - _parse_ts(r["created_at"])).total_seconds() / 3600
+        if 0 <= age_h < RECENT_REPORTS_H:
+            counts[r["station_id"]] = counts.get(r["station_id"], 0) + 1
+    return counts
 
 
 def ignored_bikes(data: Data, at: datetime | None = None) -> list[dict]:
@@ -171,12 +237,16 @@ def priority(data: Data, at: datetime | None = None) -> list[dict]:
     median_peak = sorted(peak.values())[len(peak) // 2] if peak else 0
     raw = {st: n * peak.get(st, 0) for st, n in suspected.items()}
     top = max(raw.values()) or 1
-    ts = at.replace(tzinfo=CDMX).astimezone(timezone.utc).isoformat()
+    at_utc = at.replace(tzinfo=CDMX).astimezone(timezone.utc)
+    ts = at_utc.isoformat()
+    reported = recent_reports_by_station(data, at_utc)
     items = []
     for st, n in suspected.items():
         signals = ["bici ignorada"]
         if peak.get(st, 0) > median_peak:
             signals.append("sale mucho en pico")
+        if reported.get(st):
+            signals.append("reportada por usuarios")
         items.append({
             "station_id": st,            # código del CSV; se cambia a station_id del feed con la tabla de L5
             "ts": ts,
