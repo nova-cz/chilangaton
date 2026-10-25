@@ -7,7 +7,7 @@ from typing import Literal
 from fastapi import APIRouter, HTTPException, Response
 
 from shared.contracts.c2_priority import Priority
-from shared.contracts.c4_reports import Report, ReportIn
+from shared.contracts.c4_reports import Report, ReportIn, Withdrawal
 from shared.contracts.c6_loss_risk import LossRisk
 
 from . import engine
@@ -62,6 +62,16 @@ def loss_risk(at: str | None = None, limit: int = 50, ids: Literal["ce", "feed"]
 def list_reports(station_id: str | None = None):
     """D5 · Reportes de bicis dañadas, más recientes primero. Filtra por estación si se pide."""
     return {"mode": DATA.mode, "items": engine.list_reports(DATA, station_id)}
+
+
+@router.post("/reports/withdrawals", response_model=dict)
+def report_withdrawal(body: Withdrawal):
+    """D5 · Avisa que una persona retiró una bici. Si reportó esa bici 5 min o menos antes, el reporte se descarta."""
+    taken = datetime.fromisoformat(body.taken_at) if body.taken_at else datetime.now(timezone.utc)
+    if taken.tzinfo is None:
+        taken = taken.replace(tzinfo=timezone.utc)
+    dropped = engine.register_withdrawal(DATA, body.bike_id, body.user_hash, taken)
+    return {"discarded": [r["report_id"] for r in dropped]}
 
 
 @router.post("/reports", response_model=Report, status_code=201)
