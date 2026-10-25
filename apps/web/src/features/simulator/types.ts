@@ -34,6 +34,9 @@ export interface SimulationResults {
   stations: number;
   trips_in_window: number;
   target_zones: string[];
+  target_station_hours?: number;
+  excluded_stations?: number;
+  excluded_trips?: number;
   assumptions: string[];
   scenarios: Record<"true" | "false", Record<string, ScenarioResult>>;
 }
