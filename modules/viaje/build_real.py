@@ -8,6 +8,7 @@ Uso (desde la raíz del repo, con los archivos del Drive en data/):
         --info data/station_information.json
 
 Escribe modules/viaje/real/ (sí se sube al repo: son promedios, sin bicis, edades ni géneros):
+(cada archivo va como .json.gz con {"cols": [...], "rows": [[...]]} para que pese ~1 MB)
     stations.json   catálogo con station_id = número de la estación (el que ve la gente)
     states.json     estado C1 de cada estación el día demo a las 07:45 (desde el feed)
     baseline.json   salidas/llegadas promedio por estación, tipo de día y bloque de 15 min (28 días)
@@ -19,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import gzip
 import json
 import re
 import unicodedata
@@ -202,13 +204,19 @@ def main():
         "baseline.json": build_baseline(con, keys, log),
         "travel.json": build_travel(con, keys, log),
     }
+    for old in OUT.glob("*.json"):  # versión anterior sin comprimir
+        if old.name != "meta.json":
+            old.unlink()
     for name, data in files.items():
-        (OUT / name).write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        cols = list(data[0]) if data else []
+        table = {"cols": cols, "rows": [[r[c] for c in cols] for r in data]}
+        with gzip.open(OUT / f"{name}.gz", "wt", encoding="utf-8", compresslevel=9) as fh:
+            json.dump(table, fh, ensure_ascii=False, separators=(",", ":"))
     meta = {"demo_day": str(DEMO_DAY), "demo_time": f"{DEMO_TIME[0]:02d}:{DEMO_TIME[1]:02d}",
             "baseline_days": DAYS, "sources": [Path(p).name for p in [*a.trips, a.feed, a.info]],
             "built_at_utc": datetime.now(ZoneInfo("UTC")).isoformat(timespec="seconds"), "log": log}
     (OUT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
-    size = sum((OUT / n).stat().st_size for n in files) // 1024
+    size = sum((OUT / f"{n}.gz").stat().st_size for n in files) // 1024
     print(f"\n✔ modules/viaje/real/ listo ({size} KB). Sube esa carpeta; data/ NO.")
 
 

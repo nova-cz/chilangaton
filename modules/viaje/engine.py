@@ -94,24 +94,38 @@ class Data:
     mode: str = "EJEMPLO"
 
 
+def _read(path: Path):
+    """Lee .json o .json.gz; acepta lista de dicts o tabla compacta {"cols", "rows"}."""
+    import gzip
+    if path.exists():
+        data = json.loads(path.read_text(encoding="utf-8"))
+    elif path.with_name(path.name + ".gz").exists():
+        with gzip.open(path.with_name(path.name + ".gz"), "rt", encoding="utf-8") as fh:
+            data = json.load(fh)
+    else:
+        return None
+    if isinstance(data, dict) and "cols" in data:
+        return [dict(zip(data["cols"], r)) for r in data["rows"]]
+    return data
+
+
 def _load_dir(f: Path, names: dict[str, str], mode: str) -> Data:
     st = {s["station_id"]: Station(**{k: s[k] for k in ("station_id", "name", "lat", "lon", "capacity")})
-          for s in json.loads((f / names["stations"]).read_text(encoding="utf-8"))}
+          for s in _read(f / names["stations"])}
     states = {}
-    for s in json.loads((f / names["states"]).read_text(encoding="utf-8")):
+    for s in _read(f / names["states"]):
         states[s["station_id"]] = State(
             station_id=s["station_id"], ts=s["ts"], useful_bikes=s["useful_bikes"],
             docks_available=s["docks_available"], docks_disabled=s.get("docks_disabled", 0),
             is_renting=s.get("is_renting", True), is_returning=s.get("is_returning", True))
-    if names.get("c2") and (f / names["c2"]).exists():
-        for p in json.loads((f / names["c2"]).read_text(encoding="utf-8")):
-            if p["station_id"] in states:
-                states[p["station_id"]].suspected_expected = p["suspected_expected"]
+    for p in (_read(f / names["c2"]) if names.get("c2") else None) or []:
+        if p["station_id"] in states:
+            states[p["station_id"]].suspected_expected = p["suspected_expected"]
     base = {}
-    for b in json.loads((f / names["baseline"]).read_text(encoding="utf-8")):
+    for b in _read(f / names["baseline"]):
         base[(b["station_id"], b["day_type"], b["block"])] = (b["lam_out"], b["lam_in"])
     travel = {(t["origin"], t["destination"]): t["minutes"]
-              for t in json.loads((f / names["travel"]).read_text(encoding="utf-8"))}
+              for t in _read(f / names["travel"])}
     return Data(st, states, base, travel, mode)
 
 
