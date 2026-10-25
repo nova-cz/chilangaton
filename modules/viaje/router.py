@@ -25,15 +25,25 @@ def _check(*ids):
             raise HTTPException(404, f"Estación {i} no existe")
 
 
+@router.get("/stations")
+def stations(at: str | None = None):
+    """Catálogo + estado actual (C1) para elegir origen y destino."""
+    return {"mode": DATA.mode, "stations": engine.station_rows(DATA)}
+
+
 @router.get("/nearby")
 def nearby(lat: float, lon: float, at: str | None = None, limit: int = 5):
     return {"mode": DATA.mode, "stations": engine.nearby(DATA, lat, lon, _now(at), limit)}
 
 
 @router.get("/stations/{station_id}/forecast")
-def forecast(station_id: str, at: str | None = None):
+def forecast(station_id: str, at: str | None = None,
+             horizons: str = Query("15,30,60", pattern=r"^\d{1,3}(,\d{1,3}){0,11}$")):
+    """C3. `horizons` opcional (p. ej. 15,30,45,60,75,90) para la curva de la pantalla de estación."""
     _check(station_id)
-    return {"mode": DATA.mode, "forecast": engine.forecast(DATA, station_id, _now(at))}
+    hs = tuple(sorted({max(1, min(180, int(h))) for h in horizons.split(",")}))
+    return {"mode": DATA.mode, "station": engine.station_row(DATA, station_id),
+            "forecast": engine.forecast(DATA, station_id, _now(at), hs)}
 
 
 @router.get("/recommendations")

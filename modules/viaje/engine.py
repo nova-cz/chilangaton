@@ -244,17 +244,22 @@ def forecast(data: Data, sid: str, now: datetime, horizons=(15, 30, 60)) -> list
 # ---------------------------------------------------------------- V3 · recomendación
 def travel_minutes(data: Data, a: str, b: str) -> tuple[float, str]:
     if (a, b) in data.travel:
-        return data.travel[(a, b)], "mediana real de viajes"
+        return data.travel[(a, b)], "mediana de viajes" + (" (EJEMPLO)" if "EJEMPLO" in data.mode else "")
     sa, sb = data.stations[a], data.stations[b]
     return haversine_m(sa.lat, sa.lon, sb.lat, sb.lon) / 1000 / BIKE_KMH * 60, "distancia a 12 km/h"
 
 
+def pct(p: float) -> int:
+    """Nunca prometemos 0% ni 100%: es una probabilidad, no una garantía."""
+    return 0 if p <= 0 else min(99, max(1, round(p * 100)))
+
+
 def _label_bike(p, mins):
-    return f"{round(p * 100)}% de que haya bici útil en {round(mins)} min"
+    return f"{pct(p)}% de que haya bici útil en {round(mins)} min"
 
 
 def _label_dock(p, mins):
-    return f"{round(p * 100)}% de que haya lugar al llegar en {round(mins)} min"
+    return f"{pct(p)}% de que haya lugar al llegar en {round(mins)} min"
 
 
 def recommend(data: Data, origin: str, destination: str, now: datetime,
@@ -304,7 +309,7 @@ def recommend(data: Data, origin: str, destination: str, now: datetime,
                 "p_free_dock": p, "light": traffic_light(p), "detour_min": round(detour, 1),
                 "grace_min": grace_minutes(detour),
                 "score": round(p - 0.03 * walk, 3),
-                "text": f"Déjala en {st.name}: {round(p * 100)}% de lugar, "
+                "text": f"Déjala en {st.name}: {pct(p)}% de lugar, "
                         f"a {round(walk)} min caminando de tu destino. +{grace_minutes(detour)} min de gracia"})
         alternatives.sort(key=lambda a: -a["score"])
 
@@ -321,6 +326,19 @@ def recommend(data: Data, origin: str, destination: str, now: datetime,
             "alternatives": alternatives[:3], "advice": advice,
             "preferences": {"max_walk_min": max_walk_min, "accept_alternative": accept_alternative,
                             "avoid_effort": avoid_effort}}
+
+
+def station_row(data: Data, sid: str) -> dict:
+    st, s = data.stations[sid], data.states.get(sid)
+    return {"station_id": sid, "name": st.name, "lat": st.lat, "lon": st.lon, "capacity": st.capacity,
+            "useful_bikes_now": s.useful_bikes if s else None,
+            "docks_available_now": s.docks_available if s else None,
+            "is_renting": s.is_renting if s else False, "is_returning": s.is_returning if s else False,
+            "data_ts": s.ts if s else None}
+
+
+def station_rows(data: Data) -> list[dict]:
+    return sorted((station_row(data, sid) for sid in data.stations), key=lambda r: r["name"])
 
 
 def nearby(data: Data, lat: float, lon: float, now: datetime, limit: int = 5) -> list[dict]:

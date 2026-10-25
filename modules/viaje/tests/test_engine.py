@@ -42,3 +42,18 @@ def test_evitar_esfuerzo_limita_a_2_min():
 
 def test_gracia():
     assert engine.grace_minutes(2) == 10 and engine.grace_minutes(7) == 14
+
+
+def test_nunca_promete_100():
+    assert engine.pct(0.996) == 99 and engine.pct(0.001) == 1 and engine.pct(0) == 0
+
+
+def test_endpoints_web():
+    from fastapi.testclient import TestClient
+    from services.api.main import create_app
+
+    c = TestClient(create_app())
+    assert len(c.get("/api/v1/viaje/stations").json()["stations"]) == 6
+    f = c.get("/api/v1/viaje/stations/14/forecast", params={"horizons": "15,45,90"}).json()
+    assert [x["horizon_min"] for x in f["forecast"]] == [15, 45, 90] and f["station"]["capacity"] == 39
+    assert c.get("/api/v1/viaje/stations/999/forecast").status_code == 404
