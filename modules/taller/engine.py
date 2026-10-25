@@ -13,10 +13,9 @@ Tareas pendientes (ver plan unificado):
 import json
 import logging
 import os
-from datetime import timezone
 from zoneinfo import ZoneInfo
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -29,6 +28,9 @@ LOST_AFTER_DAYS = 21
 PEAK_HOURS = ((7, 10), (18, 21))   # hora CDMX, días hábiles
 HOLIDAYS = ("2026-09-16",)
 CDMX = ZoneInfo("America/Mexico_City")
+HERE = Path(__file__).resolve().parent
+REAL_DIR = HERE / "real"          # snapshot exportado (se sube a git; chico)
+DEMO_AT = datetime(2026, 9, 29, 7, 45)   # mismo momento que usa la Línea 3
 
 
 @dataclass
@@ -36,6 +38,7 @@ class Data:
     mode: str                      # "EJEMPLO" | "REAL"
     trips_dir: Path | None = None
     reports: list[dict] = field(default_factory=list)   # D5
+    snapshot_dir: Path | None = None                    # sin DATA_DIR: usa REAL_DIR (Railway)
     reports_file: Path | None = None                     # REAL: se guardan en DATA_DIR/reports/
     _stations: set[str] | None = None
 
@@ -54,8 +57,10 @@ def load() -> Data:
             return Data(mode="REAL", trips_dir=trips, reports_file=reports_file,
                         reports=_read_reports(reports_file))
         logging.warning("taller: DATA_DIR=%r no tiene trips/trips_*.parquet; uso EJEMPLO", data_dir)
-    else:
-        logging.info("taller: sin DATA_DIR; modo EJEMPLO")
+    if (REAL_DIR / "c2_priority.json").exists() and os.getenv("TALLER_MODE", "").lower() != "ejemplo":
+        logging.info("taller: modo REAL con el snapshot de %s", REAL_DIR)
+        return Data(mode="REAL", snapshot_dir=REAL_DIR)
+    logging.info("taller: modo EJEMPLO")
     return Data(mode="EJEMPLO", reports=_example("c4_reports"))
 
 
@@ -93,11 +98,31 @@ ORDER BY departures_while_docked DESC
 
 def latest_time(data: Data) -> datetime | None:
     """Último retiro registrado (hora CDMX). Sirve de `at` por defecto en modo REAL."""
-    if data.mode != "REAL":
+    if data.mode != "REAL" or data.trips_dir is None:
         return None
     import duckdb
     glob = str(data.trips_dir / "trips_*.parquet")
     return duckdb.execute("SELECT max(start_local) FROM read_parquet(?)", [glob]).fetchone()[0]
+
+
+# ---------- Ids de estación ----------
+_STATIONS_MAP: dict[str, str] | None = None
+
+
+def feed_ids() -> dict[str, str]:
+    """Código CE del CSV (271-272) -> station_id del feed. Sale de real/stations_map.json."""
+    global _STATIONS_MAP
+    if _STATIONS_MAP is None:
+        path = REAL_DIR / "stations_map.json"
+        _STATIONS_MAP = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    return _STATIONS_MAP
+
+
+def with_ids(item: dict, key: str, ids: str = "feed") -> dict:
+    """Pone station_id (feed por defecto, o el código CE) y deja el código CE en short_name."""
+    item["short_name"] = key
+    item["station_id"] = key if ids == "ce" else feed_ids().get(key, key)
+    return item
 
 
 # ---------- D5 · Reportes ----------
@@ -115,6 +140,8 @@ def known_stations(data: Data) -> set[str] | None:
     """Códigos de estación vistos en los viajes. None en modo EJEMPLO (no se valida)."""
     if data.mode != "REAL":
         return None
+    if data.trips_dir is None:      # snapshot: aceptamos código CE o station_id del feed
+        return set(feed_ids()) | set(feed_ids().values())
     if data._stations is None:
         import duckdb
         glob = str(data.trips_dir / "trips_*.parquet")
@@ -122,7 +149,7 @@ def known_stations(data: Data) -> set[str] | None:
             "SELECT DISTINCT start_key FROM read_parquet(?) WHERE start_key IS NOT NULL "
             "UNION SELECT DISTINCT end_key FROM read_parquet(?) WHERE end_key IS NOT NULL",
             [glob, glob]).fetchall()
-        data._stations = {r[0] for r in rows}
+        data._stations = {r[0] for r in rows} | set(feed_ids().values())
     return data._stations
 
 
@@ -168,7 +195,7 @@ def ignored_bikes(data: Data, at: datetime | None = None) -> list[dict]:
     `at` va en hora CDMX sin zona (igual que start_local). Es una señal, no un diagnóstico:
     la bici probablemente no sirve, nadie la eligió.
     """
-    if data.mode != "REAL":
+    if data.mode != "REAL" or data.trips_dir is None:
         return []
     import duckdb  # solo hace falta en modo REAL
     at = (at or latest_time(data)).replace(tzinfo=None)
@@ -221,7 +248,13 @@ def peak_departures(data: Data, at: datetime) -> dict[str, float]:
     return {k: round(v, 1) for k, v in rows}
 
 
-def priority(data: Data, at: datetime | None = None) -> list[dict]:
+def _snapshot(data: Data, name: str) -> list[dict]:
+    """Lee un archivo exportado (modo sin DATA_DIR). Ignora `at`: es la foto del día demo."""
+    path = data.snapshot_dir / name
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+
+
+def priority(data: Data, at: datetime | None = None, ids: str = "feed") -> list[dict]:
     """D3 · Prioridad de taller por estación (C2).
 
     Versión básica: sospechosas × salidas en pico. El factor "% del tiempo vacía" queda en
@@ -229,6 +262,8 @@ def priority(data: Data, at: datetime | None = None) -> list[dict]:
     """
     if data.mode == "EJEMPLO":
         return _example("c2_priority")
+    if data.trips_dir is None:
+        return _snapshot(data, "c2_priority.ce.json" if ids == "ce" else "c2_priority.json")
     at = (at or latest_time(data)).replace(tzinfo=None)
     suspected = suspected_by_station(ignored_bikes(data, at))
     peak = peak_departures(data, at)
@@ -247,15 +282,14 @@ def priority(data: Data, at: datetime | None = None) -> list[dict]:
             signals.append("sale mucho en pico")
         if reported.get(st):
             signals.append("reportada por usuarios")
-        items.append({
-            "station_id": st,            # código del CSV; se cambia a station_id del feed con la tabla de L5
+        items.append(with_ids({
             "ts": ts,
             "suspected_expected": n,
             "priority_score": round(raw[st] / top, 3),
             "top_signals": signals,
             "peak_departures": peak.get(st, 0.0),
             "empty_share": None,
-        })
+        }, st, ids))
     return sorted(items, key=lambda i: i["priority_score"], reverse=True)
 
 
@@ -290,7 +324,78 @@ ORDER BY disappeared_bikes DESC, station_key
 """
 
 
-def loss_risk(data: Data, at: datetime | None = None) -> list[dict]:
+VALIDATION_SQL = """
+WITH t AS (
+    SELECT CAST(bike_id AS VARCHAR) AS bike_id, start_key, start_local, end_key, end_local
+    FROM read_parquet($glob)
+    WHERE start_local IS NOT NULL AND end_local IS NOT NULL
+),
+docked AS (
+    SELECT bike_id, end_key AS station_key, end_local AS docked_since,
+           LEAD(start_local) OVER (PARTITION BY bike_id ORDER BY start_local) AS next_out
+    FROM t
+),
+nd AS (                           -- ancladas en `at` desde hace menos de 72 h
+    SELECT * FROM docked
+    WHERE docked_since <= $at AND docked_since > $at - INTERVAL 72 HOUR
+      AND (next_out IS NULL OR next_out > $at) AND station_key IS NOT NULL
+),
+dep AS (
+    SELECT start_key AS station_key, start_local FROM t
+    WHERE start_local > $at - INTERVAL 24 HOUR AND start_local <= $at
+),
+flag AS (
+    SELECT n.bike_id FROM nd n
+    JOIN dep d ON d.station_key = n.station_key AND d.start_local >= n.docked_since
+    GROUP BY n.bike_id HAVING COUNT(*) >= $min_dep
+)
+SELECT f.bike_id IS NOT NULL AS flagged, COUNT(*) AS n,
+       SUM(CASE WHEN nd.next_out IS NULL OR nd.next_out > $at + INTERVAL 72 HOUR THEN 1 ELSE 0 END) AS gone
+FROM nd LEFT JOIN flag f ON f.bike_id = nd.bike_id
+GROUP BY 1
+"""
+
+
+def validation(data: Data, days: list[datetime] | None = None) -> dict:
+    """D2 · Validación: ¿las bicis ignoradas desaparecen más de 72 h con más frecuencia que las demás?
+
+    Para cada momento, toma las bicis ancladas hace menos de 72 h; las ignoradas son las que cumplen
+    la regla de D2 y "las demás" el resto. Después mira si cada una vuelve a salir en las siguientes 72 h.
+    """
+    if data.mode != "REAL":
+        return {}
+    if data.trips_dir is None:
+        path = data.snapshot_dir / "validation.json"
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    import duckdb
+    glob = str(data.trips_dir / "trips_*.parquet")
+    end = duckdb.execute("SELECT max(start_local) FROM read_parquet(?)", [glob]).fetchone()[0]
+    if days is None:   # días hábiles de septiembre a las 8:00, con 72 h de seguimiento disponibles
+        d = datetime(2026, 9, 1, 8)
+        days = []
+        while d + timedelta(hours=72) <= end:
+            if d.weekday() < 5 and d.strftime("%Y-%m-%d") not in HOLIDAYS:
+                days.append(d)
+            d += timedelta(days=1)
+    tot = {True: [0, 0], False: [0, 0]}      # flagged -> [bicis, desaparecidas >72 h]
+    for at in days:
+        for flagged, n, gone in duckdb.execute(VALIDATION_SQL, {
+                "glob": glob, "at": at, "min_dep": IGNORED_MIN_DEPARTURES}).fetchall():
+            tot[bool(flagged)][0] += n
+            tot[bool(flagged)][1] += int(gone or 0)
+    rate = lambda a: (a[1] / a[0]) if a[0] else None  # noqa: E731
+    ig, rest = rate(tot[True]), rate(tot[False])
+    return {
+        "moments": [d.isoformat(timespec="minutes") for d in days],
+        "ignored": {"bikes": tot[True][0], "gone_72h": tot[True][1], "rate": ig},
+        "others": {"bikes": tot[False][0], "gone_72h": tot[False][1], "rate": rest},
+        "ratio": round(ig / rest, 1) if ig is not None and rest else None,
+        "definition": "Ancladas hace menos de 72 h; 'desaparece' = no vuelve a salir en las siguientes 72 h. "
+                      "Es una señal, no un diagnóstico.",
+    }
+
+
+def loss_risk(data: Data, at: datetime | None = None, ids: str = "feed") -> list[dict]:
     """D4 · Bicis que dejan de aparecer (C6).
 
     Cuenta, por estación y franja de su último arribo, las bicis que llegaron ahí y no
@@ -299,13 +404,14 @@ def loss_risk(data: Data, at: datetime | None = None) -> list[dict]:
     """
     if data.mode == "EJEMPLO":
         return _example("c6_loss_risk")
+    if data.trips_dir is None:
+        return _snapshot(data, "c6_loss_risk.ce.json" if ids == "ce" else "c6_loss_risk.json")
     import duckdb
     at = (at or latest_time(data)).replace(tzinfo=None)
     rows = duckdb.execute(LOSS_SQL, {
         "glob": str(data.trips_dir / "trips_*.parquet"), "at": at, "lost": LOST_AFTER_DAYS,
     }).fetchall()
     return [
-        {"station_id": st, "time_band": band, "disappeared_bikes": n,
-          "note": "riesgo, no robo comprobado"}
+        with_ids({"time_band": band, "disappeared_bikes": n, "note": "riesgo, no robo comprobado"}, st, ids)
         for st, band, n in rows
     ]

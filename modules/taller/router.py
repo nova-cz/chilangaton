@@ -2,6 +2,7 @@
 
 import uuid
 from datetime import datetime, timezone
+from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Response
 
@@ -16,10 +17,14 @@ DATA = engine.load()
 
 
 @router.get("/priority", response_model=dict)
-def priority(at: str | None = None, limit: int = 50):
-    """D3 · Estaciones para el taller, de mayor a menor prioridad (C2). `at` en hora CDMX."""
+def priority(at: str | None = None, limit: int = 50, ids: Literal["feed", "ce"] = "feed"):
+    """D3 · Estaciones para el taller, de mayor a menor prioridad (C2). `at` en hora CDMX.
+
+    `ids=feed` (por defecto) pone el station_id del feed en `station_id`; `ids=ce` pone el código CE.
+    El código CE siempre viaja en `short_name`. Sin DATA_DIR responde la foto exportada (ignora `at`).
+    """
     when = datetime.fromisoformat(at) if at else None
-    items = [Priority(**p).model_dump() for p in engine.priority(DATA, when)][:limit]
+    items = [Priority(**p).model_dump() for p in engine.priority(DATA, when, ids)][:limit]
     pending = [] if DATA.mode == "EJEMPLO" else ["empty_share: falta el feed de la Línea 1"]
     return {"mode": DATA.mode, "pending": pending, "items": items}
 
@@ -35,11 +40,20 @@ def ignored(at: str | None = None):
     return {"mode": DATA.mode, "summary": summary, "items": items}
 
 
+@router.get("/validation", response_model=dict)
+def validation():
+    """D2 · ¿Las bicis ignoradas desaparecen más de 72 h con más frecuencia que las demás? (foto exportada)"""
+    result = engine.validation(DATA)
+    if not result:
+        raise HTTPException(404, "Sin validación: corre python -m modules.taller.export_real")
+    return {"mode": DATA.mode, **result}
+
+
 @router.get("/loss-risk", response_model=dict)
-def loss_risk(at: str | None = None, limit: int = 50):
+def loss_risk(at: str | None = None, limit: int = 50, ids: Literal["feed", "ce"] = "feed"):
     """D4 · Estaciones y franjas donde más bicis dejan de aparecer (C6). Riesgo, no robo comprobado."""
     when = datetime.fromisoformat(at) if at else None
-    items = [LossRisk(**r).model_dump() for r in engine.loss_risk(DATA, when)]
+    items = [LossRisk(**r).model_dump() for r in engine.loss_risk(DATA, when, ids)]
     total = sum(i["disappeared_bikes"] for i in items)
     return {"mode": DATA.mode, "total_bikes": total, "items": items[:limit]}
 
