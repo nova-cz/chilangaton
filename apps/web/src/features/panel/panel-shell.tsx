@@ -2,7 +2,7 @@
 
 import { Logo } from "@/components/brand/logo";
 import { QrInstall } from "@/components/pwa/qr-install";
-import { DemoBadge } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonClasses } from "@/components/ui/button";
 import { PANEL_NAV } from "@/features/navigation/routes";
 import { cn } from "@/lib/cn";
@@ -11,7 +11,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
-/** Layout del panel operativo: sidebar responsive + header con estado DEMO y QR. */
+/** Layout del panel operativo: cada módulo indica el origen de sus datos. */
 export function PanelShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [openPath, setOpenPath] = useState<string | null>(null);
@@ -90,7 +90,7 @@ export function PanelShell({ children }: { children: ReactNode }) {
               <p className="text-xs font-medium text-ink-muted">Equilibici · Panel operativo</p>
               <p className="truncate text-sm font-semibold">Corredor Buenavista–Reforma–Polanco</p>
             </div>
-            <DemoBadge />
+            <Badge tone="neutral">Prototipo</Badge>
             <div className="relative">
               <Button variant="glass" size="icon" aria-label="Mostrar QR de la app" aria-expanded={qrOpen} onClick={() => setQrOpen((v) => !v)}>
                 {qrOpen ? <X aria-hidden className="size-5" /> : <QrCode aria-hidden className="size-5" />}
@@ -104,7 +104,7 @@ export function PanelShell({ children }: { children: ReactNode }) {
             </div>
           </div>
           <p role="status" className="mt-2 rounded-xl bg-warning-100 px-3 py-1.5 text-xs font-medium text-warning-700">
-            Modo DEMO: este panel aún no muestra datos reales. Cada módulo se conecta al corte A con su contrato.
+            Cada módulo indica si muestra datos reales, un registro histórico o una simulación. Las recompensas del prototipo son virtuales.
           </p>
         </header>
         <main className="px-4 py-6 lg:px-8 lg:py-8">{children}</main>
