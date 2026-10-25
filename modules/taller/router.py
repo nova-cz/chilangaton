@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Response
 
 from shared.contracts.c2_priority import Priority
 from shared.contracts.c4_reports import Report, ReportIn
@@ -45,16 +45,23 @@ def loss_risk(at: str | None = None, limit: int = 50):
 
 
 @router.get("/reports", response_model=dict)
-def list_reports():
-    return {"mode": DATA.mode, "items": DATA.reports}
+def list_reports(station_id: str | None = None):
+    """D5 · Reportes de bicis dañadas, más recientes primero. Filtra por estación si se pide."""
+    return {"mode": DATA.mode, "items": engine.list_reports(DATA, station_id)}
 
 
 @router.post("/reports", response_model=Report, status_code=201)
-def create_report(body: ReportIn):
+def create_report(body: ReportIn, response: Response):
+    """D5 · Registra un reporte. Un duplicado del mismo usuario en 30 min devuelve el original (200)."""
+    known = engine.known_stations(DATA)
+    if known is not None and body.station_id not in known:
+        raise HTTPException(404, f"Estación {body.station_id} no existe")
     report = Report(
         **body.model_dump(),
         report_id=f"r-{uuid.uuid4().hex[:8]}",
         created_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
-    )
-    DATA.reports.append(report.model_dump())
-    return report
+    ).model_dump()
+    saved, is_new = engine.add_report(DATA, report)
+    if not is_new:
+        response.status_code = 200
+    return saved
