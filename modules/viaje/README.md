@@ -8,14 +8,12 @@ Sigue la estructura de la API común (`services/api`, rama de Miguel): `services
 este `router.py` en `/api/v1`. Desde la raíz del repo:
 
 ```
-pip install -r requirements-dev.txt numpy duckdb requests
+pip install -r requirements-dev.txt
 uvicorn services.api.main:app --reload
 ```
 
 Docs: http://localhost:8000/docs · Pruebas: `pytest modules/viaje`
 
-**Al integrar en `dev`:** agregar al `requirements.txt` de la raíz `numpy`, `duckdb` y `requests`
-(duckdb solo se usa con `DATA_DIR` y requests con `LIVE=1`; numpy siempre).
 
 ## Endpoints (`/api/v1/viaje`)
 
