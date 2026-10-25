@@ -1,0 +1,187 @@
+{
+  "label": "DATOS REALES (septiembre 2026), zonas aproximadas",
+  "window": {
+    "weekdays_only": true,
+    "start": "07:00",
+    "end": "10:00",
+    "tz": "America/Mexico_City",
+    "days": 22
+  },
+  "zones": {
+    "Anzures": {
+      "role": "fills",
+      "radius_m": 700,
+      "stations": 16
+    },
+    "Polanco": {
+      "role": "fills",
+      "radius_m": 900,
+      "stations": 26
+    },
+    "Reforma": {
+      "role": "fills",
+      "radius_m": 900,
+      "stations": 34
+    },
+    "Buenavista": {
+      "role": "empties",
+      "radius_m": 700,
+      "stations": 13
+    },
+    "San Rafael": {
+      "role": "empties",
+      "radius_m": 650,
+      "stations": 14
+    }
+  },
+  "trips_per_day_avg": 39.8,
+  "trips_per_day_min": 11,
+  "trips_per_day_max": 56,
+  "by_zone_pair": [
+    {
+      "from": "Reforma",
+      "to": "San Rafael",
+      "trips_per_day": 22.5
+    },
+    {
+      "from": "Reforma",
+      "to": "Buenavista",
+      "trips_per_day": 8.5
+    },
+    {
+      "from": "Anzures",
+      "to": "San Rafael",
+      "trips_per_day": 4.1
+    },
+    {
+      "from": "Anzures",
+      "to": "Buenavista",
+      "trips_per_day": 3.3
+    },
+    {
+      "from": "Polanco",
+      "to": "Buenavista",
+      "trips_per_day": 0.8
+    },
+    {
+      "from": "Polanco",
+      "to": "San Rafael",
+      "trips_per_day": 0.5
+    }
+  ],
+  "top_station_pairs": [
+    {
+      "origin": {
+        "code": "1",
+        "name": "CE-001 Río Sena-Río Balsas"
+      },
+      "dest": {
+        "code": "174",
+        "name": "CE-174 Joaquín Garcia Icazbalceta-Ignacio Manuel Altamirano"
+      },
+      "trips_per_day": 2.41
+    },
+    {
+      "origin": {
+        "code": "257",
+        "name": "CE-257 Manuel Maria Contreras-Villalongin"
+      },
+      "dest": {
+        "code": "174",
+        "name": "CE-174 Joaquín Garcia Icazbalceta-Ignacio Manuel Altamirano"
+      },
+      "trips_per_day": 0.95
+    },
+    {
+      "origin": {
+        "code": "11",
+        "name": "CE-011 Río Amazonas - Río Lerma"
+      },
+      "dest": {
+        "code": "174",
+        "name": "CE-174 Joaquín Garcia Icazbalceta-Ignacio Manuel Altamirano"
+      },
+      "trips_per_day": 0.91
+    },
+    {
+      "origin": {
+        "code": "485",
+        "name": "CE-485 Lago de Pátzcuaro - Marina Nacional"
+      },
+      "dest": {
+        "code": "174",
+        "name": "CE-174 Joaquín Garcia Icazbalceta-Ignacio Manuel Altamirano"
+      },
+      "trips_per_day": 0.91
+    },
+    {
+      "origin": {
+        "code": "24",
+        "name": "CE-024 Reforma- Florencia"
+      },
+      "dest": {
+        "code": "555",
+        "name": "CE-555 Ribera de San Cosme - Insurgentes Centro"
+      },
+      "trips_per_day": 0.77
+    },
+    {
+      "origin": {
+        "code": "27",
+        "name": "CE-027 Reforma- Havre"
+      },
+      "dest": {
+        "code": "183",
+        "name": "CE-183 Gabino Barreda-Guillermo Prieto"
+      },
+      "trips_per_day": 0.73
+    },
+    {
+      "origin": {
+        "code": "27",
+        "name": "CE-027 Reforma- Havre"
+      },
+      "dest": {
+        "code": "254",
+        "name": "CE-254 Alfonso Herrera-Miguel Shultz"
+      },
+      "trips_per_day": 0.68
+    },
+    {
+      "origin": {
+        "code": "19",
+        "name": "CE-019 Reforma - Río Rhin"
+      },
+      "dest": {
+        "code": "256",
+        "name": "CE-256 Gómez Farías-Sadi Carnot"
+      },
+      "trips_per_day": 0.68
+    },
+    {
+      "origin": {
+        "code": "11",
+        "name": "CE-011 Río Amazonas - Río Lerma"
+      },
+      "dest": {
+        "code": "255",
+        "name": "CE-255 José Rosas Moreno-Guillermo Prieto"
+      },
+      "trips_per_day": 0.68
+    },
+    {
+      "origin": {
+        "code": "477",
+        "name": "CE-477 Lago Iseo-Laguna de Mayrán"
+      },
+      "dest": {
+        "code": "554",
+        "name": "CE-554 Heroes Ferrocarrileros - Mariano Azuela"
+      },
+      "trips_per_day": 0.64
+    }
+  ],
+  "criterion": "viable si el promedio de contraflujo >= 100 viajes por dia habil (con 10% de adopcion = 10 bicis por dia)",
+  "viable": false,
+  "conclusion": "NO VIABLE: 40 viajes de contraflujo por dia habil (umbral 100); a 10% de adopcion serian ~4 bicis por dia."
+}
