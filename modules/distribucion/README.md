@@ -8,6 +8,12 @@ S2 y S3 generan resultados offline desde datos locales, sin cargar pandas/DuckDB
 - `GET /api/v1/simulation/results?scenario=10&recovered=false` (sin `scenario`, devuelve 0/5/10/20).
 - Un escenario inválido responde 422 con `error.code=validation_error`.
 
+### Estaciones incluidas en S3
+
+Se exige capacidad positiva y que `is_installed`, `is_renting` e `is_returning` sean verdaderas en el snapshot inicial. Un flag nulo se trata como no operativo. Las estaciones excluidas no cuentan como vacías/llenas, no son alternativas ni destinos de misiones y sus bicis no se recuperan. Los viajes que las tocan se excluyen de la reproducción; no se contabilizan como demanda insatisfecha.
+
+El JSON regenerado usa 672 estaciones (5 excluidas) y reproduce 14,344 de 14,404 viajes de la ventana (60 excluidos). Buenavista/San Rafael conservan 27 estaciones, equivalentes a 81 horas estación posibles. A 0% y 20% sin recuperación previa, las horas vacías son 35.87 y 35.04. Son resultados del modelo, no mediciones de impacto real. El estado operativo del inventario inicial se mantiene fijo durante la ventana; no se modelan cierres posteriores.
+
 ## S5 · Motor y API DEMO
 
 Solo con `DEMO_MODE=true`. La interfaz `/app/mision` sigue siendo la maqueta local; estos endpoints permiten probar las reglas del servidor desde `/docs`. No verifica viajes, desbloqueos o estaciones oficiales. El hash y la matrícula son identificadores de prueba, no autenticación. No introducir datos personales ni matrículas reales.

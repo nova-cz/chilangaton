@@ -1,6 +1,9 @@
 from datetime import datetime, timedelta
+from dataclasses import replace
 
-from modules.distribucion.engine import Station, Trip, simulate
+import pytest
+
+from modules.distribucion.engine import Station, Trip, build_neighbors, simulate
 
 START = datetime(2026, 9, 29, 7, 0)
 END = datetime(2026, 9, 29, 10, 0)
@@ -62,3 +65,38 @@ def test_series_every_15_minutes_in_utc():
     assert len(series) == 13
     assert series[0]["ts"] == "2026-09-29T13:00:00Z"
     assert series[1]["ts"] == "2026-09-29T13:15:00Z"
+
+
+@pytest.mark.parametrize("field,value", [("is_renting", False), ("is_returning", False), ("is_installed", False), ("capacity", 0)])
+@pytest.mark.parametrize("recovered", [False, True])
+def test_closed_stations_do_not_count_as_empty_full_or_recoverable(field, value, recovered):
+    stations, trips = mini()
+    closed = replace(Station("closed", 19.4471, -99.1541, 8, 0, 8, "Buenavista"), **{field: value})
+    expected = simulate(stations, trips, adoption=1, recovered=recovered, return_final=True)
+    # Incluir vecinos precalculados prueba que no se reutilizan índices anteriores al filtro.
+    extended = [closed, *stations]
+    actual = simulate(extended, trips, adoption=1, recovered=recovered, neighbors=build_neighbors(extended), return_final=True)
+    assert actual == expected
+    assert "closed" not in actual["final_inventory"]
+
+
+def test_adoption_and_full_arrival_skip_the_nearest_closed_station():
+    stations = [
+        Station("A", 19.4300, -99.1700, 10, 4, 0, "Reforma"),
+        Station("B", 19.4460, -99.1530, 2, 2, 0, "Buenavista"),
+        Station("closed", 19.4461, -99.1531, 8, 0, 0, "Buenavista", is_returning=False),
+        Station("C", 19.4470, -99.1540, 8, 0, 0, "Buenavista"),
+    ]
+    trip = Trip("A", "B", START, START + timedelta(minutes=20))
+    for adoption in (0, 1):
+        result = simulate(stations, [trip], adoption=adoption, recovered=False, return_final=True)
+        assert result["final_inventory"]["C"][0] == 1
+        assert "closed" not in result["final_inventory"]
+
+
+def test_trips_touching_excluded_stations_are_not_replayed():
+    stations, trips = mini()
+    stations.append(Station("closed", 19.44, -99.16, 10, 8, 0, "Reforma", is_renting=False))
+    expected = simulate(stations, trips, adoption=1, recovered=False)
+    trips.extend([Trip("closed", "B", START, START + timedelta(minutes=10)), Trip("A", "closed", START, START + timedelta(minutes=10))])
+    assert simulate(stations, trips, adoption=1, recovered=False) == expected
