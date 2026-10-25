@@ -13,6 +13,8 @@ Tareas pendientes (ver plan unificado):
 import json
 import logging
 import os
+from datetime import timezone
+from zoneinfo import ZoneInfo
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -24,6 +26,9 @@ IGNORED_MIN_DEPARTURES = 30      # salidas de otras bicis mientras la bici sigue
 IGNORED_WINDOW_H = 24
 IGNORED_MAX_AGE_H = 72          # anclada más tiempo: probablemente ya la retiraron
 LOST_AFTER_DAYS = 21
+PEAK_HOURS = ((7, 10), (18, 21))   # hora CDMX, días hábiles
+HOLIDAYS = ("2026-09-16",)
+CDMX = ZoneInfo("America/Mexico_City")
 
 
 @dataclass
@@ -125,11 +130,63 @@ def suspected_by_station(items: list[dict]) -> dict[str, int]:
     return counts
 
 
-def priority(data: Data) -> list[dict]:
-    """D3. En modo EJEMPLO devuelve el ejemplo de C2."""
+PEAK_SQL = """
+SELECT start_key AS station_key,
+       COUNT(*) * 1.0 / COUNT(DISTINCT CAST(start_local AS DATE)) AS peak_departures
+FROM read_parquet($glob)
+WHERE start_key IS NOT NULL
+  AND date_trunc('month', start_local) = date_trunc('month', CAST($at AS TIMESTAMP))
+  AND isodow(start_local) <= 5
+  AND CAST(start_local AS DATE) NOT IN (SELECT CAST(unnest($holidays) AS DATE))
+  AND ((hour(start_local) >= $p1a AND hour(start_local) < $p1b)
+    OR (hour(start_local) >= $p2a AND hour(start_local) < $p2b))
+GROUP BY 1
+"""
+
+
+def peak_departures(data: Data, at: datetime) -> dict[str, float]:
+    """Salidas promedio por día hábil en pico (7-10 y 18-21 h) en el mes de `at`, sin festivos."""
+    import duckdb
+    (p1a, p1b), (p2a, p2b) = PEAK_HOURS
+    rows = duckdb.execute(PEAK_SQL, {
+        "glob": str(data.trips_dir / "trips_*.parquet"), "at": at, "holidays": list(HOLIDAYS),
+        "p1a": p1a, "p1b": p1b, "p2a": p2a, "p2b": p2b,
+    }).fetchall()
+    return {k: round(v, 1) for k, v in rows}
+
+
+def priority(data: Data, at: datetime | None = None) -> list[dict]:
+    """D3 · Prioridad de taller por estación (C2).
+
+    Versión básica: sospechosas × salidas en pico. El factor "% del tiempo vacía" queda en
+    None hasta que la Línea 1 publique el feed; entonces se multiplica también.
+    """
     if data.mode == "EJEMPLO":
         return _example("c2_priority")
-    return []  # TODO D3
+    at = (at or latest_time(data)).replace(tzinfo=None)
+    suspected = suspected_by_station(ignored_bikes(data, at))
+    peak = peak_departures(data, at)
+    if not suspected:
+        return []
+    median_peak = sorted(peak.values())[len(peak) // 2] if peak else 0
+    raw = {st: n * peak.get(st, 0) for st, n in suspected.items()}
+    top = max(raw.values()) or 1
+    ts = at.replace(tzinfo=CDMX).astimezone(timezone.utc).isoformat()
+    items = []
+    for st, n in suspected.items():
+        signals = ["bici ignorada"]
+        if peak.get(st, 0) > median_peak:
+            signals.append("sale mucho en pico")
+        items.append({
+            "station_id": st,            # código del CSV; se cambia a station_id del feed con la tabla de L5
+            "ts": ts,
+            "suspected_expected": n,
+            "priority_score": round(raw[st] / top, 3),
+            "top_signals": signals,
+            "peak_departures": peak.get(st, 0.0),
+            "empty_share": None,
+        })
+    return sorted(items, key=lambda i: i["priority_score"], reverse=True)
 
 
 def loss_risk(data: Data) -> list[dict]:
