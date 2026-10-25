@@ -19,7 +19,7 @@ HORIZONS = (15, 30, 45, 60, 75, 90)
 WALKS = (2, 3, 5, 10)
 HOME = (19.4437, -99.1525)    # Buenavista (Jesús García - Carlos J. Meneses)
 WORK = (19.4245, -99.1732)    # Reforma - Río de Plata
-STORY = {"real": ("271-272", "14"), "ejemplo": ("271", "14")}
+STORY = {"real": ("271-272", "261"), "ejemplo": ("271", "14")}
 N_ORIGINS, N_DESTINATIONS = 6, 10
 OUT = Path(__file__).resolve().parents[2] / "apps/web/src/features/viaje/demo-snapshot.json"
 

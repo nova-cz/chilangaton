@@ -80,7 +80,8 @@ class State:
     docks_disabled: int = 0
     is_renting: bool = True
     is_returning: bool = True
-    suspected_expected: float = 0.0   # C2, Línea 2
+    suspected_expected: float = 0.0   # C2, Línea 2: se RESTA de las bicis útiles al simular
+    ignored_bikes: float = 0.0        # C2, Línea 2: solo se muestra como aviso (no cambia las probabilidades)
 
 
 @dataclass
@@ -126,7 +127,11 @@ def _load_dir(f: Path, names: dict[str, str], mode: str) -> Data:
             is_renting=s.get("is_renting", True), is_returning=s.get("is_returning", True))
     for p in (_read(f / names["c2"]) if names.get("c2") else None) or []:
         if p["station_id"] in states:
-            states[p["station_id"]].suspected_expected = p["suspected_expected"]
+            states[p["station_id"]].ignored_bikes = p["suspected_expected"]
+            # En REAL no se resta: la señal de bicis "ignoradas" no es un diagnóstico (solo ~16 % desaparece
+            # después), así que restarlas castigaría de más. En las fixtures de ejemplo sí se resta.
+            if mode != "REAL":
+                states[p["station_id"]].suspected_expected = p["suspected_expected"]
     base = {}
     for b in _read(f / names["baseline"]):
         base[(b["station_id"], b["day_type"], b["block"])] = (b["lam_out"], b["lam_in"])
@@ -251,7 +256,8 @@ def merge_live(real: Data, live_stations: dict, live_states: dict, keymap: dict)
         if key in real.stations:
             states[key] = State(key, st.ts, st.useful_bikes, st.docks_available, st.docks_disabled,
                                 st.is_renting, st.is_returning, real.states[key].suspected_expected
-                                if key in real.states else 0.0)
+                                if key in real.states else 0.0,
+                                real.states[key].ignored_bikes if key in real.states else 0.0)
     real.states = states
     real.stations = {k: v for k, v in real.stations.items() if k in states}
     real.mode = "VIVO + baseline REAL"
@@ -487,7 +493,8 @@ def station_row(data: Data, sid: str) -> dict:
             "useful_bikes_now": s.useful_bikes if s else None,
             "docks_available_now": s.docks_available if s else None,
             "is_renting": s.is_renting if s else False, "is_returning": s.is_returning if s else False,
-            "data_ts": s.ts if s else None}
+            "data_ts": s.ts if s else None,
+            "ignored_bikes": int(round(s.ignored_bikes)) if s else 0}
 
 
 def station_rows(data: Data) -> list[dict]:

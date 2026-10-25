@@ -251,6 +251,7 @@ export function TripPlanner() {
         ) : riding ? (
           <RideTimer
             stationName={targetName}
+            stationId={target}
             fallbackName={fallback}
             graceMin={targetAlt?.grace_min}
             prefs={prefs}

@@ -11,6 +11,8 @@ export interface ViajeStation {
   lon: number;
   capacity: number;
   useful_bikes_now: number | null;
+  /** Bicis que llevan rato ancladas sin que nadie las tome (Línea 2). Solo aviso; no cambia los porcentajes. */
+  ignored_bikes?: number;
   docks_available_now: number | null;
   is_renting: boolean;
   is_returning: boolean;

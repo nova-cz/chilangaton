@@ -6,7 +6,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { Skeleton, StateMessage } from "@/components/ui/state-message";
 import { TONE_TEXT } from "@/features/stations/status";
 import { cn } from "@/lib/cn";
-import { Bike, Clock3, MapPin, ParkingSquare } from "lucide-react";
+import { Bike, Clock3, MapPin, ParkingSquare, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { DockStrip, timesOutOfTen } from "./dock-strip";
@@ -106,6 +106,18 @@ export function StationForecast({ id }: { id: string }) {
         <Clock3 aria-hidden className="size-3.5" />
         Estado del {cdmxStamp(station.data_ts)} (hora CDMX). “Útiles” descuenta las bicis que podrían estar dañadas.
       </p>
+
+      {mode === "REAL" && (station.ignored_bikes ?? 0) >= 1 ? (
+        <p role="note" className="mt-3 flex gap-2.5 rounded-2xl bg-warning-100 px-3.5 py-3 text-sm text-ink">
+          <Wrench aria-hidden className="mt-0.5 size-4 shrink-0 text-warning-700" />
+          <span>
+            {station.ignored_bikes === 1
+              ? "Hay 1 bici que lleva rato aquí sin que nadie la tome; podría estar descompuesta."
+              : `Hay ${station.ignored_bikes} bicis que llevan rato aquí sin que nadie las tome; algunas podrían estar descompuestas.`}{" "}
+            Es una pista, no una certeza.
+          </span>
+        </p>
+      ) : null}
 
       {/* Si llegas en… */}
       <section aria-labelledby="curva" className="mt-6 rounded-[var(--radius-card)] bg-card p-4 shadow-soft lg:p-5">
