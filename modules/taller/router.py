@@ -17,11 +17,11 @@ DATA = engine.load()
 
 
 @router.get("/priority", response_model=dict)
-def priority(at: str | None = None, limit: int = 50, ids: Literal["feed", "ce"] = "feed"):
+def priority(at: str | None = None, limit: int = 50, ids: Literal["ce", "feed"] = "ce"):
     """D3 · Estaciones para el taller, de mayor a menor prioridad (C2). `at` en hora CDMX.
 
-    `ids=feed` (por defecto) pone el station_id del feed en `station_id`; `ids=ce` pone el código CE.
-    El código CE siempre viaja en `short_name`. Sin DATA_DIR responde la foto exportada (ignora `at`).
+    `ids=ce` (por defecto, lo que ya leen la Línea 1 y la Línea 3) pone el código CE en `station_id`; `ids=feed` pone el id del feed.
+    El código CE viaja siempre en `short_name`. Sin DATA_DIR responde la foto exportada (ignora `at`).
     """
     when = datetime.fromisoformat(at) if at else None
     items = [Priority(**p).model_dump() for p in engine.priority(DATA, when, ids)][:limit]
@@ -50,7 +50,7 @@ def validation():
 
 
 @router.get("/loss-risk", response_model=dict)
-def loss_risk(at: str | None = None, limit: int = 50, ids: Literal["feed", "ce"] = "feed"):
+def loss_risk(at: str | None = None, limit: int = 50, ids: Literal["ce", "feed"] = "ce"):
     """D4 · Estaciones y franjas donde más bicis dejan de aparecer (C6). Riesgo, no robo comprobado."""
     when = datetime.fromisoformat(at) if at else None
     items = [LossRisk(**r).model_dump() for r in engine.loss_risk(DATA, when, ids)]

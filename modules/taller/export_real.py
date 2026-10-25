@@ -4,8 +4,8 @@
     python -m modules.taller.export_real [--at 2026-09-29T07:45] [--skip-validation]
 
 Deja en modules/taller/real/:
-    c2_priority.json / c2_priority.ce.json    station_id del feed / código CE (para quien lo lee por código)
-    c6_loss_risk.json / c6_loss_risk.ce.json
+    c2_priority.json / c2_priority.feed.json    station_id = código CE (L1 y L3) / id del feed
+    c6_loss_risk.json / c6_loss_risk.feed.json
     validation.json                           bici ignorada vs las demás (desaparece >72 h)
 Con eso la API sirve datos REAL sin DATA_DIR (Railway) y L1/L3 pueden leer C2 por archivo.
 """
@@ -39,7 +39,7 @@ def main() -> None:
     engine.REAL_DIR.mkdir(exist_ok=True)
     at = datetime.fromisoformat(args.at)
     print(f"Exportando a {engine.REAL_DIR} (C2 a las {at:%Y-%m-%d %H:%M} CDMX)…")
-    for ids, suffix in (("feed", ""), ("ce", ".ce")):
+    for ids, suffix in (("ce", ""), ("feed", ".feed")):
         c2 = [Priority(**p).model_dump() for p in engine.priority(data, at, ids)]
         c6 = [LossRisk(**r).model_dump() for r in engine.loss_risk(data, None, ids)]
         _dump(f"c2_priority{suffix}.json", c2)

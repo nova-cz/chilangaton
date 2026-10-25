@@ -118,10 +118,10 @@ def feed_ids() -> dict[str, str]:
     return _STATIONS_MAP
 
 
-def with_ids(item: dict, key: str, ids: str = "feed") -> dict:
-    """Pone station_id (feed por defecto, o el código CE) y deja el código CE en short_name."""
+def with_ids(item: dict, key: str, ids: str = "ce") -> dict:
+    """Pone station_id (código CE por defecto, o el id del feed) y deja el código CE en short_name."""
     item["short_name"] = key
-    item["station_id"] = key if ids == "ce" else feed_ids().get(key, key)
+    item["station_id"] = feed_ids().get(key, key) if ids == "feed" else key
     return item
 
 
@@ -254,7 +254,7 @@ def _snapshot(data: Data, name: str) -> list[dict]:
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
 
 
-def priority(data: Data, at: datetime | None = None, ids: str = "feed") -> list[dict]:
+def priority(data: Data, at: datetime | None = None, ids: str = "ce") -> list[dict]:
     """D3 · Prioridad de taller por estación (C2).
 
     Versión básica: sospechosas × salidas en pico. El factor "% del tiempo vacía" queda en
@@ -263,7 +263,7 @@ def priority(data: Data, at: datetime | None = None, ids: str = "feed") -> list[
     if data.mode == "EJEMPLO":
         return _example("c2_priority")
     if data.trips_dir is None:
-        return _snapshot(data, "c2_priority.ce.json" if ids == "ce" else "c2_priority.json")
+        return _snapshot(data, "c2_priority.feed.json" if ids == "feed" else "c2_priority.json")
     at = (at or latest_time(data)).replace(tzinfo=None)
     suspected = suspected_by_station(ignored_bikes(data, at))
     peak = peak_departures(data, at)
@@ -395,7 +395,7 @@ def validation(data: Data, days: list[datetime] | None = None) -> dict:
     }
 
 
-def loss_risk(data: Data, at: datetime | None = None, ids: str = "feed") -> list[dict]:
+def loss_risk(data: Data, at: datetime | None = None, ids: str = "ce") -> list[dict]:
     """D4 · Bicis que dejan de aparecer (C6).
 
     Cuenta, por estación y franja de su último arribo, las bicis que llegaron ahí y no
@@ -405,7 +405,7 @@ def loss_risk(data: Data, at: datetime | None = None, ids: str = "feed") -> list
     if data.mode == "EJEMPLO":
         return _example("c6_loss_risk")
     if data.trips_dir is None:
-        return _snapshot(data, "c6_loss_risk.ce.json" if ids == "ce" else "c6_loss_risk.json")
+        return _snapshot(data, "c6_loss_risk.feed.json" if ids == "feed" else "c6_loss_risk.json")
     import duckdb
     at = (at or latest_time(data)).replace(tzinfo=None)
     rows = duckdb.execute(LOSS_SQL, {
