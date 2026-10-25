@@ -4,7 +4,7 @@ import { Skeleton, StateMessage } from "@/components/ui/state-message";
 import { Button } from "@/components/ui/button";
 import { TONE_DOT, TONE_TEXT } from "@/features/stations/status";
 import { cn } from "@/lib/cn";
-import { ArrowDownUp, ChevronDown, Footprints, History, Repeat2, Settings2, Shuffle } from "lucide-react";
+import { ArrowDownUp, ChevronDown, Footprints, History, MapPinOff, Repeat2, Settings2, Shuffle } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -51,7 +51,11 @@ export function TripPlanner() {
   // Si lo que tenemos es de otro viaje, mostramos "cargando" en vez de datos viejos.
   const rec: Load<Recommendation> = recState.key === tripKey ? recState : { status: "loading" };
   const originStation = stations.status === "ok" ? stations.data.origins.find((s) => s.station_id === from) : undefined;
-  const walkToOrigin = originStation ? walkMinutes(here, originStation) : 3;
+  const walkFromHere = originStation ? walkMinutes(here, originStation) : 3;
+  // Si la estación elegida queda lejos de ti, nadie camina 98 min: calculamos el viaje como si ya estuvieras ahí.
+  const FAR_MIN = 10;
+  const farAway = walkFromHere > FAR_MIN;
+  const walkToOrigin = farAway ? 1 : walkFromHere;
 
   const setRoute = (next: { from?: string; to?: string }) => {
     const q = new URLSearchParams(params.toString());
@@ -253,15 +257,26 @@ export function TripPlanner() {
             onEnd={() => setRiding(false)}
           />
         ) : (
-          <TripRibbon
-            rec={rec.data}
-            walkToOrigin={walkToOrigin}
-            chosen={target}
-            onChoose={setChosen}
-            onChooseOrigin={(id) => setRoute({ from: id })}
-            onStart={() => setRiding(true)}
-            replay={Boolean(replayText)}
-          />
+          <>
+            {farAway && originStation ? (
+              <p role="status" className="mb-4 flex gap-2.5 rounded-2xl bg-warning-100 px-3.5 py-3 text-sm text-ink">
+                <MapPinOff aria-hidden className="mt-0.5 size-4 shrink-0 text-warning-700" />
+                <span>
+                  <span className="font-semibold">Esa estación queda a unos {walkFromHere} min a pie de ti.</span> Calculamos el viaje como si ya
+                  estuvieras ahí. Para salir ya, elige una de “Cerca de ti”.
+                </span>
+              </p>
+            ) : null}
+            <TripRibbon
+              rec={rec.data}
+              walkToOrigin={walkToOrigin}
+              chosen={target}
+              onChoose={setChosen}
+              onChooseOrigin={(id) => setRoute({ from: id })}
+              onStart={() => setRiding(true)}
+              replay={Boolean(replayText)}
+            />
+          </>
         )}
         {recData ? (
           <p className="mt-3 px-1 text-xs text-ink-soft">
