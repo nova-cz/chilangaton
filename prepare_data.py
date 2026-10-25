@@ -25,7 +25,7 @@ import pandas as pd
 import requests
 
 OUT = Path("data")
-DEMO_DAY = "2026-09-29"          # martes demo (cambiar si hay huecos en el feed)
+DEMO_DAY = "2026-09-22"          # martes demo (el 29 tiene hueco en el feed de 8:38 a 9:14)
 DEMO_FROM, DEMO_TO = "07:00", "10:00"
 
 TRIPS = {  # URLs de https://ecobici.cdmx.gob.mx/datos-abiertos/
