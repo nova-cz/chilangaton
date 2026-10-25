@@ -45,7 +45,7 @@ export type AppTab =
 export const APP_TABS: AppTab[] = [
   { key: "map", label: "Mapa", icon: Map, view: "map" },
   { key: "list", label: "Lista", icon: List, view: "list" },
-  { key: "trip", label: "Viaje", icon: Bike, href: "/app/viaje", owner: "Línea 3", ready: false },
+  { key: "trip", label: "Viaje", icon: Bike, href: "/app/viaje", owner: "Línea 3", ready: true },
   { key: "missions", label: "Misiones", icon: Target, view: "missions" },
   { key: "help", label: "Ayuda", icon: LifeBuoy, href: "/app/ayuda", owner: "Línea 5", ready: false },
 ];

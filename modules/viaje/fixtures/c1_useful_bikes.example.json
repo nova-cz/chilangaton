@@ -1,0 +1,68 @@
+[
+ {
+  "station_id": "271",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "useful_bikes": 6,
+  "bikes_disabled": 4,
+  "docks_available": 30,
+  "docks_disabled": 0,
+  "is_renting": true,
+  "is_returning": true,
+  "pct_empty_hour": 0.46
+ },
+ {
+  "station_id": "273",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "useful_bikes": 9,
+  "bikes_disabled": 2,
+  "docks_available": 24,
+  "docks_disabled": 0,
+  "is_renting": true,
+  "is_returning": true,
+  "pct_empty_hour": 0.3
+ },
+ {
+  "station_id": "14",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "useful_bikes": 33,
+  "bikes_disabled": 1,
+  "docks_available": 4,
+  "docks_disabled": 1,
+  "is_renting": true,
+  "is_returning": true,
+  "pct_empty_hour": 0.0
+ },
+ {
+  "station_id": "18",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "useful_bikes": 20,
+  "bikes_disabled": 0,
+  "docks_available": 10,
+  "docks_disabled": 0,
+  "is_renting": true,
+  "is_returning": true,
+  "pct_empty_hour": 0.0
+ },
+ {
+  "station_id": "27",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "useful_bikes": 12,
+  "bikes_disabled": 0,
+  "docks_available": 15,
+  "docks_disabled": 0,
+  "is_renting": true,
+  "is_returning": true,
+  "pct_empty_hour": 0.02
+ },
+ {
+  "station_id": "31",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "useful_bikes": 8,
+  "bikes_disabled": 1,
+  "docks_available": 15,
+  "docks_disabled": 0,
+  "is_renting": true,
+  "is_returning": true,
+  "pct_empty_hour": 0.05
+ }
+]

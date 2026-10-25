@@ -1,0 +1,23 @@
+[
+ {
+  "station_id": "14",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "horizon_min": 15,
+  "p_useful_bike": 1.0,
+  "p_free_dock": 0.582
+ },
+ {
+  "station_id": "14",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "horizon_min": 30,
+  "p_useful_bike": 1.0,
+  "p_free_dock": 0.188
+ },
+ {
+  "station_id": "14",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "horizon_min": 60,
+  "p_useful_bike": 1.0,
+  "p_free_dock": 0.066
+ }
+]

@@ -1,0 +1,21 @@
+[
+ {
+  "station_id": "271",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "suspected_expected": 2.0,
+  "priority_score": 0.91,
+  "top_signals": [
+   "bici ignorada",
+   "sale mucho en pico"
+  ]
+ },
+ {
+  "station_id": "273",
+  "ts": "2026-09-29T13:45:00+00:00",
+  "suspected_expected": 1.0,
+  "priority_score": 0.62,
+  "top_signals": [
+   "bici ignorada"
+  ]
+ }
+]

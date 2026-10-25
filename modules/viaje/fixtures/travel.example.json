@@ -1,0 +1,27 @@
+[
+ {
+  "origin": "271",
+  "destination": "14",
+  "minutes": 14
+ },
+ {
+  "origin": "271",
+  "destination": "18",
+  "minutes": 13
+ },
+ {
+  "origin": "271",
+  "destination": "27",
+  "minutes": 16
+ },
+ {
+  "origin": "271",
+  "destination": "31",
+  "minutes": 15
+ },
+ {
+  "origin": "273",
+  "destination": "14",
+  "minutes": 15
+ }
+]
