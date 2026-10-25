@@ -9,3 +9,5 @@ duckdb==2.0.0
 requests==2.32.5
 # Línea 5 (regreso): httpx para leer el feed GBFS en vivo
 httpx==0.28.1
+# Línea 1 (bici_util): pandas para el motor de Bici Útil
+pandas==3.1.0
