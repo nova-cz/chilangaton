@@ -4,7 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader } from "@/components/ui/card";
 import { StateMessage } from "@/components/ui/state-message";
 import { cn } from "@/lib/cn";
-import { CalendarClock, CircleGauge, Timer } from "lucide-react";
+import { buttonClasses } from "@/components/ui/button";
+import { CalendarClock, CircleGauge, FileText, Timer } from "lucide-react";
+import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { useBiciUtil } from "./data";
 import { DataNote } from "./data-note";
@@ -24,7 +26,12 @@ export function SupervisionView() {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">Supervisión del contrato</h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">Supervisión del contrato</h1>
+          <Link href="/panel/supervision/reporte" className={buttonClasses("dark", "sm")}>
+            <FileText aria-hidden className="mr-1.5 size-4" /> Reporte para Semovi
+          </Link>
+        </div>
         <p className="max-w-3xl text-ink-muted">
           Tres indicadores medidos con datos públicos, independientes del reporte del operador. Ventana: {cdmxDate(k.window.from)} a{" "}
           {cdmxDate(k.window.to)}.

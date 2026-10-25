@@ -8,6 +8,9 @@ from enum import StrEnum
 import httpx
 
 STATUS_URL = "https://gbfs.mex.lyftbikes.com/gbfs/es/station_status.json"
+INFO_URL = "https://gbfs.mex.lyftbikes.com/gbfs/es/station_information.json"
+# El catálogo casi no cambia en el día; se pide una vez por hora.
+CATALOG_TTL_S = 3600
 # El feed se publica con ttl de 10 s; si last_updated tiene más de 5 min, el feed no responde.
 # Ojo: last_reported de cada estación solo cambia cuando cambia la estación, no sirve como latido.
 STALE_AFTER_S = 300
@@ -76,3 +79,38 @@ class StationFeed:
             last_reported=_ts(int(raw.get("last_reported", 0))),
             feed_updated=self._updated,
         )
+
+
+@dataclass(frozen=True)
+class StationInfo:
+    station_id: str
+    code: str
+    name: str
+    lat: float
+    lon: float
+
+
+class StationCatalog:
+    """station_information del feed: lo que la app necesita para elegir dónde ancló la persona."""
+
+    def __init__(self, url: str = INFO_URL):
+        self.url = url
+        self._stations: list[StationInfo] | None = None
+        self._expires = 0.0
+
+    async def stations(self) -> list[StationInfo] | None:
+        if time.monotonic() >= self._expires:
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.get(self.url)
+                    resp.raise_for_status()
+                    raw = resp.json()["data"]["stations"]
+                self._stations = [
+                    StationInfo(station_id=s["station_id"], code=str(s.get("short_name", "")),
+                                name=s["name"], lat=float(s["lat"]), lon=float(s["lon"]))
+                    for s in raw
+                ]
+                self._expires = time.monotonic() + CATALOG_TTL_S
+            except (httpx.HTTPError, ValueError, KeyError, TypeError):
+                pass  # se queda con la última copia, si hay
+        return self._stations

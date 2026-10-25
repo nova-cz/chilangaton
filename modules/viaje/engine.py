@@ -92,6 +92,12 @@ class Data:
     # (origen, destino) -> minutos (mediana real)
     travel: dict[tuple[str, str], float] = field(default_factory=dict)
     mode: str = "EJEMPLO"
+    # Qué tanto del azar de Poisson se conserva (1 = completo). El inventario real se corrige solo
+    # (camiones, usuarios), así que el azar puro sobrestima la incertidumbre. Se ajusta con backtest --tune.
+    disp: float = 1.0
+    # Qué fracción de la tendencia promedio (llegadas − salidas) se conserva. Los camiones y usuarios
+    # que reacomodan la contrarrestan, y los viajes no los ven. 1 = tendencia completa, 0 = sin tendencia.
+    drift: float = 1.0
 
 
 def _read(path: Path):
@@ -151,6 +157,10 @@ def load_real() -> Data | None:
     d.stations = {k: v for k, v in d.stations.items() if k in d.states}
     for st in d.stations.values():  # "CE-271-272 Jesús García - …" → "Jesús García - …"
         st.name = re.sub(r"^CE-?[\w-]+\s+", "", st.name).strip() or st.name
+    tuning = REAL_DIR / "tuning.json"   # lo escribe backtest --tune
+    if tuning.exists():
+        t = json.loads(tuning.read_text(encoding="utf-8"))
+        d.disp, d.drift = float(t.get("disp", 1.0)), float(t.get("drift", 1.0))
     return d
 
 
@@ -228,6 +238,10 @@ def load_live(fetch=None) -> tuple[dict, dict, dict]:
     return stations, states, keymap
 
 
+# Sin LIVE, "ahora" es la mañana de la demo: el estado de real/ es del martes 29 sep ~7:40.
+REPLAY_AT = datetime(2026, 9, 29, 7, 45, tzinfo=CDMX)
+
+
 def merge_live(real: Data, live_stations: dict, live_states: dict, keymap: dict) -> Data:
     """Estado de AHORA (feed GBFS) + promedios reales de real/. Une por número de estación."""
     inv = {gid: key for key, gid in keymap.items() if key}
@@ -275,6 +289,38 @@ def load() -> Data:
     return d
 
 
+class Source:
+    """Datos que usa la API. Con LIVE=1 el estado de las estaciones se refresca cada LIVE_TTL s
+    (si el feed falla, se queda con lo último que tenía y reintenta pronto)."""
+
+    LIVE_TTL = 60
+    RETRY = 15
+
+    def __init__(self):
+        self.want_live = os.getenv("LIVE") == "1" and os.getenv("VIAJE_MODE", "").lower() != "ejemplo"
+        self.base = load_real() if self.want_live else None
+        self.want_live = self.want_live and self.base is not None
+        self.data = self.base if self.want_live else load()
+        self._next = 0.0
+        self._lock = __import__("threading").Lock()
+
+    def get(self) -> Data:
+        if not self.want_live:
+            return self.data
+        import time
+        if time.time() >= self._next:
+            with self._lock:
+                if time.time() >= self._next:
+                    try:
+                        import dataclasses
+                        self.data = merge_live(dataclasses.replace(self.base), *load_live())
+                        self._next = time.time() + self.LIVE_TTL
+                    except Exception as e:
+                        print(f"[viaje] feed en vivo no disponible ({e}); sigo con lo último")
+                        self._next = time.time() + self.RETRY
+        return self.data
+
+
 # ---------------------------------------------------------------- V2 · pronóstico
 def simulate(data: Data, sid: str, start: datetime, minutes: float,
              n: int = N_SCENARIOS, seed: int = 42) -> dict:
@@ -282,17 +328,26 @@ def simulate(data: Data, sid: str, start: datetime, minutes: float,
     st, s = data.stations[sid], data.states[sid]
     cap = max(0, st.capacity - s.docks_disabled)
     b0 = max(0, min(cap, round(s.useful_bikes - s.suspected_expected)))
+    # Anclajes libres: se parte de los que reporta el feed. Las bicis descompuestas también
+    # ocupan anclaje, así que "capacidad − bicis útiles" sobrestimaría el lugar disponible.
+    d0 = max(0, min(cap, s.docks_available))
     rng = np.random.default_rng(seed)
     inv = np.full(n, b0, dtype=float)
+    free = np.full(n, d0, dtype=float)
     t, left = start, minutes
     while left > 1e-9:
         frac = min(1.0, left / 15)
         lo, li = data.baseline.get((sid, day_type(t), block_of(t)), (0.0, 0.0))
-        inv = np.clip(inv + rng.poisson(li * frac, n) - rng.poisson(lo * frac, n), 0, cap)
+        delta = rng.poisson(li * frac, n) - rng.poisson(lo * frac, n)   # llegadas − salidas
+        if data.disp != 1.0 or data.drift != 1.0:
+            mean = (li - lo) * frac
+            delta = np.rint(data.drift * mean + data.disp * (delta - mean))
+        inv = np.clip(inv + delta, 0, cap)
+        free = np.clip(free - delta, 0, cap)
         t += timedelta(minutes=15 * frac)
         left -= 15 * frac
     p_bike = float(np.mean(inv >= 1)) if s.is_renting else 0.0
-    p_dock = float(np.mean(cap - inv >= 1)) if s.is_returning else 0.0
+    p_dock = float(np.mean(free >= 1)) if s.is_returning else 0.0
     return {"p_useful_bike": round(p_bike, 3), "p_free_dock": round(p_dock, 3),
             "expected_bikes": round(float(inv.mean()), 1), "capacity_effective": cap}
 

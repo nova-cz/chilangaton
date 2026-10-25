@@ -76,3 +76,57 @@ def test_merge_live_une_por_numero_de_estacion():
     out = engine.merge_live(base, {}, live_states, {"14": "g14", "271": "g271"})
     assert list(out.stations) == ["14"] and out.states["14"].useful_bikes == 3
     assert out.mode == "VIVO + baseline REAL"
+
+
+def test_bicis_descompuestas_ocupan_anclaje():
+    d = engine.load_fixtures()
+    # 14: capacidad 39, 33 útiles, 1 descompuesta, 1 anclaje descompuesto, 4 libres → p(lugar) ya es baja
+    now = engine.simulate(d, "14", T, 1)
+    assert now["p_free_dock"] <= 1 and d.states["14"].docks_available == 4
+    d.states["271"].docks_available = 0   # el feed dice que no hay lugar, aunque haya pocas bicis útiles
+    assert engine.simulate(d, "271", T, 0.05)["p_free_dock"] < 0.1
+
+
+def test_modo_real_usa_la_hora_de_la_repeticion():
+    from modules.viaje import router
+    d = engine.load_fixtures()
+    d.mode = "REAL"
+    assert router._now(None, d) == engine.REPLAY_AT
+    d.mode = "VIVO + baseline REAL"
+    assert router._now(None, d).tzinfo is not None and router._now(None, d) != engine.REPLAY_AT
+
+
+def test_dispersion_menor_da_pronostico_mas_firme():
+    d = engine.load_fixtures()
+    d.disp = 1.0
+    a = engine.simulate(d, "14", T, 45)
+    d.disp = 0.2
+    b = engine.simulate(d, "14", T, 45)
+    assert 0 <= b["p_free_dock"] <= 1 and 0 <= a["p_free_dock"] <= 1
+    assert abs(b["p_free_dock"] - 0.5) >= abs(a["p_free_dock"] - 0.5) - 0.05
+
+
+def test_fuente_en_vivo_refresca_y_aguanta_fallas(monkeypatch):
+    import time
+    base = engine.load_fixtures()
+    base.mode = "REAL"
+    monkeypatch.setenv("LIVE", "1")
+    monkeypatch.setattr(engine, "load_real", lambda: base)
+    calls = {"n": 0, "fail": False}
+
+    def fake_live():
+        calls["n"] += 1
+        if calls["fail"]:
+            raise OSError("sin internet")
+        st = engine.State("g14", "2026-10-25T19:00:00+00:00", calls["n"], 30)
+        return {}, {"g14": st}, {"14": "g14"}
+
+    monkeypatch.setattr(engine, "load_live", fake_live)
+    src = engine.Source()
+    assert src.get().states["14"].useful_bikes == 1 and src.get().mode == "VIVO + baseline REAL"
+    assert calls["n"] == 1                       # dentro del TTL no vuelve a pedir
+    src._next = 0
+    assert src.get().states["14"].useful_bikes == 2
+    calls["fail"] = True; src._next = 0
+    assert src.get().states["14"].useful_bikes == 2   # falla: conserva lo último
+    assert base.states["14"].useful_bikes == 33        # y no ensucia la base

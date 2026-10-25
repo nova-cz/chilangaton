@@ -4,7 +4,7 @@ import { Skeleton, StateMessage } from "@/components/ui/state-message";
 import { Button } from "@/components/ui/button";
 import { TONE_DOT, TONE_TEXT } from "@/features/stations/status";
 import { cn } from "@/lib/cn";
-import { ArrowDownUp, ChevronDown, Footprints, History, Repeat2, Settings2, Shuffle } from "lucide-react";
+import { ArrowDownUp, ChevronDown, Footprints, History, MapPinOff, Repeat2, Settings2, Shuffle } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -29,10 +29,21 @@ export function TripPlanner() {
   const [chosen, setChosen] = useState<string | null>(null);
   const [riding, setRiding] = useState(false);
   const [reload, setReload] = useState(0);
+  // Punto de referencia para "cerca de ti": Buenavista (historia de la demo) hasta que des permiso de ubicación.
+  const [here, setHere] = useState<{ lat: number; lon: number; label: string }>({ lat: HOME.lat, lon: HOME.lon, label: HOME.label });
 
-  const rawFrom = params.get("from") ?? STORY?.from ?? "";
-  const rawTo = params.get("to") ?? STORY?.to ?? "";
   const choices = stations.status === "ok" ? stations.data : null;
+  // En vivo no hay historia prefijada: la persona elige. En repetición, arranca con la historia de Isabel.
+  const isLive = stations.status === "ok" && stations.mode.startsWith("VIVO");
+  const rawFrom = params.get("from") ?? (isLive ? "" : (STORY?.from ?? ""));
+  const rawTo = params.get("to") ?? (isLive ? "" : (STORY?.to ?? ""));
+  // "REAL" = datos reales de una mañana pasada (no en vivo): siempre se avisa que es repetición.
+  const replayText =
+    REPLAY_AT || (stations.status === "ok" && stations.mode === "REAL")
+      ? REPLAY_AT
+        ? replayLabel(REPLAY_AT)
+        : cdmxStamp(stations.status === "ok" ? stations.data.origins[0]?.data_ts : null)
+      : null;
   // Solo cuenta lo elegido si existe en las listas; si no, la pantalla pide elegir.
   const from = choices?.origins.some((s) => s.station_id === rawFrom) ? rawFrom : "";
   const to = choices?.destinations.some((s) => s.station_id === rawTo) ? rawTo : "";
@@ -40,7 +51,11 @@ export function TripPlanner() {
   // Si lo que tenemos es de otro viaje, mostramos "cargando" en vez de datos viejos.
   const rec: Load<Recommendation> = recState.key === tripKey ? recState : { status: "loading" };
   const originStation = stations.status === "ok" ? stations.data.origins.find((s) => s.station_id === from) : undefined;
-  const walkToOrigin = originStation ? walkMinutes(HOME, originStation) : 3;
+  const walkFromHere = originStation ? walkMinutes(here, originStation) : 3;
+  // Si la estación elegida queda lejos de ti, nadie camina 98 min: calculamos el viaje como si ya estuvieras ahí.
+  const FAR_MIN = 10;
+  const farAway = walkFromHere > FAR_MIN;
+  const walkToOrigin = farAway ? 1 : walkFromHere;
 
   const setRoute = (next: { from?: string; to?: string }) => {
     const q = new URLSearchParams(params.toString());
@@ -53,17 +68,33 @@ export function TripPlanner() {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([getStations(), getNearby()])
-      .then(([s, n]) => {
-        if (!alive) return;
-        setStations({ status: "ok", data: s.data, mode: s.mode });
-        setNearby(n.data);
-      })
+    getStations()
+      .then((s) => alive && setStations({ status: "ok", data: s.data, mode: s.mode }))
       .catch((e: unknown) => alive && setStations({ status: "error", message: e instanceof Error ? e.message : "Sin conexión" }));
     return () => {
       alive = false;
     };
   }, [reload]);
+
+  useEffect(() => {
+    let alive = true;
+    getNearby(here.lat, here.lon)
+      .then((n) => alive && setNearby(n.data))
+      .catch(() => alive && setNearby([]));
+    return () => {
+      alive = false;
+    };
+  }, [here.lat, here.lon, reload]);
+
+  // En vivo pedimos la ubicación (redondeada a ~100 m) solo para ordenar estaciones cercanas.
+  useEffect(() => {
+    if (!isLive || !("geolocation" in navigator)) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => setHere({ lat: Math.round(p.coords.latitude * 1000) / 1000, lon: Math.round(p.coords.longitude * 1000) / 1000, label: "" }),
+      () => {},
+      { timeout: 8000, maximumAge: 60_000 },
+    );
+  }, [isLive]);
 
   useEffect(() => {
     if (!from || !to || from === to || stations.status !== "ok") return;
@@ -112,11 +143,11 @@ export function TripPlanner() {
           <p className="mt-1 text-ink-muted">
             Te decimos qué tan probable es encontrar bici al salir y lugar al llegar.
           </p>
-          {REPLAY_AT ? (
+          {replayText ? (
             <p className="mt-2 inline-flex items-start gap-2 rounded-2xl bg-mist-100 px-3 py-2 text-sm text-ink">
               <History aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-700" />
               <span>
-                <span className="font-semibold">Repetición del {replayLabel(REPLAY_AT)}.</span> Usamos los datos de esa mañana, no los de ahorita.
+                <span className="font-semibold">Repetición del {replayText}.</span> Usamos los datos de esa mañana, no los de ahorita.
               </span>
             </p>
           ) : null}
@@ -163,7 +194,7 @@ export function TripPlanner() {
       {nearby.length ? (
           <section aria-labelledby="cerca" className="min-w-0 max-lg:order-3 lg:col-start-1 lg:self-start">
             <h2 id="cerca" className="text-sm font-semibold text-ink-muted">
-              Cerca de ti en {HOME.label}
+              {here.label ? `Cerca de ti en ${here.label}` : "Cerca de ti"}
             </h2>
             <ul className="mt-2 divide-y divide-line overflow-hidden rounded-[var(--radius-card)] bg-card shadow-soft">
               {nearby.slice(0, 4).map((n) => {
@@ -226,15 +257,26 @@ export function TripPlanner() {
             onEnd={() => setRiding(false)}
           />
         ) : (
-          <TripRibbon
-            rec={rec.data}
-            walkToOrigin={walkToOrigin}
-            chosen={target}
-            onChoose={setChosen}
-            onChooseOrigin={(id) => setRoute({ from: id })}
-            onStart={() => setRiding(true)}
-            replay={Boolean(REPLAY_AT)}
-          />
+          <>
+            {farAway && originStation ? (
+              <p role="status" className="mb-4 flex gap-2.5 rounded-2xl bg-warning-100 px-3.5 py-3 text-sm text-ink">
+                <MapPinOff aria-hidden className="mt-0.5 size-4 shrink-0 text-warning-700" />
+                <span>
+                  <span className="font-semibold">Esa estación queda a unos {walkFromHere} min a pie de ti.</span> Calculamos el viaje como si ya
+                  estuvieras ahí. Para salir ya, elige una de “Cerca de ti”.
+                </span>
+              </p>
+            ) : null}
+            <TripRibbon
+              rec={rec.data}
+              walkToOrigin={walkToOrigin}
+              chosen={target}
+              onChoose={setChosen}
+              onChooseOrigin={(id) => setRoute({ from: id })}
+              onStart={() => setRiding(true)}
+              replay={Boolean(replayText)}
+            />
+          </>
         )}
         {recData ? (
           <p className="mt-3 px-1 text-xs text-ink-soft">

@@ -36,6 +36,10 @@ export function formatCdmx(date: Date): string {
   }).format(date);
 }
 
+export function formatCdmxTime(date: Date): string {
+  return new Intl.DateTimeFormat("es-MX", { timeZone: "America/Mexico_City", timeStyle: "short" }).format(date);
+}
+
 export function helpMessage({
   kind,
   station,
@@ -57,6 +61,11 @@ export function helpMessage({
 
 export function whatsappUrl(text: string): string {
   return `https://wa.me/${ECOBICI_WHATSAPP.number}?text=${encodeURIComponent(text)}`;
+}
+
+/** Enlace a "Anclé aquí" con la estación ya elegida (station_id del feed). */
+export function anclajeHref(stationId?: string): string {
+  return stationId ? `/app/anclaje?estacion=${encodeURIComponent(stationId)}` : "/app/anclaje";
 }
 
 /** Enlace a /app/ayuda con los datos ya puestos (lo usan "¿Todo bien?" y "Anclé aquí"). */

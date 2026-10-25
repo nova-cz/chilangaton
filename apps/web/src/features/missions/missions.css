@@ -1,0 +1,72 @@
+/* Baldosas isométricas y animaciones del camino de misiones (solo CSS/SVG propio). */
+.iso-tile .top,
+.iso-tile .side {
+  stroke-linejoin: round;
+  stroke-width: 12;
+}
+.iso-tile.completed .top {
+  fill: var(--color-brand-400);
+  stroke: var(--color-brand-400);
+}
+.iso-tile.completed .side {
+  fill: var(--color-brand-600);
+  stroke: var(--color-brand-600);
+}
+.iso-tile.current .top {
+  fill: var(--color-lime-300);
+  stroke: var(--color-lime-300);
+}
+.iso-tile.current .side {
+  fill: var(--color-lime-500);
+  stroke: var(--color-lime-500);
+}
+.iso-tile.locked .top {
+  fill: #e8edea;
+  stroke: #e8edea;
+}
+.iso-tile.locked .side {
+  fill: #cdd6d1;
+  stroke: #cdd6d1;
+}
+.iso-tile .shine {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.45);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.mission-bob {
+  animation: mission-bob 2.2s ease-in-out infinite;
+}
+.mission-glow {
+  animation: mission-glow 2.2s ease-in-out infinite;
+}
+.mission-sparkle {
+  animation: mission-sparkle 2.6s ease-in-out infinite;
+}
+
+@keyframes mission-bob {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes mission-glow {
+  50% {
+    opacity: 0.35;
+    transform: scale(1.18);
+  }
+}
+@keyframes mission-sparkle {
+  50% {
+    transform: translateY(-3px) rotate(-3deg);
+  }
+}
+
+/* El reset global deja las animaciones en 1 ms: en bucle parpadearían, así que se apagan. */
+@media (prefers-reduced-motion: reduce) {
+  .mission-bob,
+  .mission-glow,
+  .mission-sparkle {
+    animation: none !important;
+  }
+}
