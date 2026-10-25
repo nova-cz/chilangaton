@@ -73,3 +73,26 @@ export function useBiciUtil(): { data: BiciUtilData; source: Source; loading: bo
 
   return state;
 }
+
+/** C5 · casos de Regreso Seguro por estación (Línea 5, GET /api/v1/cases/count). */
+export interface CasesCount {
+  station_id: string;
+  open_cases: number;
+  reincorporated: number;
+}
+
+/** null = sin datos todavía (modo demo o la Línea 5 no responde). Nunca se rellena. */
+export function useCasesCount(): { generatedAt: string; stations: CasesCount[] } | null {
+  const [state, setState] = useState<{ generatedAt: string; stations: CasesCount[] } | null>(null);
+  useEffect(() => {
+    if (config.dataMode !== "api") return;
+    let alive = true;
+    apiGet<{ generated_at: string; stations: CasesCount[] }>("/cases/count")
+      .then((r) => alive && setState({ generatedAt: r.generated_at, stations: r.stations }))
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return state;
+}
