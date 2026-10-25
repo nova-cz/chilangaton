@@ -6,4 +6,8 @@ export interface Priority {
   suspected_expected: number;
   priority_score: number;
   top_signals: string[];
+  /** Opcional: salidas promedio por día hábil en pico */
+  peak_departures?: number | null;
+  /** Opcional: % del tiempo vacía en pico; null = pendiente feed L1 */
+  empty_share?: number | null;
 }
