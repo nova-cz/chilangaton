@@ -228,6 +228,10 @@ def load_live(fetch=None) -> tuple[dict, dict, dict]:
     return stations, states, keymap
 
 
+# Sin LIVE, "ahora" es la mañana de la demo: el estado de real/ es del martes 29 sep ~7:40.
+REPLAY_AT = datetime(2026, 9, 29, 7, 45, tzinfo=CDMX)
+
+
 def merge_live(real: Data, live_stations: dict, live_states: dict, keymap: dict) -> Data:
     """Estado de AHORA (feed GBFS) + promedios reales de real/. Une por número de estación."""
     inv = {gid: key for key, gid in keymap.items() if key}
@@ -282,17 +286,23 @@ def simulate(data: Data, sid: str, start: datetime, minutes: float,
     st, s = data.stations[sid], data.states[sid]
     cap = max(0, st.capacity - s.docks_disabled)
     b0 = max(0, min(cap, round(s.useful_bikes - s.suspected_expected)))
+    # Anclajes libres: se parte de los que reporta el feed. Las bicis descompuestas también
+    # ocupan anclaje, así que "capacidad − bicis útiles" sobrestimaría el lugar disponible.
+    d0 = max(0, min(cap, s.docks_available))
     rng = np.random.default_rng(seed)
     inv = np.full(n, b0, dtype=float)
+    free = np.full(n, d0, dtype=float)
     t, left = start, minutes
     while left > 1e-9:
         frac = min(1.0, left / 15)
         lo, li = data.baseline.get((sid, day_type(t), block_of(t)), (0.0, 0.0))
-        inv = np.clip(inv + rng.poisson(li * frac, n) - rng.poisson(lo * frac, n), 0, cap)
+        delta = rng.poisson(li * frac, n) - rng.poisson(lo * frac, n)   # llegadas − salidas
+        inv = np.clip(inv + delta, 0, cap)
+        free = np.clip(free - delta, 0, cap)
         t += timedelta(minutes=15 * frac)
         left -= 15 * frac
     p_bike = float(np.mean(inv >= 1)) if s.is_renting else 0.0
-    p_dock = float(np.mean(cap - inv >= 1)) if s.is_returning else 0.0
+    p_dock = float(np.mean(free >= 1)) if s.is_returning else 0.0
     return {"p_useful_bike": round(p_bike, 3), "p_free_dock": round(p_dock, 3),
             "expected_bikes": round(float(inv.mean()), 1), "capacity_effective": cap}
 

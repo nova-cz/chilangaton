@@ -18,6 +18,8 @@ def _now(at: str | None) -> datetime:
     if at:
         dt = datetime.fromisoformat(at)
         return dt if dt.tzinfo else dt.replace(tzinfo=engine.CDMX)
+    if DATA.mode == "REAL":  # estado de real/ es del 29 sep: usar la hora de ahorita lo mezclaría
+        return engine.REPLAY_AT
     return datetime.now(ZoneInfo("UTC"))
 
 

@@ -33,6 +33,13 @@ export function TripPlanner() {
   const rawFrom = params.get("from") ?? STORY?.from ?? "";
   const rawTo = params.get("to") ?? STORY?.to ?? "";
   const choices = stations.status === "ok" ? stations.data : null;
+  // "REAL" = datos reales de una mañana pasada (no en vivo): siempre se avisa que es repetición.
+  const replayText =
+    REPLAY_AT || (stations.status === "ok" && stations.mode === "REAL")
+      ? REPLAY_AT
+        ? replayLabel(REPLAY_AT)
+        : cdmxStamp(stations.status === "ok" ? stations.data.origins[0]?.data_ts : null)
+      : null;
   // Solo cuenta lo elegido si existe en las listas; si no, la pantalla pide elegir.
   const from = choices?.origins.some((s) => s.station_id === rawFrom) ? rawFrom : "";
   const to = choices?.destinations.some((s) => s.station_id === rawTo) ? rawTo : "";
@@ -112,11 +119,11 @@ export function TripPlanner() {
           <p className="mt-1 text-ink-muted">
             Te decimos qué tan probable es encontrar bici al salir y lugar al llegar.
           </p>
-          {REPLAY_AT ? (
+          {replayText ? (
             <p className="mt-2 inline-flex items-start gap-2 rounded-2xl bg-mist-100 px-3 py-2 text-sm text-ink">
               <History aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-700" />
               <span>
-                <span className="font-semibold">Repetición del {replayLabel(REPLAY_AT)}.</span> Usamos los datos de esa mañana, no los de ahorita.
+                <span className="font-semibold">Repetición del {replayText}.</span> Usamos los datos de esa mañana, no los de ahorita.
               </span>
             </p>
           ) : null}
@@ -233,7 +240,7 @@ export function TripPlanner() {
             onChoose={setChosen}
             onChooseOrigin={(id) => setRoute({ from: id })}
             onStart={() => setRiding(true)}
-            replay={Boolean(REPLAY_AT)}
+            replay={Boolean(replayText)}
           />
         )}
         {recData ? (

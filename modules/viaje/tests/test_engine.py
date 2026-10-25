@@ -76,3 +76,22 @@ def test_merge_live_une_por_numero_de_estacion():
     out = engine.merge_live(base, {}, live_states, {"14": "g14", "271": "g271"})
     assert list(out.stations) == ["14"] and out.states["14"].useful_bikes == 3
     assert out.mode == "VIVO + baseline REAL"
+
+
+def test_bicis_descompuestas_ocupan_anclaje():
+    d = engine.load_fixtures()
+    # 14: capacidad 39, 33 útiles, 1 descompuesta, 1 anclaje descompuesto, 4 libres → p(lugar) ya es baja
+    now = engine.simulate(d, "14", T, 1)
+    assert now["p_free_dock"] <= 1 and d.states["14"].docks_available == 4
+    d.states["271"].docks_available = 0   # el feed dice que no hay lugar, aunque haya pocas bicis útiles
+    assert engine.simulate(d, "271", T, 0.05)["p_free_dock"] < 0.1
+
+
+def test_modo_real_usa_la_hora_de_la_repeticion():
+    from modules.viaje import router
+    old = router.DATA.mode
+    try:
+        router.DATA.mode = "REAL"
+        assert router._now(None) == engine.REPLAY_AT
+    finally:
+        router.DATA.mode = old
