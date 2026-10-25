@@ -37,3 +37,6 @@ venv/
 # --- Sistema ---
 .DS_Store
 npm-debug.log*
+
+# --- Contexto local del equipo ---
+context/

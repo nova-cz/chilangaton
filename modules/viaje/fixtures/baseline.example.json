@@ -1,0 +1,842 @@
+[
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 24,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 25,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 26,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 27,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 28,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 29,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 30,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 31,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 32,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 33,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 34,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 35,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 36,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 37,
+"lam_out": 14.0,
+"lam_in": 3.0
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 38,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 39,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 40,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 41,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 42,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "271",
+"day_type": "weekday",
+"block": 43,
+"lam_out": 7.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 24,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 25,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 26,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 27,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 28,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 29,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 30,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 31,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 32,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 33,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 34,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 35,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 36,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 37,
+"lam_out": 10.0,
+"lam_in": 3.0
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 38,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 39,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 40,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 41,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 42,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "273",
+"day_type": "weekday",
+"block": 43,
+"lam_out": 5.0,
+"lam_in": 1.5
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 24,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 25,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 26,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 27,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 28,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 29,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 30,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 31,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 32,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 33,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 34,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 35,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 36,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 37,
+"lam_out": 2.0,
+"lam_in": 6.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 38,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 39,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 40,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 41,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 42,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "14",
+"day_type": "weekday",
+"block": 43,
+"lam_out": 1.0,
+"lam_in": 3.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 24,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 25,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 26,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 27,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 28,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 29,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 30,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 31,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 32,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 33,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 34,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 35,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 36,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 37,
+"lam_out": 3.0,
+"lam_in": 5.0
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 38,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 39,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 40,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 41,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 42,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "18",
+"day_type": "weekday",
+"block": 43,
+"lam_out": 1.5,
+"lam_in": 2.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 24,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 25,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 26,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 27,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 28,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 29,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 30,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 31,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 32,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 33,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 34,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 35,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 36,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 37,
+"lam_out": 3.0,
+"lam_in": 3.0
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 38,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 39,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 40,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 41,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 42,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "27",
+"day_type": "weekday",
+"block": 43,
+"lam_out": 1.5,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 24,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 25,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 26,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 27,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 28,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 29,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 30,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 31,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 32,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 33,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 34,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 35,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 36,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 37,
+"lam_out": 2.0,
+"lam_in": 1.5
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 38,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 39,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 40,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 41,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 42,
+"lam_out": 1.0,
+"lam_in": 0.75
+},
+{
+"station_id": "31",
+"day_type": "weekday",
+"block": 43,
+"lam_out": 1.0,
+"lam_in": 0.75
+}
+]

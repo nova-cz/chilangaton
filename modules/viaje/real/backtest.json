@@ -1,0 +1,176 @@
+{
+ "dias_prueba": [
+  "2026-09-30"
+ ],
+ "horas": "07:00–09:45 cada 15 min",
+ "baseline": "1–28 sep 2026",
+ "escenarios": 300,
+ "ajuste": {
+  "disp": 0.7,
+  "drift": 0.0,
+  "ajustado_con": "2026-09-29",
+  "probado_en": "2026-09-30",
+  "error_relativo_prueba": 0.635,
+  "error_relativo_prueba_sin_ajuste": 1.071
+ },
+ "bici": {
+  "15": {
+   "n": 8112,
+   "brier": 0.0886,
+   "brier_persistencia": 0.1222,
+   "mejora_vs_persistencia": 0.275,
+   "fallos_reales": 1276,
+   "fallos_avisados": 0.84,
+   "fallos_avisados_persistencia": 0.626,
+   "bandas": {
+    "verde": {
+     "n": 5777,
+     "dijimos": 0.98,
+     "paso": 0.965
+    },
+    "amarillo": {
+     "n": 1023,
+     "dijimos": 0.691,
+     "paso": 0.732
+    },
+    "rojo": {
+     "n": 1312,
+     "dijimos": 0.279,
+     "paso": 0.392
+    }
+   }
+  },
+  "30": {
+   "n": 8112,
+   "brier": 0.1042,
+   "brier_persistencia": 0.1596,
+   "mejora_vs_persistencia": 0.347,
+   "fallos_reales": 1240,
+   "fallos_avisados": 0.791,
+   "fallos_avisados_persistencia": 0.507,
+   "bandas": {
+    "verde": {
+     "n": 5407,
+     "dijimos": 0.973,
+     "paso": 0.952
+    },
+    "amarillo": {
+     "n": 1715,
+     "dijimos": 0.654,
+     "paso": 0.718
+    },
+    "rojo": {
+     "n": 990,
+     "dijimos": 0.374,
+     "paso": 0.497
+    }
+   }
+  },
+  "60": {
+   "n": 8112,
+   "brier": 0.1089,
+   "brier_persistencia": 0.1866,
+   "mejora_vs_persistencia": 0.416,
+   "fallos_reales": 1147,
+   "fallos_avisados": 0.746,
+   "fallos_avisados_persistencia": 0.412,
+   "bandas": {
+    "verde": {
+     "n": 5128,
+     "dijimos": 0.961,
+     "paso": 0.943
+    },
+    "amarillo": {
+     "n": 2636,
+     "dijimos": 0.661,
+     "paso": 0.731
+    },
+    "rojo": {
+     "n": 348,
+     "dijimos": 0.411,
+     "paso": 0.578
+    }
+   }
+  }
+ },
+ "lugar": {
+  "15": {
+   "n": 8112,
+   "brier": 0.015,
+   "brier_persistencia": 0.0216,
+   "mejora_vs_persistencia": 0.303,
+   "fallos_reales": 226,
+   "fallos_avisados": 0.85,
+   "fallos_avisados_persistencia": 0.619,
+   "bandas": {
+    "verde": {
+     "n": 7727,
+     "dijimos": 0.997,
+     "paso": 0.996
+    },
+    "amarillo": {
+     "n": 158,
+     "dijimos": 0.674,
+     "paso": 0.671
+    },
+    "rojo": {
+     "n": 227,
+     "dijimos": 0.343,
+     "paso": 0.383
+    }
+   }
+  },
+  "30": {
+   "n": 8112,
+   "brier": 0.0179,
+   "brier_persistencia": 0.0302,
+   "mejora_vs_persistencia": 0.407,
+   "fallos_reales": 226,
+   "fallos_avisados": 0.819,
+   "fallos_avisados_persistencia": 0.465,
+   "bandas": {
+    "verde": {
+     "n": 7667,
+     "dijimos": 0.996,
+     "paso": 0.995
+    },
+    "amarillo": {
+     "n": 325,
+     "dijimos": 0.634,
+     "paso": 0.618
+    },
+    "rojo": {
+     "n": 120,
+     "dijimos": 0.418,
+     "paso": 0.492
+    }
+   }
+  },
+  "60": {
+   "n": 8112,
+   "brier": 0.0195,
+   "brier_persistencia": 0.0349,
+   "mejora_vs_persistencia": 0.441,
+   "fallos_reales": 218,
+   "fallos_avisados": 0.725,
+   "fallos_avisados_persistencia": 0.376,
+   "bandas": {
+    "verde": {
+     "n": 7626,
+     "dijimos": 0.994,
+     "paso": 0.992
+    },
+    "amarillo": {
+     "n": 467,
+     "dijimos": 0.677,
+     "paso": 0.681
+    },
+    "rojo": {
+     "n": 19,
+     "dijimos": 0.43,
+     "paso": 0.526
+    }
+   }
+  }
+ }
+}

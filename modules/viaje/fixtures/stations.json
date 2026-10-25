@@ -1,0 +1,44 @@
+[
+ {
+  "station_id": "271",
+  "name": "Jesús García - Carlos J. Meneses (Buenavista)",
+  "lat": 19.4468,
+  "lon": -99.1519,
+  "capacity": 40
+ },
+ {
+  "station_id": "273",
+  "name": "Colosio - Av. Jesús García (Buenavista)",
+  "lat": 19.4459,
+  "lon": -99.153,
+  "capacity": 35
+ },
+ {
+  "station_id": "14",
+  "name": "Reforma - Río de Plata",
+  "lat": 19.429,
+  "lon": -99.164,
+  "capacity": 39
+ },
+ {
+  "station_id": "18",
+  "name": "Reforma - Río Rhin",
+  "lat": 19.4306,
+  "lon": -99.1612,
+  "capacity": 30
+ },
+ {
+  "station_id": "27",
+  "name": "Reforma - Havre",
+  "lat": 19.4268,
+  "lon": -99.1668,
+  "capacity": 27
+ },
+ {
+  "station_id": "31",
+  "name": "Río Lerma - Río Sena",
+  "lat": 19.4302,
+  "lon": -99.1665,
+  "capacity": 24
+ }
+]

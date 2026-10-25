@@ -9,6 +9,7 @@ import type { DemoDataset } from "@/features/demo/types";
 import { useMediaQuery } from "@/lib/use-media-query";
 import { Box, LayoutDashboard, List, LocateFixed, Map as MapIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { BottomNav, type AppView } from "./bottom-nav";
 import { BottomSheet, type SheetSnap } from "./bottom-sheet";
@@ -32,6 +33,7 @@ export function AppExperience({ data }: { data: DemoDataset }) {
   const [filter, setFilter] = useState<StationFilter>("all");
   const [snap, setSnap] = useState<SheetSnap>("compact");
   const [recenter, setRecenter] = useState(0);
+  const router = useRouter();
   const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const stations = filterStations(allStations, filter);
@@ -40,18 +42,16 @@ export function AppExperience({ data }: { data: DemoDataset }) {
   const showMap = view !== "list";
 
   const changeView = (next: AppView) => {
+    // La estación abierta pertenece a la vista donde se abrió: al cambiar de vista se cierra.
+    if (next !== view) setSelectedId(null);
     setView(next);
-    if (next === "missions") {
-      setSelectedId(null);
-      setSnap("expanded");
-    } else {
-      setSnap("compact");
-    }
+    setSnap(next === "missions" ? "expanded" : "compact");
   };
+  // Elegir una estación (lista, búsqueda o resumen) siempre lleva al mapa, donde vive su ficha.
   const pickStation = (id: string) => {
     setSelectedId(id);
     setSnap("compact");
-    if (view === "missions") setView("map");
+    setView("map");
   };
   const clearSelection = () => {
     setSelectedId(null);
@@ -63,7 +63,7 @@ export function AppExperience({ data }: { data: DemoDataset }) {
       stations={stations}
       onPick={pickStation}
       showList={isDesktop || snap === "expanded"}
-      mission={mission ? { title: mission.title, onOpen: () => changeView("missions") } : undefined}
+      mission={mission ? { title: mission.title, onOpen: () => router.push("/app/mision") } : undefined}
     />
   );
   const missionCard = mission ? (
