@@ -47,7 +47,9 @@ Prueba rápida: `/api/v1/bici-util/stations/141?at=2026-09-29T08:00` (Buenavista
 |---|---|---|
 | EJEMPLO | Por defecto | 6 estaciones reales con fotos sintéticas (semilla fija) |
 | REAL | `DATA_DIR=data` | `data/feed/*.parquet` (MaxHalford, UTC) |
-| Sospechosas | `C2_FILE=ruta.json` | Sin esto, el ejemplo de `fixtures/` y la respuesta dice `c2_mode: EJEMPLO` |
+| Sospechosas en vivo | `C2_URL=http://localhost:8000/api/v1/taller/priority` | Endpoint de la Línea 2; se vuelve a pedir cada 5 min. Si no responde, `c2_mode: PENDIENTE` y no se descuenta nada |
+| Sospechosas de archivo | `C2_FILE=ruta.json` | Sin esto ni `C2_URL`, el ejemplo de `fixtures/` y `c2_mode: EJEMPLO` |
+| Tipo de ID en C2 | `C2_IDS=ce` o `gbfs` | La Línea 2 hoy publica códigos CE (`271-272`) y se traducen al ID del feed. Con `C2_URL` el valor por defecto es `ce` |
 
 ## Cifras con el feed real (1 ago – 30 sep 2026)
 

@@ -72,3 +72,18 @@ def test_normalize_acepta_columnas_del_feed():
                          "is_returning": 1}])
     s = engine.normalize(raw)
     assert s.loc[0, "station_id"] == "14" and s.loc[0, "hour"] == 8   # 14:00 UTC = 8:00 CDMX
+
+
+def test_c2_con_codigo_ce_se_traduce_a_station_id_del_feed():
+    rows = [{"station_id": "271-272", "suspected_expected": 2}, {"station_id": "CE-014", "suspected_expected": 1},
+            {"station_id": "999", "suspected_expected": 5}]
+    assert engine.map_suspected(rows, D.stations, ids="ce") == {"141": 2.0, "267": 1.0}
+
+
+def test_c2_con_station_id_del_feed_no_se_traduce():
+    rows = [{"station_id": "141", "suspected_expected": 2}]
+    assert engine.map_suspected(rows, D.stations, ids="gbfs") == {"141": 2.0}
+
+
+def test_c2_acepta_respuesta_con_items():
+    assert engine._c2_rows({"mode": "REAL", "items": [{"station_id": "1"}]}) == [{"station_id": "1"}]

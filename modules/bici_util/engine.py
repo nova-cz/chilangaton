@@ -20,6 +20,9 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import time
+import urllib.request
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -38,6 +41,7 @@ MAX_GAP_H = 6.0             # hueco más largo que no rompe una racha (la noche 
 NIGHT_FROM, NIGHT_TO = 30, 300   # minutos del día CDMX fuera de servicio (0:30–5:00)
 PEAK_HOURS = (8, 18)
 SNAP_MIN = 12               # el feed de MaxHalford se toma cada ~12 min
+C2_TTL_S = 300              # cada cuánto se vuelve a pedir C2 a la Línea 2 (C2_URL)
 
 # Nombres del feed (con o sin prefijo num_) -> nombre único
 ALIASES = {
@@ -70,7 +74,8 @@ class Data:
     snaps: pd.DataFrame                         # una fila por estación y foto, columnas COLS + derivadas
     suspected: dict[str, float] = field(default_factory=dict)   # C2, Línea 2
     mode: str = "EJEMPLO"
-    c2_mode: str = "EJEMPLO"     # de dónde salieron las sospechosas: EJEMPLO o REAL (C2_FILE)
+    c2_mode: str = "EJEMPLO"     # de dónde salieron las sospechosas: EJEMPLO, REAL o PENDIENTE
+    c2_fetched_at: float = 0.0   # última vez que se pidió C2_URL (time.monotonic)
 
 
 def normalize(df: pd.DataFrame) -> pd.DataFrame:
@@ -134,19 +139,71 @@ def load_fixtures() -> Data:
     st = {s["station_id"]: Station(**s) for s in json.loads((f / "stations.json").read_text())}
     days = ["2026-09-28", "2026-09-29", "2026-09-30"]   # lunes a miércoles
     snaps = normalize(_synthetic_snaps(st, days))
-    return Data(st, snaps, load_suspected(), "EJEMPLO", _c2_mode())
+    return Data(st, snaps, load_suspected(st), "EJEMPLO", _c2_mode())
 
 
+# ---------------------------------------------------------------- C2 · sospechosas (Línea 2)
 def _c2_mode() -> str:
+    if os.environ.get("C2_URL"):
+        return "PENDIENTE"          # hasta que responda la Línea 2
     return "REAL" if os.environ.get("C2_FILE") else "EJEMPLO"
 
 
-def load_suspected() -> dict[str, float]:
-    """Sospechosas esperadas por estación (C2). Antes del corte A, del archivo de ejemplo."""
+def station_key(x: object) -> str | None:
+    """'CE-271-272', '271-272', '014' -> '271-272' / '14'. Misma regla que prepare_data.py."""
+    if x is None:
+        return None
+    s = re.sub(r"\s+", "", str(x).strip().upper().replace("CE-", "").replace("CE", ""))
+    s = re.sub(r"\.0$", "", s)
+    return "-".join((p.lstrip("0") or "0") if p.isdigit() else p for p in s.split("-")) or None
+
+
+def map_suspected(rows: list[dict], stations: dict[str, Station], ids: str = "gbfs") -> dict[str, float]:
+    """Filas de C2 -> {station_id del GBFS: sospechosas}.
+
+    `ids="gbfs"`: station_id ya es el del feed. `ids="ce"`: es el código CE de los viajes (p. ej. 271-272).
+    No se adivina: "141" es CE-141 (Zacatecas) y también el ID del feed de Buenavista CE-271-272.
+    """
+    by_key = {station_key(st.short_name): sid for sid, st in stations.items() if st.short_name}
+    out: dict[str, float] = {}
+    for r in rows:
+        raw = str(r.get("station_id", ""))
+        sid = by_key.get(station_key(raw), "") if ids == "ce" else raw
+        if sid in stations:
+            out[sid] = out.get(sid, 0.0) + float(r.get("suspected_expected", 0) or 0)
+    return out
+
+
+def _c2_rows(payload: object) -> list[dict]:
+    """C2 llega como lista o como {"mode", "items": [...]} (GET /api/v1/taller/priority)."""
+    if isinstance(payload, dict):
+        return list(payload.get("items") or payload.get("stations") or [])
+    return list(payload or [])
+
+
+def load_suspected(stations: dict[str, Station]) -> dict[str, float]:
+    """Sospechosas desde archivo (C2_FILE o el ejemplo de fixtures/)."""
     path = Path(os.environ.get("C2_FILE", HERE / "fixtures" / "c2_priority.example.json"))
     if not path.exists():
         return {}
-    return {p["station_id"]: float(p["suspected_expected"]) for p in json.loads(path.read_text())}
+    ids = os.environ.get("C2_IDS", "ce" if os.environ.get("C2_FILE") else "gbfs")
+    return map_suspected(_c2_rows(json.loads(path.read_text())), stations, ids)
+
+
+def refresh_c2(data: Data, force: bool = False) -> None:
+    """Con C2_URL, pide las sospechosas a la Línea 2 cada C2_TTL_S. Si falla, se queda con lo último."""
+    url = os.environ.get("C2_URL")
+    if not url or (not force and time.monotonic() - data.c2_fetched_at < C2_TTL_S):
+        return
+    data.c2_fetched_at = time.monotonic()
+    try:
+        with urllib.request.urlopen(url, timeout=3) as r:
+            payload = json.load(r)
+    except Exception:  # noqa: BLE001 - la Línea 2 caída no tumba a la Línea 1
+        return
+    # La Línea 2 hoy publica códigos CE (start_key de los viajes); C2_IDS=gbfs cuando cambie.
+    data.suspected = map_suspected(_c2_rows(payload), data.stations, os.environ.get("C2_IDS", "ce"))
+    data.c2_mode = str(payload.get("mode", "REAL")) if isinstance(payload, dict) else "REAL"
 
 
 def stations_from_feed(raw: pd.DataFrame) -> dict[str, Station]:
@@ -164,7 +221,7 @@ def load_real(data_dir: str) -> Data:
         raise FileNotFoundError(f"No hay feed en {d / 'feed'}")
     raw = pd.concat([pd.read_parquet(p) for p in files], ignore_index=True)
     st = stations_from_feed(raw)
-    return Data(st, normalize(raw), load_suspected(), "REAL", _c2_mode())
+    return Data(st, normalize(raw), {} if os.environ.get("C2_URL") else load_suspected(st), "REAL", _c2_mode())
 
 
 def load() -> Data:
