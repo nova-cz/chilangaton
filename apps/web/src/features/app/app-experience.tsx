@@ -42,18 +42,16 @@ export function AppExperience({ data }: { data: DemoDataset }) {
   const showMap = view !== "list";
 
   const changeView = (next: AppView) => {
+    // La estación abierta pertenece a la vista donde se abrió: al cambiar de vista se cierra.
+    if (next !== view) setSelectedId(null);
     setView(next);
-    if (next === "missions") {
-      setSelectedId(null);
-      setSnap("expanded");
-    } else {
-      setSnap("compact");
-    }
+    setSnap(next === "missions" ? "expanded" : "compact");
   };
+  // Elegir una estación (lista, búsqueda o resumen) siempre lleva al mapa, donde vive su ficha.
   const pickStation = (id: string) => {
     setSelectedId(id);
     setSnap("compact");
-    if (view === "missions") setView("map");
+    setView("map");
   };
   const clearSelection = () => {
     setSelectedId(null);
