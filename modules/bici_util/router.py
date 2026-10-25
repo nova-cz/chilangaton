@@ -21,11 +21,13 @@ def _at(at: str | None) -> datetime | None:
 @router.get("/stations")
 def stations(at: str | None = None):
     """Contrato C1: bici útil por estación."""
+    engine.refresh_c2(DATA)
     return {"mode": DATA.mode, "c2_mode": DATA.c2_mode, "stations": engine.stations(DATA, _at(at))}
 
 
 @router.get("/stations/{station_id}")
 def station(station_id: str, at: str | None = None):
+    engine.refresh_c2(DATA)
     row = next((s for s in engine.stations(DATA, _at(at)) if s["station_id"] == station_id), None)
     if row is None:
         raise HTTPException(404, f"Estación {station_id} no existe")
@@ -35,6 +37,7 @@ def station(station_id: str, at: str | None = None):
 @router.get("/hourly")
 def hourly():
     """Perfil del sistema por hora CDMX (días hábiles): para la gráfica del panel."""
+    engine.refresh_c2(DATA)
     return {"mode": DATA.mode, "hours": engine.hourly(DATA)}
 
 
@@ -47,4 +50,5 @@ def clock(at: str | None = None, limit_h: float = engine.CLOCK_LIMIT_H):
 @router.get("/contract")
 def contract(at: str | None = None):
     """Los tres indicadores del contrato."""
+    engine.refresh_c2(DATA)
     return engine.contract(DATA, _at(at))
