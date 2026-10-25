@@ -70,7 +70,7 @@ def test_flujo_de_caso_y_conteo(env):
     assert r.status_code == 409
 
     r = client.get("/api/v1/cases/count")
-    assert r.json()["stations"] == [{"station_id": "1", "open_cases": 1, "reincorporated": 0}]
+    assert r.json()["stations"] == [{"station_id": "1", "short_name": "710", "open_cases": 1, "reincorporated": 0}]
 
     r = client.get("/api/v1/cases", params={"open": "true"})
     assert [c["case_id"] for c in r.json()] == [case["case_id"]]

@@ -108,3 +108,10 @@ def test_siguientes_estados_respetan_la_regla_de_taller():
     assert case.next_states == [S.EN_ESTACION]
     store.transition(case.case_id, S.EN_ESTACION, G, at(2))
     assert case.next_states == []
+
+
+def test_c5_lleva_el_codigo_ce_para_unir_con_otras_lineas():
+    store = CaseStore()
+    store.open(IncidentIn(type=IncidentType.ROBO, station_id="267"), T0)  # 267 = CE-014 en el feed
+    (row,) = store.counts(T0).stations
+    assert (row.station_id, row.short_name) == ("267", "14")

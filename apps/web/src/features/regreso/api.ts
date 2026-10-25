@@ -95,6 +95,22 @@ export interface IncidentIn {
   note?: string;
 }
 
+/** C6 · riesgo de pérdida (Línea 2). Con ?ids=feed, station_id es el del feed y short_name el código CE. */
+export interface LossRisk {
+  station_id: string;
+  time_band: string;
+  disappeared_bikes: number;
+  note: string;
+  short_name?: string | null;
+}
+
+export interface LossRiskResponse {
+  /** "REAL" (viajes oficiales) o "EJEMPLO" (datos de ejemplo de la Línea 2) */
+  mode: string;
+  total_bikes: number;
+  items: LossRisk[];
+}
+
 async function apiPost<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${config.apiUrl}${config.apiPrefix}${path}`, {
     method: "POST",
@@ -119,6 +135,10 @@ export const regresoApi = {
   assign: (caseId: string, body: { guardian_id: string; actor: Actor }) =>
     apiPost<Case>(`/cases/${encodeURIComponent(caseId)}/assign`, body),
   scenarios: () => apiGet<Scenario[]>("/scenarios"),
+  lossRisk: () => apiGet<LossRiskResponse>("/taller/loss-risk?ids=feed&limit=50"),
+  /** C4 · reporte al taller de la Línea 2 (solo daños; aquí, anclajes que no registraron). */
+  reportToTaller: (body: { station_id: string; type: "anclaje"; source: "usuario"; bike_id?: string }) =>
+    apiPost<{ report_id: string }>("/taller/reports", body),
   runScenario: (key: string) => apiPost<ScenarioRun>(`/scenarios/${encodeURIComponent(key)}/run`, {}),
 };
 

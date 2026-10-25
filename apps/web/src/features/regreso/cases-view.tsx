@@ -7,12 +7,13 @@ import { Segmented } from "@/components/ui/segmented";
 import { StateMessage } from "@/components/ui/state-message";
 import { KpiCard } from "@/features/panel/kpi-card";
 import { cn } from "@/lib/cn";
-import { ClipboardList, Map as MapIcon, Plus, ShieldCheck, UserX, Wrench } from "lucide-react";
+import { ClipboardList, Plus, ShieldCheck, UserX, Wrench } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { regresoApi, type Actor, type Case, type StationOption } from "./api";
 import { CaseDetail } from "./case-detail";
 import { STATE_LABEL, STATE_TONE, TYPE_LABEL } from "./case-labels";
 import { formatCdmxTime } from "./channels";
+import { LossRiskSection } from "./loss-risk-section";
 import { NewCaseForm } from "./new-case-form";
 import { ScenariosCard } from "./scenarios-card";
 
@@ -226,18 +227,7 @@ export function CasesView() {
         }}
       />
 
-      <Card>
-        <CardHeader
-          title="Riesgo de pérdida por estación"
-          description="Bicis que dejan de aparecer, por estación y franja horaria. Es riesgo, no robo comprobado."
-          action={<MapIcon aria-hidden className="size-5 text-ink-soft" />}
-        />
-        <StateMessage
-          kind="empty"
-          title="Esperando el contrato C6 de la Línea 2"
-          description="En cuanto la Línea 2 publique loss_risk, aquí aparece el mapa con su lista equivalente. La ubicación precisa de una bici nunca se publica."
-        />
-      </Card>
+      <LossRiskSection stations={stations} />
     </div>
   );
 }

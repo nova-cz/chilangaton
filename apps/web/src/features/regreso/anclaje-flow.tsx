@@ -184,7 +184,7 @@ export function AnclajeFlow() {
       ) : check.status === "revisando" ? (
         <Checking check={check} offline={offline} />
       ) : (
-        <Result check={check} status={check.status} onRetry={start} retrying={starting} help={help} />
+        <Result check={check} status={check.status} stationCode={station.code} onRetry={start} retrying={starting} help={help} />
       )}
 
       <Announce message={check ? check.message : ""} />
@@ -215,12 +215,14 @@ function Checking({ check, offline }: { check: ReturnCheck; offline: boolean }) 
 function Result({
   check,
   status,
+  stationCode,
   onRetry,
   retrying,
   help,
 }: {
   check: ReturnCheck;
   status: Final;
+  stationCode: string;
   onRetry: () => void;
   retrying: boolean;
   help: ReactNode;
@@ -249,7 +251,7 @@ function Result({
               {status === "sin_cambio" ? "Ya volví a empujar: revisar otra vez" : "Revisar otra vez"}
             </Button>
             {help}
-            <ReportForReview check={check} />
+            <ReportForReview check={check} stationCode={stationCode} />
           </>
         )}
       </div>
@@ -257,8 +259,8 @@ function Result({
   );
 }
 
-/** Abre un caso "anclaje" con esta verificación como evidencia, para que lo revise un Guardián. */
-function ReportForReview({ check }: { check: ReturnCheck }) {
+/** Abre un caso "anclaje" con esta verificación como evidencia y avisa al taller de la Línea 2 (C4). */
+function ReportForReview({ check, stationCode }: { check: ReturnCheck; stationCode: string }) {
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const send = async () => {
     setState("sending");
@@ -269,6 +271,8 @@ function ReportForReview({ check }: { check: ReturnCheck }) {
         station_id: check.station_id,
         return_id: check.return_id,
       });
+      // C4 pide el código CE. Si el taller no responde, el caso ya quedó abierto: no se bloquea.
+      regresoApi.reportToTaller({ station_id: stripZeros(stationCode), type: "anclaje", source: "usuario" }).catch(() => {});
       setState("sent");
     } catch {
       setState("error");

@@ -11,6 +11,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from shared.contracts.c5_cases_count import CasesCount, CasesCountResponse
+from shared.contracts.station_ids import feed_to_ce
 
 from .schemas import Actor, BikeState, CaseEvent, IncidentIn, IncidentType
 
@@ -193,6 +194,6 @@ class CaseStore:
                 by_station[case.station_id][1] += 1
         return CasesCountResponse(
             generated_at=now,
-            stations=[CasesCount(station_id=sid, open_cases=o, reincorporated=r)
+            stations=[CasesCount(station_id=sid, short_name=feed_to_ce(sid), open_cases=o, reincorporated=r)
                       for sid, (o, r) in sorted(by_station.items())],
         )
