@@ -28,7 +28,8 @@ STARTS = [(h, m) for h in (7, 8, 9) for m in (0, 15, 30, 45)]
 HORIZONS = (15, 30, 60)
 TOL_MIN = 10          # foto real más cercana a ± 10 min del momento objetivo
 N = 300               # escenarios por pronóstico (más rápido; el error de muestreo es ~3%)
-DISPS = (1.0, 0.8, 0.6, 0.45, 0.3, 0.15)   # cuánto azar de Poisson se conserva
+DRIFTS = (1.0, 0.75, 0.5, 0.25, 0.0)       # cuánta tendencia promedio se conserva
+DISPS = (1.0, 1.3, 0.7)                     # cuánto azar de Poisson se conserva
 
 
 def snapshots(con, feed: str, gbfs_to_key: dict):
@@ -88,9 +89,9 @@ def pc(x) -> str:
     return "—" if x is None else f"{x:.0%}"
 
 
-def evaluate(data, by, days, disp: float, stations=None):
+def evaluate(data, by, days, disp: float, drift: float = 1.0, stations=None):
     """Corre el pronóstico en mañanas pasadas. Devuelve listas (p, ocurrió, persistencia) por horizonte."""
-    data.disp = disp
+    data.disp, data.drift = disp, drift
     bike = {h: [] for h in HORIZONS}
     dock = {h: [] for h in HORIZONS}
     for day in days:
@@ -160,33 +161,45 @@ def main():
     out = {"dias_prueba": [str(d) for d in DAYS], "horas": "07:00–09:45 cada 15 min",
            "baseline": "1–28 sep 2026", "escenarios": N}
 
-    disp = data.disp
+    disp, drift = data.disp, data.drift
     if a.tune:
         fit_day, test_day = DAYS[0], DAYS[1]
         subset = sorted(data.stations)[::4]          # 1 de cada 4 estaciones para ir rápido
         print(f"Ajustando con {fit_day} ({len(subset)} estaciones)…")
-        results = {}
+        print("Paso 1 · cuánta tendencia promedio conservar:")
+        by_drift = {}
+        for g in DRIFTS:
+            b, d = evaluate(data, by, [fit_day], 1.0, g, subset)
+            by_drift[g] = score(b, d)
+            print(f"  tendencia {g}: error relativo {by_drift[g]:.3f} (1.0 = igual que 'nada cambia')")
+        drift = min(by_drift, key=by_drift.get)
+        print(f"Paso 2 · cuánto azar conservar (con tendencia {drift}):")
+        by_disp = {}
         for k in DISPS:
-            b, d = evaluate(data, by, [fit_day], k, subset)
-            results[k] = score(b, d)
-            print(f"  dispersión {k}: error relativo {results[k]:.3f} (1.0 = igual que 'nada cambia')")
-        disp = min(results, key=results.get)
-        print(f"→ Mejor: {disp}. Ahora se prueba en {test_day}, que no se usó para ajustar.")
-        b1, d1 = evaluate(data, by, [test_day], 1.0)
-        b2, d2 = evaluate(data, by, [test_day], disp)
-        report(b1, d1, f"{test_day} · SIN ajuste (dispersión 1.0)")
-        res = report(b2, d2, f"{test_day} · CON ajuste (dispersión {disp})")
-        out.update({"ajuste": {"disp": disp, "ajustado_con": str(fit_day), "probado_en": str(test_day),
+            b, d = evaluate(data, by, [fit_day], k, drift, subset)
+            by_disp[k] = score(b, d)
+            print(f"  azar {k}: error relativo {by_disp[k]:.3f}")
+        disp = min(by_disp, key=by_disp.get)
+        print(f"→ Mejor: tendencia {drift}, azar {disp}. Se prueba en {test_day}, que no se usó para ajustar.")
+        b1, d1 = evaluate(data, by, [test_day], 1.0, 1.0)
+        b2, d2 = evaluate(data, by, [test_day], disp, drift)
+        report(b1, d1, f"{test_day} · SIN ajuste")
+        res = report(b2, d2, f"{test_day} · CON ajuste (tendencia {drift}, azar {disp})")
+        out.update({"ajuste": {"disp": disp, "drift": drift, "ajustado_con": str(fit_day), "probado_en": str(test_day),
                                "error_relativo_prueba": round(score(b2, d2), 3),
                                "error_relativo_prueba_sin_ajuste": round(score(b1, d1), 3)},
                     "bici": res["bici"], "lugar": res["lugar"], "dias_prueba": [str(test_day)]})
+        keep = score(b2, d2) < score(b1, d1) - 0.01
+        tuned = {"disp": disp, "drift": drift} if keep else {"disp": 1.0, "drift": 1.0}
         (engine.REAL_DIR / "tuning.json").write_text(
-            json.dumps({"disp": disp, "ajustado_con": str(fit_day), "probado_en": str(test_day)}, indent=1), encoding="utf-8")
-        print("\n✔ modules/viaje/real/tuning.json (el motor lo usa solo)")
+            json.dumps({**tuned, "ajustado_con": str(fit_day), "probado_en": str(test_day), "aplicado": keep}, indent=1),
+            encoding="utf-8")
+        print(f"\n{'✔ El ajuste mejora en el día de prueba: queda activo' if keep else '✖ El ajuste NO mejora en el día de prueba: no se aplica'}"
+              " (modules/viaje/real/tuning.json)")
     else:
-        b, d = evaluate(data, by, DAYS, disp)
-        res = report(b, d, f"Resultados (mañanas que el modelo no vio, dispersión {disp}):")
-        out.update({"disp": disp, "bici": res["bici"], "lugar": res["lugar"]})
+        b, d = evaluate(data, by, DAYS, disp, drift)
+        res = report(b, d, f"Resultados (mañanas que el modelo no vio; tendencia {drift}, azar {disp}):")
+        out.update({"disp": disp, "drift": drift, "bici": res["bici"], "lugar": res["lugar"]})
 
     (engine.REAL_DIR / "backtest.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print("✔ modules/viaje/real/backtest.json")
