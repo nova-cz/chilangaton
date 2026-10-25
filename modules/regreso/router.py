@@ -4,14 +4,14 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 
-from shared.contracts.cases_count import CasesCountResponse
+from shared.contracts.c5_cases_count import CasesCountResponse
 
 from . import returns
 from .cases import CaseNotFound, CaseStore, InvalidTransition
 from .gbfs import FeedProblem, StationFeed
 from .schemas import AssignIn, BikeState, CaseOut, IncidentIn, IncidentOut, ReturnIn, ReturnOut, TransitionIn
 
-router = APIRouter(tags=["regreso"])
+router = APIRouter(tags=["Línea 5 · Regreso Seguro"])
 
 _feed = StationFeed()
 _cases = CaseStore()

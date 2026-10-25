@@ -4,7 +4,7 @@
  *
  * Solo aparecen estaciones con al menos un caso; las que no salen tienen 0 y 0.
  * Los casos sin estación conocida no se cuentan aquí (sí salen en GET /cases).
- * Esquema Pydantic equivalente: shared/contracts/cases_count.py
+ * Esquema Pydantic equivalente: shared/contracts/c5_cases_count.py
  */
 
 export interface CasesCount {

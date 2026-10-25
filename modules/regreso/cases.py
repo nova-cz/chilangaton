@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import uuid4
 
-from shared.contracts.cases_count import CasesCount, CasesCountResponse
+from shared.contracts.c5_cases_count import CasesCount, CasesCountResponse
 
 from .schemas import Actor, BikeState, CaseEvent, IncidentIn, IncidentType
 
