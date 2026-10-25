@@ -24,22 +24,22 @@ def test_stations_map_covers_all_stations_and_has_no_collisions():
     assert m["271-272"] and m["710"]
 
 
-def test_with_ids_feed_default_and_ce():
+def test_with_ids_ce_default_and_feed():
     key = "271-272"
-    assert engine.with_ids({}, key)["station_id"] == engine.feed_ids()[key]
+    assert engine.with_ids({}, key)["station_id"] == key           # lo que ya leen L1 y L3
     assert engine.with_ids({}, key)["short_name"] == key
-    assert engine.with_ids({}, key, "ce")["station_id"] == key
-    assert engine.with_ids({}, "9999")["station_id"] == "9999"      # sin mapa: deja el código
+    assert engine.with_ids({}, key, "feed")["station_id"] == engine.feed_ids()[key]
+    assert engine.with_ids({}, "9999", "feed")["station_id"] == "9999"   # sin mapa: deja el código
 
 
 def test_snapshot_mode_serves_exported_files(tmp_path):
     item = Priority(station_id="5", ts="2026-09-29T13:45:00+00:00", suspected_expected=2,
                     priority_score=1, top_signals=["bici ignorada"]).model_dump()
-    (tmp_path / "c2_priority.json").write_text(json.dumps([item]))
-    (tmp_path / "c2_priority.ce.json").write_text(json.dumps([{**item, "station_id": "271"}]))
+    (tmp_path / "c2_priority.json").write_text(json.dumps([{**item, "station_id": "271"}]))
+    (tmp_path / "c2_priority.feed.json").write_text(json.dumps([item]))
     data = engine.Data(mode="REAL", snapshot_dir=tmp_path)
-    assert engine.priority(data)[0]["station_id"] == "5"
-    assert engine.priority(data, ids="ce")[0]["station_id"] == "271"
+    assert engine.priority(data)[0]["station_id"] == "271"
+    assert engine.priority(data, ids="feed")[0]["station_id"] == "5"
     assert engine.ignored_bikes(data) == []
     assert "271-272" in engine.known_stations(data)
 
