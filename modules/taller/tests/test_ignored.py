@@ -43,3 +43,16 @@ def test_not_flagged_once_it_leaves(tmp_path):
 
 def test_example_mode_returns_nothing():
     assert engine.ignored_bikes(engine.Data(mode="EJEMPLO")) == []
+
+
+def test_old_docking_is_not_ignored_but_stale(tmp_path):
+    old = T0 - timedelta(days=5)
+    rows = [("A", "100", old - timedelta(minutes=30), "271", old)]
+    rows += [(f"B{i}", "271", T0 + timedelta(minutes=5 * i + 1), "300",
+              T0 + timedelta(minutes=5 * i + 20)) for i in range(35)]
+    _write_trips(tmp_path, rows)
+
+    items = engine.ignored_bikes(engine.Data(mode="REAL", trips_dir=tmp_path), T0 + timedelta(hours=4))
+
+    assert items[0]["signal"] == "sin movimiento 3+ días"
+    assert engine.suspected_by_station(items) == {}
