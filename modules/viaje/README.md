@@ -42,10 +42,23 @@ Prueba rápida: `/api/v1/viaje/recommendations?origin=271&destination=14&at=2026
 
 | Modo | Cómo se activa | Qué usa |
 |---|---|---|
-| EJEMPLO | Por defecto | `fixtures/` con valores inventados |
-| VIVO | `LIVE=1` | Estaciones e inventario reales de ahorita desde el feed GBFS (dos JSON chicos); demanda aún de ejemplo |
-| REAL | `LIVE=1 DATA_DIR=/ruta/a/data` | Lo anterior + demanda y duraciones reales de `data/trips/*.parquet` (rama `data`) |
+| **REAL** | Existe `modules/viaje/real/` (se genera abajo) | Viajes de sep 2026 (baseline de 28 días y duraciones) + estado del feed el martes 29 a las 7:45 |
+| EJEMPLO | No existe `real/`, o `VIAJE_MODE=ejemplo` | `fixtures/` con 6 estaciones inventadas (pruebas y respaldo) |
+| VIVO | `LIVE=1` | Estado de ahorita desde el feed GBFS; demanda de ejemplo |
 
-Ejemplo: `LIVE=1 DATA_DIR=~/Desktop/chilangaton-data/data uvicorn services.api.main:app --reload`
+### Generar `real/` con los archivos del Drive
 
-La respuesta siempre dice en `mode` qué datos usó. Pendiente: restar las sospechosas reales de C2 (Línea 2) cuando exista su endpoint.
+Baja del Drive del equipo a `data/` (no se sube a git): `public_data_web_2026-09.csv`,
+`public_data_web_2026-08_2.csv`, `Sep.parquet` y `station_information.json`. Luego, desde la raíz:
+
+```
+python -m modules.viaje.build_real --trips data/public_data_web_2026-09.csv data/public_data_web_2026-08_2.csv --feed data/Sep.parquet --info data/station_information.json
+python -m modules.viaje.export_demo     # actualiza el escenario de la web (modo demo)
+```
+
+`real/` sí se sube: son promedios por estación y bloque, sin bicis, edades ni géneros. `real/meta.json`
+dice qué archivos se usaron y trae avisos (códigos sin pareja, huecos del feed).
+En modo REAL el `station_id` es el número de la estación (el del letrero), p. ej. `271`.
+
+La respuesta siempre dice en `mode` qué datos usó. Pendiente: restar las sospechosas reales de C2 (Línea 2):
+basta con dejar `real/c2_priority.json` (`[{station_id, suspected_expected}]`).

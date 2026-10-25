@@ -8,7 +8,7 @@ import { ArrowDownUp, ChevronDown, Footprints, Repeat2, Settings2, Shuffle } fro
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { DEMO_AT, HOME, getNearby, getRecommendation, getStations } from "./data";
+import { DEMO_AT, HOME, getNearby, getRecommendation, getStations, type StationChoices } from "./data";
 import { LIGHT_TONE, cdmxTime, localClock, pct, splitName } from "./format";
 import { usePrefs } from "./prefs";
 import { RideTimer } from "./ride-timer";
@@ -26,7 +26,7 @@ export function TripPlanner() {
   const router = useRouter();
   const params = useSearchParams();
   const [prefs] = usePrefs();
-  const [stations, setStations] = useState<Load<ViajeStation[]>>({ status: "loading" });
+  const [stations, setStations] = useState<Load<StationChoices>>({ status: "loading" });
   const [nearby, setNearby] = useState<NearbyRow[]>([]);
   const [rec, setRec] = useState<Load<Recommendation>>({ status: "loading" });
   const [chosen, setChosen] = useState<string | null>(null);
@@ -118,9 +118,10 @@ export function TripPlanner() {
             </div>
           ) : (
             <div className="relative">
-              <StationSelect label="Salgo de" dot="bg-brand-500" value={from} stations={stations.data} onChange={(v) => setRoute({ from: v })} />
+              <StationSelect label="Salgo de" dot="bg-brand-500" value={from} stations={stations.data.origins} onChange={(v) => setRoute({ from: v })} />
               <div className="mx-4 border-t border-dashed border-line" />
-              <StationSelect label="Voy a" dot="bg-brand-900" value={to} stations={stations.data} onChange={(v) => setRoute({ to: v })} />
+              <StationSelect label="Voy a" dot="bg-brand-900" value={to} stations={stations.data.destinations} onChange={(v) => setRoute({ to: v })} />
+              {stations.data.origins.some((x) => x.station_id === to) && stations.data.destinations.some((x) => x.station_id === from) ? (
               <button
                 type="button"
                 onClick={() => setRoute({ from: to, to: from })}
@@ -129,6 +130,7 @@ export function TripPlanner() {
               >
                 <ArrowDownUp aria-hidden className="size-4" />
               </button>
+              ) : null}
             </div>
           )}
         </div>

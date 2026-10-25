@@ -53,7 +53,8 @@ def test_endpoints_web():
     from services.api.main import create_app
 
     c = TestClient(create_app())
-    assert len(c.get("/api/v1/viaje/stations").json()["stations"]) == 6
-    f = c.get("/api/v1/viaje/stations/14/forecast", params={"horizons": "15,45,90"}).json()
-    assert [x["horizon_min"] for x in f["forecast"]] == [15, 45, 90] and f["station"]["capacity"] == 39
-    assert c.get("/api/v1/viaje/stations/999/forecast").status_code == 404
+    rows = c.get("/api/v1/viaje/stations").json()["stations"]
+    sid = rows[0]["station_id"]
+    f = c.get(f"/api/v1/viaje/stations/{sid}/forecast", params={"horizons": "15,45,90"}).json()
+    assert [x["horizon_min"] for x in f["forecast"]] == [15, 45, 90] and f["station"]["station_id"] == sid
+    assert c.get("/api/v1/viaje/stations/no-existe/forecast").status_code == 404

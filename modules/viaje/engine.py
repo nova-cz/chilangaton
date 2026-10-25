@@ -2,10 +2,9 @@
 Línea 3 · Viaje del ciclista: pronóstico de bici útil y anclaje a la llegada,
 y recomendación de estación alternativa con minutos de gracia.
 
-Funciona en dos modos:
-- EJEMPLO (por defecto): lee modules/viaje/fixtures/*.json. No depende de nadie.
-- REAL: con DATA_DIR=<ruta a data/> lee data/trips/*.parquet y data/stations.parquet
-  (rama `data`) y calcula el baseline de 28 días.
+Modos:
+- REAL (si existe modules/viaje/real/): agregados de sep 2026 hechos con build_real.py.
+- EJEMPLO (respaldo, o VIAJE_MODE=ejemplo): modules/viaje/fixtures/*.json, 6 estaciones inventadas.
 
 Método (V2): para cada estación, bloque de 15 min y tipo de día, el baseline da las
 salidas (lam_out) y llegadas (lam_in) promedio. Desde el inventario útil de ahora se
@@ -95,24 +94,47 @@ class Data:
     mode: str = "EJEMPLO"
 
 
-def load_fixtures() -> Data:
-    f = HERE / "fixtures"
-    st = {s["station_id"]: Station(**s) for s in json.loads((f / "stations.json").read_text())}
+def _load_dir(f: Path, names: dict[str, str], mode: str) -> Data:
+    st = {s["station_id"]: Station(**{k: s[k] for k in ("station_id", "name", "lat", "lon", "capacity")})
+          for s in json.loads((f / names["stations"]).read_text(encoding="utf-8"))}
     states = {}
-    for s in json.loads((f / "c1_useful_bikes.example.json").read_text()):
+    for s in json.loads((f / names["states"]).read_text(encoding="utf-8")):
         states[s["station_id"]] = State(
             station_id=s["station_id"], ts=s["ts"], useful_bikes=s["useful_bikes"],
             docks_available=s["docks_available"], docks_disabled=s.get("docks_disabled", 0),
             is_renting=s.get("is_renting", True), is_returning=s.get("is_returning", True))
-    for p in json.loads((f / "c2_priority.example.json").read_text()):
-        if p["station_id"] in states:
-            states[p["station_id"]].suspected_expected = p["suspected_expected"]
+    if names.get("c2") and (f / names["c2"]).exists():
+        for p in json.loads((f / names["c2"]).read_text(encoding="utf-8")):
+            if p["station_id"] in states:
+                states[p["station_id"]].suspected_expected = p["suspected_expected"]
     base = {}
-    for b in json.loads((f / "baseline.example.json").read_text()):
+    for b in json.loads((f / names["baseline"]).read_text(encoding="utf-8")):
         base[(b["station_id"], b["day_type"], b["block"])] = (b["lam_out"], b["lam_in"])
     travel = {(t["origin"], t["destination"]): t["minutes"]
-              for t in json.loads((f / "travel.example.json").read_text())}
-    return Data(st, states, base, travel, "EJEMPLO")
+              for t in json.loads((f / names["travel"]).read_text(encoding="utf-8"))}
+    return Data(st, states, base, travel, mode)
+
+
+def load_fixtures() -> Data:
+    """Fixtures de EJEMPLO: 6 estaciones inventadas, siempre disponibles (pruebas y respaldo)."""
+    return _load_dir(HERE / "fixtures", {
+        "stations": "stations.json", "states": "c1_useful_bikes.example.json",
+        "c2": "c2_priority.example.json", "baseline": "baseline.example.json",
+        "travel": "travel.example.json"}, "EJEMPLO")
+
+
+REAL_DIR = HERE / "real"
+
+
+def load_real() -> Data | None:
+    """Agregados reales generados con `python -m modules.viaje.build_real` (sep 2026)."""
+    if not (REAL_DIR / "meta.json").exists():
+        return None
+    d = _load_dir(REAL_DIR, {"stations": "stations.json", "states": "states.json",
+                             "c2": "c2_priority.json", "baseline": "baseline.json",
+                             "travel": "travel.json"}, "REAL")
+    d.stations = {k: v for k, v in d.stations.items() if k in d.states}
+    return d
 
 
 def build_baseline_from_trips(trips_glob: str, end_date: str | None = None, days: int = 28):
@@ -190,7 +212,12 @@ def load_live(fetch=None) -> tuple[dict, dict, dict]:
 
 
 def load() -> Data:
-    """LIVE=1 → estaciones y estado reales del feed; DATA_DIR → baseline real de viajes."""
+    """Orden: VIAJE_MODE=ejemplo fuerza fixtures; si existe real/ se usa (REAL);
+    LIVE=1 → estado del feed en vivo; DATA_DIR → baseline desde parquet de la rama data."""
+    if os.getenv("VIAJE_MODE", "").lower() != "ejemplo":
+        real = load_real()
+        if real and os.getenv("LIVE") != "1":
+            return real
     d = load_fixtures()
     keymap = None
     if os.getenv("LIVE") == "1":

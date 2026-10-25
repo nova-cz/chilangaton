@@ -13,6 +13,8 @@ const snap = snapshot as unknown as {
   mode: string;
   home: { lat: number; lon: number; label: string };
   stations: ViajeStation[];
+  origins: string[];
+  destinations: string[];
   nearby: NearbyRow[];
   forecast: Record<string, ForecastPoint[]>;
   recommendations: Record<string, Omit<Recommendation, "preferences">>;
@@ -30,10 +32,19 @@ export interface Sourced<T> {
   mode: string;
 }
 
-export async function getStations(): Promise<Sourced<ViajeStation[]>> {
-  if (isDemo) return { data: snap.stations, mode: snap.mode };
+export interface StationChoices {
+  origins: ViajeStation[];
+  destinations: ViajeStation[];
+}
+
+/** En demo solo se ofrecen los pares que trae el escenario; con API, todas las estaciones. */
+export async function getStations(): Promise<Sourced<StationChoices>> {
+  if (isDemo) {
+    const pick = (ids: string[]) => snap.stations.filter((s) => ids.includes(s.station_id));
+    return { data: { origins: pick(snap.origins), destinations: pick(snap.destinations) }, mode: snap.mode };
+  }
   const r = await apiGet<{ mode: string; stations: ViajeStation[] }>(`/viaje/stations?at=${at}`);
-  return { data: r.stations, mode: r.mode };
+  return { data: { origins: r.stations, destinations: r.stations }, mode: r.mode };
 }
 
 export async function getNearby(lat = HOME.lat, lon = HOME.lon): Promise<Sourced<NearbyRow[]>> {
